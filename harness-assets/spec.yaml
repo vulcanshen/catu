@@ -1,0 +1,114 @@
+id: 1
+from: 0
+to: v1.1.6
+tasks:
+  - id: 1
+    spec: 1
+    request: 看一個檔案的畫面：一個 panel 放檔案的內容，上面看得到檔案的路徑、大小、修改時間、權限；q 直接離開
+    tdp: [tdp terms.2, tdp screen.1, tdp screen.2, tdp screen.4, tdp screen.8, tdp panel.1, tdp panel.4, tdp panel.10, tdp file-picker.4, tdp components.2, tdp components.4, tdp K9, tdp L1, tdp L2, tdp L3, tdp L4, tdp E5]
+    remark:
+      - |
+        版面（單畫面、一個 panel；tdp terms.2：看檔案只有一件事，不分畫面）：
+        Size: 4.2 KB       Modified: 2026-11-03 10:02  Mode: -rw-r--r--   ← statusbar（tdp screen.4）
+        ┏[1] DOCUMENTSOURCE━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓   ← label 是內容的種類；有兩種看法時是 tab
+        ┃ ~/Documents/sideproj/viewu/README.md                         ┃   ← 位置列：檔案的路徑（tdp panel.10）
+        ┃   1 …                                                         ┃
+        ┗━ h|l:tab o:open /:search v:visual ━━━━━━━━━━━━━━ 1-30 of 120 ━┛
+        Space:menu ?:help !:log q:quit                                      ← footer（tdp screen.2：只有一個 panel）
+      - "label 寫內容的種類，照 tdp file-picker.4 的 TYPE 大寫：TEXT、DIRECTORY、ARCHIVE、PDF、IMAGE、BINARY、PRIVATE KEY；Markdown 是 DOCUMENT、SOURCE 兩個 tab（task 9），mermaid 檔是 DIAGRAM、SOURCE（task 10）"
+      - "位置列是看的東西的完整路徑，家目錄寫成 ~，Lavender、太長從前面截（tdp panel.10；webu 的網址列也是內容 panel 的位置列）"
+      - "statusbar 三組 Size、Modified、Mode，寫成 label: 值（tdp screen.4；statusbar 是 app 的內容，不改大小寫，tdp components.4），值照 tdp file-picker.4 的寫法（目錄的 Size 是 N items）；種類已經寫在 label，不重複寫 TYPE。Size 的值補到 11 格，最後一組不補空白（tdp L2）"
+      - "最低尺寸調到 40×12（tdp L1：app 可以調低）：版面只有一個 panel，80×24 的終端機、tmux 對半的小窗格都要能看檔案"
+      - "q 與 Ctrl-C 直接離開，不先問（tdp K9：離開流程 app 可以自行決定；像 less 一樣看完就走）；有 popup 開著時照 tdp K9 先問（tgo 做）"
+      - "空的檔案、目錄、壓縮檔照 tdp screen.8 的空狀態：Empty file／Empty directory／Empty archive，接一句點名 [o] 的提示"
+      - "panel 不會有讀不到的狀態：啟動時讀不到在命令列就結束（task 2），o 選到讀不到的檔留在 file-picker（task 7）"
+  - id: 2
+    spec: 1
+    request: 用 viewu <路徑> 打開一個檔案或目錄；沒給路徑就看目前的目錄；有 viewu version 與 viewu help
+    tdp: [tdp E1, tdp P5, tdp note.7]
+    remark:
+      - "路徑不存在、讀不到時像 cat 一樣在 stderr 印 viewu: <路徑>: <原因>，結束碼 1，不開畫面（tdp E1：其他指令 app 可以自行決定；tdp P5 功能邏輯）"
+      - "只收一個路徑；多給、或不認得的旗標，印用法到 stderr，結束碼 2；檔名剛好叫 version、help 時寫 ./version（help 裡寫明）"
+      - "啟動時打開的那個，App Log 記一筆 Info「Opened <路徑>」（tdp note.7：只看不改的動作也記）"
+  - id: 3
+    spec: 1
+    request: 文字檔：有語法顏色與行號，一行太長折到下一列，不截掉
+    tdp: [tdp file-picker.3, tdp note.2, tdp components.3, tdp components.5, tdp E3, tdp P4, tdp P5]
+    remark:
+      - "照 viewer 的內容（tdp note.2）：chroma 的 catppuccin-mocha 只上前景色；行號 Overlay0、靠右，欄寬 max(3, 總行數的位數)；一律折行，在空白處斷（tdp components.3），折下來的列行號欄空白"
+      - "Tab 畫成 input_tab_width 格空白，CRLF 的 \\r 不畫，檔案自己帶顏色碼時照它上色、不再上語法顏色，其他控制字元畫成 Red 的名字（tdp components.5、file-picker.3）"
+      - "語言照檔名判斷（tdp note.2），判斷不出來是 Text"
+      - "整個檔讀進來，不是預覽的 64 KB：上限 16 MB，超過時只畫前 16 MB，最後一列 Overlay0 寫還有多少沒畫（tdp P5 功能邏輯）"
+  - id: 4
+    spec: 1
+    request: 其他種類的檔案照 filu 的預覽畫：目錄樹、壓縮檔裡有什麼、PDF 的文字、圖片、二進位的十六進位
+    tdp: [tdp file-picker.3, tdp file-picker.5, tdp E3, tdp F8, tdp P4, tdp P5]
+    remark:
+      - "照 tdp file-picker.3 的表：目錄與壓縮檔畫三層的樹、PDF 第一列頁數再接前 20 頁的文字、圖片是 data URI、其他是一列 8 bytes 的十六進位；這裡是 panel，能捲，所以畫到內容完，不是畫到預覽區滿"
+      - "圖片不用終端機的圖片協定：不是每個終端機都有、tmux 會擋、放不進一格一格的排版，也淡化不了（tdp F8；webu 不畫 favicon 是同一個理由）"
+      - "hide_secrets_in_preview 打開時照 tdp file-picker.5 藏起私鑰與只有擁有者能讀的檔"
+      - "十六進位最多畫前 1 MB，超過時最後一列 Overlay0 寫還有多少沒畫（tdp P5）"
+      - "目錄樹、十六進位、PDF 是 app 排出來的內容，不畫行號（tdp note.2）"
+  - id: 5
+    spec: 1
+    request: 用 vim 的方式移動：j|k、u|d、gg|G 捲動；v 進 Visual，h|j|k|l、w|b|e、0|$ 移游標，再按 v 開始選，y 複製
+    tdp: [tdp K11, tdp K12, tdp terms.8, tdp note.3, tdp note.4, tdp panel.3, tdp M2, tdp M3, tdp M5, tdp note.7, tdp toast.2]
+    remark:
+      - "照 tdp：看的時候沒有游標，j|k 捲動（tdp K12、note.4）；edit mode 先不做（使用者 2026-11-03：先不要有 edit mode，單純看檔案就好）"
+      - "折行時以畫面上的一列為單位捲（tdp note.3）"
+      - "Visual 的游標、範圍、顏色、Visual>select 兩層、y 複製後 Success toast 照 tdp note.4；在 Space menu 的 panel operation 是 [v]isual（tdp M3）"
+      - "DOCUMENT 與圖複製的是畫面上的字（webu 也是）"
+      - "進出 Visual 不記 App Log（tdp K11、note.7），複製的結果是 toast，會記"
+  - id: 6
+    spec: 1
+    request: / 找字，所有找到的地方標出來，n|N 跳到下一個、上一個
+    tdp: [tdp panel.14, tdp note.2, tdp note.3, tdp note.5, tdp text, tdp toast.2, tdp K4, tdp M6]
+    remark:
+      - "這個 panel 沒有 cursor，照 tdp panel.14：/ 開 input popup 問要找的字，命中的字加底線、目前那一筆是 cursor 色塊，n|N 繞著跳，一筆都沒有時 Info toast；Esc 清掉命中的字（tdp K4 的往上一層）"
+      - "n|N 只在有命中的時候出現在 Space menu 與 ?（tdp M6：對象不存在就不列）；Esc 也只在有命中的時候列在 ?（tdp note.5：Esc 在這裡有作用時才列）"
+      - "找字不記 App Log：跟 panel filter 一樣只是換看得到的範圍（tdp note.7）；tgo 的 viewer 的搜尋也不記"
+  - id: 7
+    spec: 1
+    request: o 打開別的檔案
+    tdp: [tdp P5, tdp K12, tdp M3, tdp M5, tdp file-picker, tdp T1, tdp F4, tdp note.6, tdp note.7, tdp toast.1]
+    remark:
+      - "o 是領域熱鍵（tdp P5），不佔移動的字母（tdp K12）；在 Space menu 的 panel operation 是 [o]pen another file（tdp M3）"
+      - "打開 tgo 的 file-picker：根目錄是正在看的檔案所在的目錄，cursor 停在正在看的那一個上（看的是目錄時根目錄就是它，cursor 在第一列）；選了檔案就換成看它，App Log 記 Info「Opened <路徑>」"
+      - "想看目錄時：file-picker 只選檔（tdp file-picker.6），目錄用 viewu <目錄> 看"
+      - "從 Space menu 打開時，選了檔案就連 Space menu 一起收起（tdp T1：表上沒有的動作 app 自行決定；底下的內容整個換了，跟 drill-down 一樣，舊的 menu 對象不在了）；取消回到 Space menu（tdp F4）"
+      - "選的檔讀不到時，file-picker 留著，上面開 error popup 寫原因（tdp toast.1：跟 popup 的動作有關、要看完再決定的失敗用 error popup；tdp note.6）；原本看的內容不動"
+  - id: 8
+    spec: 1
+    request: 設定：Tab 畫成幾格、要不要在預覽裡藏起秘密
+    tdp: [tdp E2, tdp E3, tdp E7, tdp note.2, tdp file-picker.5, tdp confirm]
+    remark:
+      - "設定檔 $XDG_CONFIG_HOME/viewu/config.yaml（fallback ~/.config/viewu/config.yaml，VIEWU__CONFIG 覆寫；tdp E2、E3），只有家族共用的兩個 key：input_tab_width（預設 4）、hide_secrets_in_preview（預設 false）"
+      - "app 不寫設定檔，沒有就用預設值；不存狀態、資料、快取"
+      - "讀不了時照 tdp E3 開 MOVE ASIDE 的 confirm（tgo MoveAside）"
+  - id: 9
+    spec: 1
+    request: Markdown 照 webu 顯示 markdown 的方式畫成文件；也看得到原始碼
+    tdp: [tdp P4, tdp P5, tdp F1, tdp terms.4, tdp panel.4, tdp K12, tdp note.2]
+    remark:
+      - "畫法照 webu 的元件（webu docs/reader.md）：畫面上沒有 markdown 的符號；標題底色只包住字、字 Base，依層 Peach、Rosewater、Green、Teal、Flamingo；行內程式碼 Surface0 底；無序清單每層 Blue 的 -；有序清單依層 1.、a.、i.；程式碼區塊 Mantle 底、照語言上色、語言名寫在右上角；引用 Lavender 的直槓、Mantle 底；連結 link icon 加字；圖片 image icon 加 alt；表格畫格子、表頭粗體；分隔線 Overlay0（內容本身的顏色與符號屬於領域，tdp P4、P5；表格的格子是內容自己畫的框，tdp F1）"
+      - "兩個 tab：DOCUMENT（畫好的文件，打開時在這裡）、SOURCE（原始碼，照 task 3 的文字檔）；h|l 切（tdp K12、terms.4、panel.4）"
+      - "DOCUMENT 是 app 排出來的內容，不畫行號（tdp note.2）；照 panel 的寬度排，終端機大小變了重排"
+      - "Markdown 用 goldmark 解析，含 GFM：表格、刪除線、任務清單、自動連結"
+      - "任務清單的記號不借 tdp checkbox 的 glyph（tdp P4：方框打勾是 checkbox）"
+  - id: 10
+    spec: 1
+    request: mermaid 圖用 pele 畫：Markdown 裡的 mermaid 區塊，與 .mmd、.mermaid 檔
+    tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp note.7]
+    remark:
+      - "pele（MIT）的 dist/pele.global.js 用 go:embed 放進執行檔，用 goja（純 Go 的 JavaScript 引擎）跑：照樣是單一靜態 binary，不必裝 Node（tdp E6）"
+      - "給 pele 一個等寬的 measurer（一個字一格寬），排出來的字剛好落在格子上；pele 的 SVG 畫成字元：方框用框線字、線與斜線用點字（braille）、箭頭用三角形、字放在它的位置。不用終端機的圖片協定（task 4 的理由，tdp F8）"
+      - "比 panel 寬時先讓 pele 照 panel 的寬度排（maxWidth、autoDirection：LR 轉成 TB）；還是太寬，右邊切掉、最後一格畫 Overlay0 的 …（webu 的表格太寬也是這樣）"
+      - "mermaid 寫錯時畫原始碼（程式碼區塊的樣子），下面一列 Red 寫 pele 的錯誤，App Log 記一筆 Warning"
+      - ".mmd、.mermaid 檔有兩個 tab：DIAGRAM（畫好的圖，打開時在這裡）、SOURCE（原始碼）"
+      - "顏色是內容的（tdp P4、P5）：框線 Blue、字 Text、線與箭頭 Overlay2、邊上的字 Subtext0"
+  - id: 11
+    spec: 1
+    request: 家族的 splash：在 panel 上按 V
+    tdp: [tdp S1, tdp S2, tdp S3, tdp S4, tdp S5, tdp E6]
+    remark:
+      - "mark 的框裡拼 V、I、E、W（docs/icon.svg 是正本，程式裡的副本用測試守住一樣，tdp E6）"

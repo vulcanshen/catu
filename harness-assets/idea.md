@@ -1,0 +1,14 @@
+# viewu
+
+## 2026-11-03
+
+> 作一個看檔案的工具，就是把 filu 那種檔案預覽，和各種檔案的 syntaxhighlight, 做成一個簡易看檔案的工具，就像 cat,bat
+> 那樣，但我真的想要做的是類似 leaf, 但比 leaf 強, 我想使用 https://github.com/obsidianmd/pele 來出 mermaid 圖, 一樣有 vim motion 來控制 cursor, 有 view
+> mode 和 edit mode, 預設 view mode,
+
+- 一個看檔案的工具：filu 那種檔案預覽，各種檔案都有 syntax highlight；簡易，像 cat、bat 那樣。
+- 真正想做的是類似 leaf（RivoLink/leaf，終端機裡的 Markdown previewer），但比 leaf 強。leaf 只是 idea 的起點，不照 leaf 那套。
+- Markdown 照 webu 顯示 markdown 的方式。
+- 用 pele（https://github.com/obsidianmd/pele）出 mermaid 圖。
+- 用 vim motion 控制 cursor。
+- 先不要有 edit mode，單純看檔案就好。
