@@ -1,4 +1,4 @@
-id: 2
+id: 3
 from: v1.1.6
 to: v1.1.6
 tasks:
@@ -31,8 +31,8 @@ tasks:
       - "只收一個路徑；多給、或不認得的旗標，印用法到 stderr，結束碼 2；檔名剛好叫 version、help 時寫 ./version（help 裡寫明）"
       - "啟動時打開的那個，App Log 記一筆 Info「Opened <路徑>」（tdp note.7：只看不改的動作也記）"
   - id: 3
-    spec: 1
-    request: 文字檔：有語法顏色與行號，一行太長折到下一列，不截掉
+    spec: 3
+    request: 文字檔：有語法顏色與行號，一行太長折到下一列，不截掉；TOML 的 key 與表名也要有顏色
     tdp: [tdp file-picker.3, tdp note.2, tdp components.3, tdp components.5, tdp E3, tdp P4, tdp P5, tdp panel.15, tdp K3]
     remark:
       - "照 viewer 的內容（tdp note.2）：chroma 的 catppuccin-mocha 只上前景色；行號 Overlay0、靠右，欄寬 max(3, 總行數的位數)；一律折行，在空白處斷（tdp components.3），折下來的列行號欄空白"
@@ -40,6 +40,8 @@ tasks:
       - "語言照檔名判斷（tdp note.2），判斷不出來是 Text"
       - "整個檔讀進來，不是預覽的 64 KB：上限 16 MB，超過時只畫前 16 MB，最後一列 Overlay0 寫還有多少沒畫（tdp P5 功能邏輯）"
       - "上語法顏色一 MB 要將近一秒：超過 64 KB 的檔先用 Text 畫出來、在背景上色，上色中 panel 是 loading（膠囊後面的 loading icon，tdp panel.15），好了只換顏色，捲動位置、命中、游標都不動（tdp K3：背景的事不移動任何東西）"
+      - note: "chroma 的 TOML lexer 把表名與 key 都標成 NameOther，catppuccin-mocha 不上色。使用者 2026-11-03 選 viewu 自己補：照 catppuccin-mocha 上 INI 的方式，表名當 Keyword（Mauve）、key 當 NameAttribute（Blue）。tdp note.2 要 viewer 照 file-picker 的預覽上色、同一個檔在兩處長得一樣，viewu 的 file-picker 預覽（tgo 畫的）還是沒有這兩個顏色：回報 tdp，等它定 lexer 的缺漏由誰補"
+        issue: "tdp #（待發）"
   - id: 4
     spec: 1
     request: 其他種類的檔案照 filu 的預覽畫：目錄樹、壓縮檔裡有什麼、PDF 的文字、圖片、二進位的十六進位
@@ -100,12 +102,12 @@ tasks:
       - "任務清單的記號照 webu 畫勾選框的字 [x]、[ ]，Blue，放在清單記號的位置；不借 tdp checkbox 的 glyph（tdp P4：方框打勾是 checkbox，這裡不能勾）"
       - "找字、Visual 照 task 5、6，複製的是畫面上的字，排滿一列的空白不複製（webu 也是）"
   - id: 10
-    spec: 1
-    request: mermaid 圖用 pele 畫：Markdown 裡的 mermaid 區塊，與 .mmd、.mermaid 檔
+    spec: 3
+    request: mermaid 圖用 pele 畫：Markdown 裡的 mermaid 區塊，與 .mmd、.mermaid 檔；菱形與其他斜的直線用階梯狀的框線畫，不要一堆點
     tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp note.7, tdp components.5]
     remark:
       - "pele（MIT）的 dist/pele.global.js 用 go:embed 放進執行檔，用 goja（純 Go 的 JavaScript 引擎）跑：照樣是單一靜態 binary，不必裝 Node（tdp E6）"
-      - "給 pele 一個等寬的 measurer（一個字一格寬），排出來的字剛好落在格子上；pele 的 SVG 畫成字元：方框用框線字、線與斜線用點字（braille）、箭頭用三角形、字放在它的位置。不用終端機的圖片協定（task 4 的理由，tdp F8）"
+      - "給 pele 一個等寬的 measurer（一個字一格寬），排出來的字剛好落在格子上；pele 的 SVG 畫成字元：方框與直線用框線字（斜的直線畫成一階一階，使用者 2026-11-03 選：跟其他框同一種線、進出的線接得起來）、圓與曲線用點字（braille）、箭頭用三角形、字放在它的位置。不用終端機的圖片協定（task 4 的理由，tdp F8）"
       - "比 panel 寬時先讓 pele 照 panel 的寬度排（maxWidth、autoDirection：LR 轉成 TB，任何寬度都轉）；還是太寬，右邊切掉、最後一格畫 Overlay0 的 …（webu 的表格太寬也是這樣）"
       - "一列比一格高一倍（16.8px），pele 的字與線常常不到一列：列照圖裡的層（框邊、分隔線、字、線的端點）依序分配，近的併一列、遠的分開，字才不會壓在線上"
       - "mermaid 寫錯時畫原始碼（程式碼區塊的樣子），下面 Red 寫 pele 的錯誤，一行一列（tdp components.5：app 自己畫的好幾行字一列一列給）；App Log 記一筆 Warning，同一個檔同一個錯只記一次（終端機大小變了會重畫）"
@@ -118,3 +120,11 @@ tasks:
     tdp: [tdp S1, tdp S2, tdp S3, tdp S4, tdp S5, tdp E6]
     remark:
       - "mark 的框裡拼 V、I、E、W（docs/icon.svg 是正本，程式裡的副本用測試守住一樣，tdp E6）"
+  - id: 12
+    spec: 3
+    request: JSON 多一個排過版（pretty print）的 tab，預設還是看原檔
+    tdp: [tdp P5, tdp terms.4, tdp panel.4, tdp K12, tdp note.2, tdp screen.8, tdp panel.15]
+    remark:
+      - "兩個 tab：TEXT（原檔，打開時在這裡）、FORMATTED（排過版）；h|l 切（tdp K12、terms.4、panel.4）。原檔在前：行號對得上別的工具報的行、找字與複製是檔案裡真的內容（使用者 2026-11-03 選）"
+      - "排版是 tdp P5 的功能邏輯：縮排 2 格，key 的順序、數字的寫法照原檔（Go 的 json.Indent），只動空白；照 task 3 上 JSON 的顏色、畫行號（它自己的行）"
+      - "只認副檔名 .json；不是合法的 JSON 時，FORMATTED 照 tdp panel.15 置中寫一句 Red 的原因（帶行號）、一句 Overlay0 的提示 Press [h] to see the file as it is"

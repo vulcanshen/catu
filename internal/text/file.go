@@ -125,9 +125,14 @@ func lex(lines []string, lexer chroma.Lexer) [][]terminu.Color {
 	if err != nil {
 		return out
 	}
-	row := 0
+	toml := lexer.Config() != nil && lexer.Config().Name == "TOML"
+	row, startOfLine, header := 0, true, false
 	for tok := it(); tok != chroma.EOF; tok = it() {
-		c := mocha.Get(tok.Type).Colour
+		kind := tok.Type
+		if toml {
+			kind, startOfLine, header = tomlKind(tok, startOfLine, header)
+		}
+		c := mocha.Get(kind).Colour
 		fg := terminu.Color{}
 		if c.IsSet() {
 			fg = terminu.Color{RGB: terminu.RGB{c.Red(), c.Green(), c.Blue()}, Set: true}
@@ -146,6 +151,31 @@ func lex(lines []string, lexer chroma.Lexer) [][]terminu.Color {
 		}
 	}
 	return out
+}
+
+// tomlKind is the kind a TOML token is coloured as. chroma's TOML lexer
+// calls a table's name and a key both NameOther, which catppuccin-mocha
+// leaves uncoloured; they are coloured as the INI lexer's are, a table
+// (a line that starts with [) a Keyword, a key a NameAttribute. It is told
+// whether the token starts a line and whether the line is a table's; it
+// gives them back for the next token.
+func tomlKind(tok chroma.Token, startOfLine, header bool) (chroma.TokenType, bool, bool) {
+	kind := tok.Type
+	switch {
+	case strings.Contains(tok.Value, "\n"):
+		return kind, true, false
+	case startOfLine && strings.TrimSpace(tok.Value) == "":
+		return kind, true, false // the indent before the line's first token
+	case startOfLine:
+		header = tok.Type == chroma.Punctuation && strings.HasPrefix(tok.Value, "[")
+	}
+	if kind == chroma.NameOther {
+		kind = chroma.NameAttribute
+		if header {
+			kind = chroma.Keyword
+		}
+	}
+	return kind, false, header
 }
 
 // builder makes a line's characters as a terminal leaves them: a \r goes

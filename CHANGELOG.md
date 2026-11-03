@@ -6,7 +6,9 @@ Each release names the version of terminu design (tdp) it follows.
 
 - First version: `viewu <path>` shows a file or a directory in one panel, the statusbar over it with its size, when it
   was modified and its mode; `viewu version` and `viewu help`
-- A text file in the colours of its language, with line numbers; long lines fold onto the rows under them
+- A text file in the colours of its language, with line numbers; long lines fold onto the rows under them. A TOML
+  file's tables and keys are coloured too
+- A JSON file as it is, and formatted in its `FORMATTED` tab
 - A Markdown file drawn as a document, as webu draws a page: headings on the colour of their level, lists, code blocks
   in their language's colours, quotes, tables as grids, links and images with their icons; its source in the `SOURCE`
   tab

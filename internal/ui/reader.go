@@ -25,8 +25,9 @@ type reader struct {
 	layout func(w int) []text.Line
 	laidW  int
 	// fact and hint say why there is nothing to show, in the middle (tdp
-	// screen.8).
+	// screen.8); red marks the fact an error (tdp panel.15).
 	fact, hint string
+	red        bool
 
 	textW, numW int
 	top, sub    int // the line the first row in sight belongs to, and that row among its rows
@@ -72,7 +73,7 @@ func (r *reader) reset() {
 	r.top, r.sub, r.folds = 0, 0, nil
 	r.hits, r.current = nil, 0
 	r.visual, r.selecting = false, false
-	r.fact, r.hint = "", ""
+	r.fact, r.hint, r.red = "", "", false
 	r.numW = 0
 }
 
@@ -319,12 +320,17 @@ func (r *reader) row(i, from, to int, lastRow bool) string {
 }
 
 // emptyRows is the middle of an empty panel: the fact, then the hint, each
-// folded and centred, a blank row between them, in Overlay0 (tdp screen.8).
+// folded and centred, a blank row between them, in Overlay0; a fact that is
+// an error in Red (tdp screen.8, panel.15).
 func (r *reader) emptyRows(w, h int) []string {
 	inner := max(w-2, 1)
 	var rows []string
+	fact := terminu.Fg(terminu.Overlay0)
+	if r.red {
+		fact = terminu.Fg(terminu.Red)
+	}
 	for _, l := range terminu.Wrap(r.fact, inner) {
-		rows = append(rows, terminu.Fg(terminu.Overlay0).Render(l))
+		rows = append(rows, fact.Render(l))
 	}
 	if r.hint != "" {
 		rows = append(rows, "")

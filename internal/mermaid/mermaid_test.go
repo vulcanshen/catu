@@ -67,18 +67,35 @@ func TestSequence(t *testing.T) {
 	}
 }
 
-func TestCurvesAsDots(t *testing.T) {
-	rs := drawRows(t, "flowchart LR\n  A{Is it?} --> B\n", 80)
-	braille := false
-	for _, r := range rs {
+func braille(rows []string) bool {
+	for _, r := range rows {
 		for _, c := range r {
 			if c >= 0x2800 && c <= 0x28ff {
-				braille = true
+				return true
 			}
 		}
 	}
-	if !braille {
-		t.Errorf("the diamond is not drawn in dots:\n%s", strings.Join(rs, "\n"))
+	return false
+}
+
+// TestDiamondAsSteps: a slanting side is steps of box-drawing lines, the
+// words on the middle row between the two points.
+func TestDiamondAsSteps(t *testing.T) {
+	rs := drawRows(t, "flowchart LR\n  A{Is it?} --> B\n", 80)
+	if braille(rs) {
+		t.Errorf("the diamond is drawn in dots:\n%s", strings.Join(rs, "\n"))
+	}
+	for _, s := range []string{"╭──╯", "╰───╮", "──┤ Is it?  ├──", "╰──╮", "╭───╯"} {
+		if !has(rs, s) {
+			t.Errorf("no %q:\n%s", s, strings.Join(rs, "\n"))
+		}
+	}
+}
+
+func TestCirclesAsDots(t *testing.T) {
+	rs := drawRows(t, "flowchart LR\n  A((Round)) --> B\n", 80)
+	if !braille(rs) || !has(rs, "Round") {
+		t.Errorf("the circle is not drawn in dots:\n%s", strings.Join(rs, "\n"))
 	}
 }
 

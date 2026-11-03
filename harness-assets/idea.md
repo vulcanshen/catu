@@ -21,3 +21,11 @@
 
 - Markdown 的第 6 層標題有自己的顏色，不要跟第 1 層一樣。
 - 引用裡的引用，那條直槓也照標題的顏色層級。
+
+## 2026-11-03（看過 samples 之後，第二次）
+
+> toml 的 syntaxhighlight 好像沒有？json 可以展開成 prettyprint 嗎? 還是保持原檔案形式真實呈現？那個流程圖的菱形用一堆點構成是 pele 的作法？
+
+- TOML 的 key 與表名也要有顏色：viewu 自己補（使用者選的）。
+- JSON 多一個排過版（pretty print）的 tab，預設還是看原檔。
+- mermaid 的菱形（與其他斜的線）用階梯狀的框線畫，不要一堆點。

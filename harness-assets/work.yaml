@@ -25,19 +25,21 @@ tasks:
       啟動時（tgo App.Start）App Log 記 Info「Opened <路徑，家目錄寫成 ~>」
     test: [TestVersionAndHelp, TestPathNotThere, TestPathNotReadable, TestBadArguments, TestOpenLogsWhatItOpened, TestOpenErrors]
   - id: 3
-    spec: 1
+    spec: 3
     implementation: |
       文字檔（前 64 KB 沒有 NUL、是合法的 UTF-8）：label TEXT；整個檔讀進來，最多 16 MB，超過時最後一列 Overlay0「(<大小> more not shown)」
       每一行左邊畫行號：靠右，欄寬 max(3, 總行數的位數)，Overlay0，後面空一格；一行比 panel 寬時在空白處折到下一列（照 tgo viewer 的 foldAt：
       空白後、寬字前後可以斷，一個字比一列長才照格子切），折下來的列行號欄空白
       語法顏色：chroma 照檔名找 lexer，catppuccin-mocha 只上前景色，lexer 沒上色的與找不到 lexer 的是 Text
+      TOML（chroma 的 TOML lexer）：NameOther 換成 INI 的種類再查 catppuccin-mocha —— 開頭是 [ 的那一行（表）裡的是 Keyword（Mauve），
+      其他（key，含 inline table 裡的）是 NameAttribute（Blue）；字串、數字、true 照 chroma
       Tab 畫成 input_tab_width 格空白（複製時是 \t）；CRLF 的 \r 不畫；一行裡的 \r 回到行首、後面的字蓋過去（只留最後的狀態）；
       其他控制字元畫成 Red 的名字（\x07、\x1b……）
       檔案裡有 \x1b[ 時：照檔案自己的 SGR 上色（粗體、斜體、底線、刪除線、16 色換成 catppuccin 的、256 色、24 位元），不再上語法顏色；
       不是 SGR 的序列，ESC 畫成 Red 的 \x1b、後面的字照原樣
       超過 64 KB、有 lexer 的檔：先全部用 Text 畫出來，tgo Panel.Loading 打開（膠囊後面的 loading icon）；上色在背景跑（tea.Cmd），
       回來時（tgo App.OnMsg）只換掉那一個 view 的行的顏色，捲動位置、命中、Visual 的游標都不動，loading icon 拿掉；已經換成別的檔案時丟掉
-    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater]
+    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater, TestTOMLKeysAndTables]
   - id: 4
     spec: 1
     implementation: |
@@ -124,7 +126,7 @@ tasks:
       內容是空的時候照 task 1 的空狀態
     test: [TestMarkdownDocumentAndSource, TestMarkdownLaidOutAgainOnResize, TestMarkdownSearchAndCopy, TestEmptyMarkdown, TestEveryRowIsTheWidth, TestNoMarkdownSymbols, TestHeadingIsAChipOfItsLevel, TestLists, TestListItemFolds, TestCodeBlock, TestCodeLineFolds, TestQuote, TestTable, TestTableTooWide, TestLinkAndImage, TestInlineStyles, TestRule, TestControlCharacters]
   - id: 10
-    spec: 1
+    spec: 3
     implementation: |
       internal/mermaid：Pele 1.13.0 的 dist/pele.global.js（MIT，LICENSE 一起放在 internal/mermaid/pele/）用 go:embed 放進執行檔，goja 跑；
       pele.render 給的 measurer 把每個字量成一格（8.4px，寬字兩格），fontSize 14，maxWidth 是可以用的格數 × 8.4，autoDirection 開著、
@@ -132,7 +134,9 @@ tasks:
       SVG 先整個讀完再畫：rect、polygon、polyline、line、circle、ellipse、path（M L H V C S Q T A Z），套用 transform（translate、scale、rotate、matrix）；
       欄是 x ÷ 8.4 四捨五入；列不是直接除：框的上下邊、分隔線、字、線的端點這些「層」排序後一層一層分配，離上一層 0.4 列以上就是新的一列
       （隔得遠的照距離多空幾列），近的併在同一列，層與層之間照比例 —— 字不會落在線上，框裡一行字時字在正中間
-      水平與垂直的線用框線字，交會處依方向選 ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼（轉角一律圓角）；虛線 ╌ ╎；其他方向的直線、曲線、圓、弧一律用點字（braille）；
+      水平與垂直的線用框線字，交會處依方向選 ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼（轉角一律圓角）；虛線 ╌ ╎；
+      斜的直線（菱形、多邊形的邊）畫成階梯：在經過的每一列畫一段橫線，在它跨到下一列的那一欄（兩列中間的那條線上）往上或往下接一格，轉角圓角；
+      曲線、圓、弧一律用點字（braille）；
       兩端都是水平（或垂直）的三次曲線畫成直角的轉折
       箭頭（填滿的三角形 pele-marker）在所有線與字畫完後放：指向的框線前一格、框線上不留朝箭頭的接頭，沒有框線時蓋在線的最後一格，▶ ◀ ▲ ▼；
       線組成的 marker（ER 圖的鴨掌、短槓）照線畫
@@ -144,7 +148,7 @@ tasks:
       寫錯（pele 丟出錯誤）：照程式碼區塊畫原始碼（右上角 mermaid），下面 Red 一行一列寫 pele 的錯誤；App Log 記 Warning「Can't draw a mermaid diagram in <檔名>: <錯誤>」，
       同一個檔同一個錯只記一次
       打開含有 mermaid 區塊的 Markdown、或 mermaid 檔時，在背景先載入 pele
-    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestCurvesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidTooWide, TestMermaidErrorLoggedOnce]
+    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDiamondAsSteps, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidTooWide, TestMermaidErrorLoggedOnce]
   - id: 11
     spec: 1
     implementation: |
@@ -152,3 +156,13 @@ tasks:
       docs/icon.svg：家族的 U 框，框裡金色的 V、I（上排）、E、W（下排），註解的順序 U、V、I、E、W
       panel 上按 V 打開；任意鍵只關掉它（tgo 做）
     test: [TestSplashIsTheIcon, TestSplash]
+  - id: 12
+    spec: 3
+    implementation: |
+      副檔名 .json 的文字檔：panel 兩個 tab，TEXT（原檔，打開時在這裡，照 task 3）、FORMATTED；h|l 切（tgo 做），下框 hint 前面多 h|l:tab
+      FORMATTED：Go 的 json.Indent 縮排 2 格（key 的順序、數字的寫法照原檔，只動空白），照 task 3 上 JSON 的顏色、畫它自己的行號、折行；
+      超過 64 KB 一樣先 Text、背景上色
+      不是合法的 JSON：FORMATTED 沒有行，位置列下面置中畫 Red 的「Not valid JSON: line N: <encoding/json 的原因>」、空一列、Overlay0 的「Press [h] to see the file as it is」
+      空的檔：FORMATTED 也是 Empty file / Press [h] to see the file as it is
+      找字、Visual 照 task 5、6，在 FORMATTED 裡找的是排過版的字
+    test: [TestJSONAsItIsThenFormatted, TestJSONNotValid, TestJSONFormattedSearch]

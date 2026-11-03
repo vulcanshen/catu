@@ -116,7 +116,7 @@ The keys every family app shares:
 | `?` | Every key that works here |
 | `!` | The App Log: what was done, newest last; here, the files opened and the diagrams that could not be drawn |
 | `j\|k`, `u\|d`, `gg\|G` | Scroll a row, half a page, to the top or the bottom |
-| `h\|l` | Switch tabs: a Markdown file's `DOCUMENT` and `SOURCE`, a mermaid file's `DIAGRAM` and `SOURCE` |
+| `h\|l` | Switch tabs: a Markdown file's `DOCUMENT` and `SOURCE`, a mermaid file's `DIAGRAM` and `SOURCE`, a JSON file's `TEXT` and `FORMATTED` |
 | `v`, `y` | `v` and move to where to start, `v` again and move to select; `y` copies it |
 | `Esc` | Close the popup on top, one at a time, or clear what a search found; it never leaves viewu |
 | `q` | Quit |
@@ -138,6 +138,7 @@ and `gg|G` as when scrolling.
 |---|---|---|
 | Markdown (`.md`, `.markdown`) | `DOCUMENT`, `SOURCE` | A document; its `mermaid` blocks as diagrams |
 | Mermaid (`.mmd`, `.mermaid`) | `DIAGRAM`, `SOURCE` | The diagram |
+| JSON (`.json`) | `TEXT`, `FORMATTED` | The file as it is; formatted, two spaces an indent, its keys in their order |
 | Any other text | `TEXT` | Its syntax colours and line numbers |
 | A directory | `DIRECTORY` | A tree three levels deep, hidden files left out |
 | An archive (zip, tar, tar.gz, tar.bz2) | `ARCHIVE` | What it holds, as a tree |

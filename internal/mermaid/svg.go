@@ -141,7 +141,18 @@ func (g *grid) row(y float64) int { return int(math.Round(g.rows.at(y))) }
 
 // hline joins the cells from x1 to x2 on the row of y.
 func (g *grid) hline(x1, x2, y float64, st text.Style, dashed bool) {
-	c1, c2, r := col(math.Min(x1, x2)), col(math.Max(x1, x2)), g.row(y)
+	g.hcells(col(x1), col(x2), g.row(y), st, dashed)
+}
+
+// vline joins the cells from y1 to y2 on the column of x.
+func (g *grid) vline(x, y1, y2 float64, st text.Style, dashed bool) {
+	g.vcells(col(x), g.row(y1), g.row(y2), st, dashed)
+}
+
+// hcells joins the cells from column c1 to c2 on row r; a single cell is a
+// short line of its own, unless a line is there already.
+func (g *grid) hcells(c1, c2, r int, st text.Style, dashed bool) {
+	c1, c2 = min(c1, c2), max(c1, c2)
 	for c := c1; c <= c2; c++ {
 		k := g.at(c, r)
 		if k == nil {
@@ -164,9 +175,10 @@ func (g *grid) hline(x1, x2, y float64, st text.Style, dashed bool) {
 	}
 }
 
-// vline joins the cells from y1 to y2 on the column of x.
-func (g *grid) vline(x, y1, y2 float64, st text.Style, dashed bool) {
-	r1, r2, c := g.row(math.Min(y1, y2)), g.row(math.Max(y1, y2)), col(x)
+// vcells joins the cells from row r1 to r2 on column c; a single cell is a
+// short line of its own, unless a line is there already.
+func (g *grid) vcells(c, r1, r2 int, st text.Style, dashed bool) {
+	r1, r2 = min(r1, r2), max(r1, r2)
 	for r := r1; r <= r2; r++ {
 		k := g.at(c, r)
 		if k == nil {
@@ -207,8 +219,8 @@ func (g *grid) dot(x, y float64, st text.Style) {
 	k.dst = st
 }
 
-// line draws a straight line: across or down with box-drawing characters,
-// any other way with dots, as many as its length on the grid takes.
+// line draws a straight line with box-drawing characters: across, down, or
+// slanting as steps.
 func (g *grid) line(a, b point, st text.Style, dashed bool) {
 	switch {
 	case math.Abs(a.y-b.y) < 0.75:
@@ -216,7 +228,42 @@ func (g *grid) line(a, b point, st text.Style, dashed bool) {
 	case math.Abs(a.x-b.x) < 0.75:
 		g.vline(a.x, a.y, b.y, st, dashed)
 	default:
-		g.dots(a, b, st)
+		g.stairs(a, b, st, dashed)
+	}
+}
+
+// stairs draws a slanting line as steps of box-drawing lines (a diamond's
+// sides): along each row it crosses, then a row up or down at the column
+// where it passes from that row to the next; the turns are round corners.
+func (g *grid) stairs(a, b point, st text.Style, dashed bool) {
+	ra, rb := g.rows.at(a.y), g.rows.at(b.y)
+	r0, r1 := int(math.Round(ra)), int(math.Round(rb))
+	c0, c1 := col(a.x), col(b.x)
+	switch {
+	case r0 == r1:
+		g.hcells(c0, c1, r0, st, dashed)
+		return
+	case c0 == c1:
+		g.vcells(c0, r0, r1, st, dashed)
+		return
+	}
+	dir := 1
+	if r1 < r0 {
+		dir = -1
+	}
+	c := c0
+	for r := r0; r != r1; r += dir {
+		// Where the line passes from row r to the next: halfway between them.
+		t := (float64(r) + 0.5*float64(dir) - ra) / (rb - ra)
+		next := col(a.x + (b.x-a.x)*min(max(t, 0), 1))
+		if next != c {
+			g.hcells(c, next, r, st, dashed)
+		}
+		g.vcells(next, r, r+dir, st, dashed)
+		c = next
+	}
+	if c != c1 {
+		g.hcells(c, c1, r1, st, dashed)
 	}
 }
 

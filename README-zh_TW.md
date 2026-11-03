@@ -112,7 +112,7 @@ viewu help         印出命令列的用法（-h、--help）
 | `?` | 這裡每一個能按的鍵 |
 | `!` | App Log：做過的事，最新的在最下面；在這裡是打開過的檔案、畫不出來的圖 |
 | `j\|k`、`u\|d`、`gg\|G` | 捲一列、半頁、到最上面或最下面 |
-| `h\|l` | 切 tab：Markdown 的 `DOCUMENT` 與 `SOURCE`、mermaid 檔的 `DIAGRAM` 與 `SOURCE` |
+| `h\|l` | 切 tab：Markdown 的 `DOCUMENT` 與 `SOURCE`、mermaid 檔的 `DIAGRAM` 與 `SOURCE`、JSON 的 `TEXT` 與 `FORMATTED` |
 | `v`、`y` | `v` 再移到要開始的地方，再按 `v` 移動選取；`y` 複製 |
 | `Esc` | 一次關掉最上面的一個 popup，或清掉找到的字；永遠不會離開 viewu |
 | `q` | 離開 |
@@ -133,6 +133,7 @@ viewu 自己的：
 |---|---|---|
 | Markdown（`.md`、`.markdown`） | `DOCUMENT`、`SOURCE` | 文件；`mermaid` 區塊畫成圖 |
 | Mermaid（`.mmd`、`.mermaid`） | `DIAGRAM`、`SOURCE` | 圖 |
+| JSON（`.json`） | `TEXT`、`FORMATTED` | 原檔；排過版的縮排 2 格，key 照原本的順序 |
 | 其他文字檔 | `TEXT` | 語法顏色與行號 |
 | 目錄 | `DIRECTORY` | 三層的樹，不列隱藏檔 |
 | 壓縮檔（zip、tar、tar.gz、tar.bz2） | `ARCHIVE` | 裡面有什麼，畫成樹 |

@@ -7,6 +7,8 @@ import (
 	"compress/bzip2"
 	"compress/gzip"
 	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -15,9 +17,11 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/alecthomas/chroma/v2"
 	"github.com/dslipak/pdf"
 	terminu "github.com/vulcanshen/terminu-go"
 
@@ -63,8 +67,10 @@ type view struct {
 	// colour, when set, is the lines in colour, made in the background:
 	// lines are the same in Text until then.
 	colour func() []text.Line
-	// fact and hint, when lines is empty, say why (tdp screen.8).
+	// fact and hint, when lines is empty, say why (tdp screen.8); red marks
+	// the fact an error (tdp panel.15).
 	fact, hint string
+	red        bool
 }
 
 // grey is a line of the app's own in Overlay0, not numbered.
@@ -161,16 +167,21 @@ func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 		name = "PRIVATE KEY"
 	}
 	source := view{name: name, numbered: true, fact: "Empty file", hint: "Press [o] to open another file"}
-	// Lexing takes about a second a megabyte: a big text is shown at once in
-	// Text and coloured in the background (tdp panel.15: the panel loading).
-	if lexer := text.Lexer(s.path); lexer != nil && len(content) > colourNow {
-		source.lines = text.File(content, nil, tabW)
-		source.colour = func() []text.Line { return text.File(content, lexer, tabW) }
-	} else {
-		source.lines = text.File(content, lexer, tabW)
-	}
+	source.lines, source.colour = textLines(content, text.Lexer(s.path), tabW)
 	opt := doc.Options{TabW: tabW, Diagram: mermaid.Draw, OnDiagramError: warn}
 	switch {
+	case s.kind == "text" && isJSON(s.path):
+		// The file as it is first; formatted, a tab away (user 2026-11-03).
+		formatted := view{name: "FORMATTED", numbered: true, fact: "Empty file", hint: "Press [h] to see the file as it is"}
+		var b bytes.Buffer
+		switch err := json.Indent(&b, []byte(content), "", "  "); {
+		case strings.TrimSpace(content) == "":
+		case err != nil:
+			formatted.fact, formatted.red = "Not valid JSON: "+jsonError(content, err), true
+		default:
+			formatted.lines, formatted.colour = textLines(b.String()+"\n", text.Lexer(s.path), tabW)
+		}
+		return []view{source, formatted}
 	case s.kind == "text" && isMarkdown(s.path):
 		s.kind = "markdown"
 		source.name = "SOURCE"
@@ -201,6 +212,30 @@ func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 		return []view{diagram, source}
 	}
 	return []view{source}
+}
+
+// textLines are a text's lines in the colours lexer reads them in. Lexing
+// takes about a second a megabyte: a big text is given in Text, colour the
+// lines in colour, to be made in the background (tdp panel.15: the panel
+// loading meanwhile).
+func textLines(content string, lexer chroma.Lexer, tabW int) (lines []text.Line, colour func() []text.Line) {
+	if lexer != nil && len(content) > colourNow {
+		return text.File(content, nil, tabW), func() []text.Line { return text.File(content, lexer, tabW) }
+	}
+	return text.File(content, lexer, tabW), nil
+}
+
+// isJSON reports a JSON file by its name.
+func isJSON(p string) bool { return strings.EqualFold(filepath.Ext(p), ".json") }
+
+// jsonError is why content is not JSON, with the line it is on.
+func jsonError(content string, err error) string {
+	var syntax *json.SyntaxError
+	if errors.As(err, &syntax) {
+		line := strings.Count(content[:min(int(syntax.Offset), len(content))], "\n") + 1
+		return "line " + strconv.Itoa(line) + ": " + err.Error()
+	}
+	return err.Error()
 }
 
 // isMermaid reports a mermaid file by its name.

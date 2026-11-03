@@ -129,7 +129,7 @@ func (v *viewer) showView(i int) {
 	} else {
 		v.body.set(vw.lines, vw.numbered)
 	}
-	v.body.fact, v.body.hint = vw.fact, vw.hint // when there is nothing to show
+	v.body.fact, v.body.hint, v.body.red = vw.fact, vw.hint, vw.red // when there is nothing to show
 	v.body.where = tilde(v.cur.path)
 	v.panel.OnEsc = nil // no hits to clear
 }
