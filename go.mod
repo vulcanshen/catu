@@ -3,17 +3,17 @@ module github.com/vulcanshen/viewu
 go 1.26.0
 
 require (
-	github.com/alecthomas/chroma/v2 v2.27.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/dop251/goja v0.0.0-20261102223426-a177d211bf60
 	github.com/dslipak/pdf v0.0.2
 	github.com/rivo/uniseg v0.4.7
-	github.com/vulcanshen/terminu-go v1.1.9
+	github.com/vulcanshen/terminu-go v1.2.0-beta.2
 	github.com/yuin/goldmark v1.8.7
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
+	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
 	github.com/charmbracelet/lipgloss v1.1.0 // indirect

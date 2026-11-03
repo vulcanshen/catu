@@ -156,6 +156,17 @@ func TestCodeBlockColoursAsThePreview(t *testing.T) {
 	}
 }
 
+// TestCodeBlockItalicComment: a code block takes catppuccin-mocha's italic
+// as the preview does, a comment italic, on the block's own ground (tdp
+// file-picker.3, note.2).
+func TestCodeBlockItalicComment(t *testing.T) {
+	lines := render("```go\n// note\n```\n", 40)
+	i, k := find(lines, "// note")
+	if i < 0 || !lines[i].Chars[k].St.Italic || lines[i].Chars[k].St.Bg != mantle {
+		t.Error("the comment is not italic on the block's ground")
+	}
+}
+
 func TestCodeLineFolds(t *testing.T) {
 	long := strings.Repeat("x", 50)
 	rows := drawnRows(render("```\n"+long+"\n```\n", 30))

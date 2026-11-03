@@ -359,6 +359,31 @@ func TestVisualSelectsAndCopies(t *testing.T) {
 	wantNot(t, d, "┫Visual")
 }
 
+// TestVisualSelectionPlain: in the selected range the syntax colours and
+// their bold, italic and underline do not show, only Base on Yellow (tdp
+// note.2).
+func TestVisualSelectionPlain(t *testing.T) {
+	dir := files(t, map[string]string{"a.go": "// a comment\n"})
+	d := start(t, filepath.Join(dir, "a.go"), 60, 20)
+	styled := func() string {
+		for i, l := range d.Screen() {
+			if strings.Contains(l, "a comment") {
+				return d.Styled()[i]
+			}
+		}
+		t.Fatal("no comment on the screen")
+		return ""
+	}
+	const italic = "\x1b[3;"
+	if !strings.Contains(styled(), italic) {
+		t.Fatal("the comment is not italic before it is selected")
+	}
+	d.Press("v", "v", "$")
+	if got := styled(); strings.Contains(got, italic) || !strings.Contains(got, selectStyle.SGR()+"/") {
+		t.Errorf("the selection shows the syntax's look: %q", got)
+	}
+}
+
 func TestVisualEscOneLayerAtATime(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "one two\n"})
 	d := start(t, filepath.Join(dir, "a.txt"), 60, 20)

@@ -7,17 +7,23 @@ import (
 	terminu "github.com/vulcanshen/terminu-go"
 )
 
-// colourOf is the colour of the first character of word on line i.
-func colourOf(t *testing.T, lines []Line, i int, word string) terminu.Color {
+// styleOf is the style of the first character of word on line i.
+func styleOf(t *testing.T, lines []Line, i int, word string) Style {
 	t.Helper()
 	chars := lines[i].Chars
 	for k := range chars {
 		if strings.HasPrefix((Line{Chars: chars[k:]}).Drawn(), word) {
-			return chars[k].St.Fg
+			return chars[k].St
 		}
 	}
 	t.Fatalf("no %q on line %d: %q", word, i+1, lines[i].Drawn())
-	return terminu.Color{}
+	return Style{}
+}
+
+// colourOf is the colour of the first character of word on line i.
+func colourOf(t *testing.T, lines []Line, i int, word string) terminu.Color {
+	t.Helper()
+	return styleOf(t, lines, i, word).Fg
 }
 
 // TestTOMLKeysAndTables: a table's name and a key are coloured as the INI
@@ -66,6 +72,43 @@ func TestYAMLValuesAsThePreview(t *testing.T) {
 	}
 	if got := lines[4].Drawn(); !strings.Contains(got, "note:    x") {
 		t.Errorf("the tab is drawn %q, want 4 spaces", got)
+	}
+}
+
+// TestBoldAndItalicAsThePreview: catppuccin-mocha's bold and italic come
+// through as the preview draws them: Markdown's **bold** bold and *italic*
+// italic, at the start of a line too, a comment italic (tdp file-picker.3,
+// note.2; task 3).
+func TestBoldAndItalicAsThePreview(t *testing.T) {
+	md := File("**Why**: x *it*\n", "a.md", 4)
+	if !styleOf(t, md, 0, "**Why**").Bold {
+		t.Error("**Why** at the start of the line is not bold")
+	}
+	if !styleOf(t, md, 0, "*it*").Italic {
+		t.Error("*it* is not italic")
+	}
+	if !styleOf(t, File("// a comment\n", "main.go", 4), 0, "//").Italic {
+		t.Error("the comment is not italic")
+	}
+}
+
+// TestFormatByDirectory: a name more than one format has is told by its
+// directory, as the preview tells it: a config in .ssh is SSH's, one in .git
+// is git's, a hosts is the hosts file only in /etc (tdp file-picker.3,
+// note.2; task 3).
+func TestFormatByDirectory(t *testing.T) {
+	if got := colourOf(t, File("Host x\n", "/home/u/.ssh/config", 4), 0, "Host"); got != terminu.Hex("#cba6f7") {
+		t.Errorf("Host in .ssh/config is %v, want Mauve", got)
+	}
+	if got := colourOf(t, File("[core]\n", "/repo/.git/config", 4), 0, "core"); got == terminu.Text {
+		t.Error("a section of .git/config is not coloured")
+	}
+	hosts := "127.0.0.1 localhost\n"
+	if got := colourOf(t, File(hosts, "/etc/hosts", 4), 0, "127"); got == terminu.Text {
+		t.Error("an address in /etc/hosts is not coloured")
+	}
+	if got := colourOf(t, File(hosts, "/srv/inventory/hosts", 4), 0, "127"); got != terminu.Text {
+		t.Errorf("a hosts outside /etc is %v, want Text", got)
 	}
 }
 

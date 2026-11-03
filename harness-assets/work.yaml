@@ -25,21 +25,23 @@ tasks:
       啟動時（tgo App.Start）App Log 記 Info「Opened <路徑，家目錄寫成 ~>」
     test: [TestVersionAndHelp, TestPathNotThere, TestPathNotReadable, TestBadArguments, TestOpenLogsWhatItOpened, TestOpenErrors]
   - id: 3
-    spec: 5
+    spec: 7
     implementation: |
       文字檔（前 64 KB 沒有 NUL、是合法的 UTF-8）：label TEXT；整個檔讀進來，最多 16 MB，超過時最後一列 Overlay0「(<大小> more not shown)」
       每一行左邊畫行號：靠右，欄寬 max(3, 總行數的位數)，Overlay0，後面空一格；一行比 panel 寬時在空白處折到下一列（照 tgo viewer 的 foldAt：
       空白後、寬字前後可以斷，一個字比一列長才照格子切），折下來的列行號欄空白
-      語法顏色：tgo 的 terminu.Syntax（檔案的路徑當語言），跟 o 選檔的預覽同一套：catppuccin-mocha 只上前景色，chroma 漏掉的照
-      tdp file-picker.3 的表補（TOML 的表名 Mauve、key Blue，YAML 沒引號的值 Green，Makefile define 區塊裡的行……）；chroma 認不出語言的檔是 Text
+      語法顏色：tgo 的 terminu.Syntax（檔案的路徑當語言），跟 o 選檔的預覽同一套：catppuccin-mocha 的顏色、粗體、斜體與底線（Markdown 的 **粗體**
+      粗體、*斜體* 斜體，行首的也是；註解斜體；= && 這類運算子粗體），不上背景色；chroma 漏掉的照 tdp file-picker.3 的表補（TOML 的表名 Mauve、
+      key Blue，YAML 沒引號的值 Green，Makefile define 區塊裡的行……）；格式由 lib 看檔名、同名的再看資料夾（.ssh/config 是 SSH config、
+      .git/config 是 Git config、/etc/hosts 是 hosts 檔，別處的 hosts 是 Text）；認不出的是 Text
       檔案的行原樣交給 Syntax，拿回同樣多行，Tab 與一行裡的 \r 留在原位，由 viewu 照下面畫
       Tab 畫成 input_tab_width 格空白（複製時是 \t）；CRLF 的 \r 不畫；一行裡的 \r 回到行首、後面的字蓋過去（只留最後的狀態）；
       其他控制字元畫成 Red 的名字（\x07、\x1b……）
       檔案裡有 \x1b[ 時：照檔案自己的 SGR 上色（粗體、斜體、底線、刪除線、16 色換成 catppuccin 的、256 色、24 位元），不再上語法顏色；
       不是 SGR 的序列，ESC 畫成 Red 的 \x1b、後面的字照原樣
-      超過 64 KB、chroma 認得語言的檔：先全部用 Text 畫出來，tgo Panel.Loading 打開（膠囊後面的 loading icon）；上色在背景跑（tea.Cmd），
+      超過 64 KB 的檔：先全部用 Text 畫出來，tgo Panel.Loading 打開（膠囊後面的 loading icon）；上色在背景跑（tea.Cmd），
       回來時（tgo App.OnMsg）只換掉那一個 view 的行的顏色，捲動位置、命中、Visual 的游標都不動，loading icon 拿掉；已經換成別的檔案時丟掉
-    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater, TestTOMLKeysAndTables, TestYAMLValuesAsThePreview, TestCarriageReturnKeepsTheLines]
+    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater, TestTOMLKeysAndTables, TestYAMLValuesAsThePreview, TestCarriageReturnKeepsTheLines, TestBoldAndItalicAsThePreview, TestFormatByDirectory]
   - id: 4
     spec: 1
     implementation: |
@@ -55,7 +57,7 @@ tasks:
       hide_secrets_in_preview 打開時：私鑰只畫第一行，下面 Overlay0「(sensitive content not shown)」，label PRIVATE KEY；group、other 都不能讀的檔只畫那一句
     test: [TestDirectoryTree, TestEmptyDirectory, TestArchiveTree, TestImageDataURI, TestPDFText, TestBinaryHex, TestBinaryTooBig, TestHideSecrets]
   - id: 5
-    spec: 1
+    spec: 7
     implementation: |
       panel 上沒有游標：j|↓、k|↑ 捲一列（折行的一行一列一列捲），d|PgDn、u|PgUp 捲半頁，gg、G 到頭尾；Ctrl-U、Ctrl-D 不作用
       下框右邊：放不下時寫 N-M of T（最上面那一列所屬的行到最下面那一列所屬的行，總行數）
@@ -63,15 +65,16 @@ tasks:
       v（Space menu 的 panel operation [v]isual：select text to copy；hint v:visual；沒有內容時不出現）：進 tgo 的 panel 模式 Visual（tgo Panel.EnterMode），
       游標出現在畫面第一行的行首，一格 Subtext1 底、Base 粗體（panel 的 cursor 色塊）；那一行的行號 Text
       Visual 裡：h|j|k|l（與方向鍵）、w|b|e、0|$、u|d（PgUp、PgDn）、gg|G 照 vim 移動游標（同 tgo viewer 的選取模式），走到畫面邊緣時捲動；下框右邊寫 N of M（游標所在的行）
-      Visual 裡再按 v：從游標開始選，進一層 select（tgo Panel.EnterLayer，模式名 Visual>select），範圍 Yellow 底、Base 字
+      Visual 裡再按 v：從游標開始選，進一層 select（tgo Panel.EnterLayer，模式名 Visual>select），範圍 Yellow 底、Base 字，
+      語法顏色與粗體、斜體、底線在範圍裡都不顯示
       y：複製範圍（從起點到游標，含游標那個字；Tab 照原樣是 \t；排好的列尾端的空白不複製）到終端機的剪貼簿（tgo Clipboard），離開模式，Success toast「Copied」
       Esc 一次退一層：select 裡按，範圍消失回到 Visual；Visual 裡按，游標消失離開模式；都不複製
       模式的 Space menu：Visual 的 [v] Select（from here）、select 的 Cop[y]（what is selected）在 ITEM OPERATION，移動鍵只顯示（tgo 做）
       footer 由 tgo 畫：Visual 裡 Space:menu ?:help v:select Esc:cancel，select 裡 Space:menu ?:help y:copy Esc:unselect
       進出模式不記 App Log；複製的 toast 由 tgo 記
-    test: [TestScrollKeys, TestVisualSelectsAndCopies, TestVisualEscOneLayerAtATime, TestVisualMoves, TestVisualSpaceMenu]
+    test: [TestScrollKeys, TestVisualSelectsAndCopies, TestVisualEscOneLayerAtATime, TestVisualMoves, TestVisualSpaceMenu, TestVisualSelectionPlain]
   - id: 6
-    spec: 6
+    spec: 7
     implementation: |
       /（Space menu 的 panel operation [/] Search：find text in it；hint /:search；沒有內容時不出現）：tgo 的 text input popup，
       標題 Search、glyph nf-fa-search（U+F002）、提示 Find in <檔名>、Enter:find
@@ -83,6 +86,7 @@ tasks:
       看不到時才捲到剛好看得到
       有命中時 panel 上的 Esc（tgo Panel.OnEsc）清掉命中；沒有命中時不設 OnEsc，? 不列 Esc；換檔案、換 tab 時命中跟著清掉
       找字不記 App Log
+      App Log（!）與 key reference（?）的 / 是 tgo 的（key reference 的 hint /:search ?|Esc:close），viewu 不另外做
     test: [TestSearchFindsAndSteps, TestSearchNoHit, TestSearchHitsDrawn, TestSearchFromTheSpaceMenu]
   - id: 7
     spec: 1
@@ -105,7 +109,7 @@ tasks:
       不存狀態、資料、快取
     test: [TestSettingsTabWidth, TestSettingsUnreadable, TestSettingsUnreadableQuit, TestHideSecrets]
   - id: 9
-    spec: 4
+    spec: 7
     implementation: |
       檔名是 .md .markdown .mdown .mkd .mkdn 的文字檔：panel 有兩個 tab（tgo Panel.Label、Tabs），DOCUMENT（打開時在這裡）、SOURCE；h|l 切（tgo 做），
       下框 hint 前面多 h|l:tab；換 tab 時回到最上面、命中與 Visual 清掉
@@ -116,7 +120,7 @@ tasks:
       標題：字的前後各一格空白、整段鋪在它那一層的顏色上，字 Base 粗體；只包住字，不鋪滿整列
       段落 Text；粗體、斜體、刪除線照終端機的樣式；行內程式碼 Pink 字、Surface0 底
       無序清單每一層都是 Blue 的 -，靠縮排分層；任務清單換成 Blue 的 [x]、[ ]；有序清單依層 1.、a.、i. 輪迴，從清單寫的起始數字開始；項目折行時對齊到字的開頭
-      程式碼區塊：整列 Mantle 底，照語言名上色（tgo 的 terminu.Syntax，跟 task 3 同一套，chroma 漏掉的照 tdp file-picker.3 補），語言名 Overlay0 寫在第一列右邊；Tab 畫成 input_tab_width 格；一行太長在空白處折行
+      程式碼區塊：整列 Mantle 底，照語言名上色（tgo 的 terminu.Syntax，跟 task 3 同一套，連粗體、斜體與底線，chroma 漏掉的照 tdp file-picker.3 補），語言名 Overlay0 寫在第一列右邊；Tab 畫成 input_tab_width 格；一行太長在空白處折行
       引用：開頭 ▎ 加一格空白，整列 Mantle 底；▎ 是那一層引用的顏色（第 1 層 Peach、引用裡的引用 Rosewater……），巢狀時每一條各是自己那一層的顏色，
       第 6 層之後顏色從頭輪
       連結：Sapphire 的 nf-md-link（U+F0337）加一格空白，連結的字 Sapphire 加底線；沒有字時寫網址
@@ -126,7 +130,7 @@ tasks:
       區塊之間空一列（清單裡不空）
       找字、Visual 照 task 5、6：命中與游標在排好的列上；複製的是畫面上的字，一列尾端補滿的空白不複製
       內容是空的時候照 task 1 的空狀態
-    test: [TestMarkdownDocumentAndSource, TestMarkdownLaidOutAgainOnResize, TestMarkdownSearchAndCopy, TestEmptyMarkdown, TestEveryRowIsTheWidth, TestNoMarkdownSymbols, TestHeadingIsAChipOfItsLevel, TestLists, TestListItemFolds, TestCodeBlock, TestCodeBlockColoursAsThePreview, TestCodeLineFolds, TestQuote, TestTable, TestTableTooWide, TestLinkAndImage, TestInlineStyles, TestRule, TestControlCharacters]
+    test: [TestMarkdownDocumentAndSource, TestMarkdownLaidOutAgainOnResize, TestMarkdownSearchAndCopy, TestEmptyMarkdown, TestEveryRowIsTheWidth, TestNoMarkdownSymbols, TestHeadingIsAChipOfItsLevel, TestLists, TestListItemFolds, TestCodeBlock, TestCodeBlockColoursAsThePreview, TestCodeBlockItalicComment, TestCodeLineFolds, TestQuote, TestTable, TestTableTooWide, TestLinkAndImage, TestInlineStyles, TestRule, TestControlCharacters]
   - id: 10
     spec: 3
     implementation: |

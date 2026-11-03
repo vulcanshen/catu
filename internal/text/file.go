@@ -5,20 +5,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/rivo/uniseg"
 	terminu "github.com/vulcanshen/terminu-go"
 )
 
-// HasSyntax reports whether lang, a file's name or a language's, names a
-// language terminu.Syntax colours: chroma's registry knows it, the lib's
-// lexers in it (tdp note.2, file-picker.3).
-func HasSyntax(lang string) bool { return lang != "" && lexers.Get(lang) != nil }
-
 // File is a text's lines as a viewer draws them (tdp note.2, file-picker.3,
 // components.5), numbered from 1: in the colours of lang's syntax, a file's
-// name or a language's, as the lib colours a file in its preview
-// (terminu.Syntax), Text with no syntax; a tab as tabW spaces; the \r of a
+// path or a language's name, as the lib colours a file in its preview
+// (terminu.Syntax, which also tells a name more than one format has by its
+// directory), Text with no syntax or no lang; a tab as tabW spaces; the \r of a
 // CRLF not drawn; any other control character by its name in Red. A text
 // with colour codes of its own is drawn in them instead, a \r inside a line
 // leaving the line's last state, as a terminal does.
@@ -40,7 +35,7 @@ func File(content, lang string, tabW int) []Line {
 		}
 		return out
 	}
-	if HasSyntax(lang) {
+	if lang != "" {
 		for i, l := range terminu.Syntax(lang, raw) {
 			out[i] = Line{Chars: coloured(l, tabW), Num: i + 1}
 		}

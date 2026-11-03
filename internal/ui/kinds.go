@@ -214,11 +214,12 @@ func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 }
 
 // textLines are a text's lines in the colours of lang's syntax, a file's
-// name or a language's. Colouring takes about a second a megabyte: a big
-// text is given in Text, colour the lines in colour, to be made in the
-// background (tdp panel.15: the panel loading meanwhile).
+// path or a language's name, which the lib tells. Colouring takes about a
+// second a megabyte: a big text is given in Text, colour the lines in
+// colour, to be made in the background (tdp panel.15: the panel loading
+// meanwhile).
 func textLines(content, lang string, tabW int) (lines []text.Line, colour func() []text.Line) {
-	if text.HasSyntax(lang) && len(content) > colourNow {
+	if lang != "" && len(content) > colourNow {
 		return text.File(content, "", tabW), func() []text.Line { return text.File(content, lang, tabW) }
 	}
 	return text.File(content, lang, tabW), nil

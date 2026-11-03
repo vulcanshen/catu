@@ -1,6 +1,6 @@
-id: 6
-from: v1.1.7
-to: v1.1.8
+id: 7
+from: v1.1.8
+to: v1.2.0-beta.2
 tasks:
   - id: 1
     spec: 1
@@ -31,14 +31,14 @@ tasks:
       - "只收一個路徑；多給、或不認得的旗標，印用法到 stderr，結束碼 2；檔名剛好叫 version、help 時寫 ./version（help 裡寫明）"
       - "啟動時打開的那個，App Log 記一筆 Info「Opened <路徑>」（tdp note.7：只看不改的動作也記）"
   - id: 3
-    spec: 5
+    spec: 7
     request: 文字檔：有語法顏色與行號，一行太長折到下一列，不截掉；TOML 的 key 與表名也要有顏色
     tdp: [tdp file-picker.3, tdp note.2, tdp components.3, tdp components.5, tdp E3, tdp P4, tdp P5, tdp panel.15, tdp K3]
     remark:
-      - "照 viewer 的內容（tdp note.2）：chroma 的 catppuccin-mocha 只上前景色；行號 Overlay0、靠右，欄寬 max(3, 總行數的位數)；一律折行，在空白處斷（tdp components.3），折下來的列行號欄空白"
+      - "照 viewer 的內容（tdp note.2）：chroma 的 catppuccin-mocha 的顏色、粗體、斜體與底線（Markdown 的 **粗體** 粗體、註解斜體……），不上背景色；行號 Overlay0、靠右，欄寬 max(3, 總行數的位數)；一律折行，在空白處斷（tdp components.3），折下來的列行號欄空白"
       - "chroma 漏掉的照 tdp file-picker.3 的表補（TOML 的表名 Mauve、key Blue，YAML 沒引號的值 Green……）：用 tgo 的 terminu.Syntax 上色，跟 o 選檔的預覽同一套，同一個檔在兩處長得一樣（tdp note.2；tdp #1 定的）"
       - "Tab 畫成 input_tab_width 格空白，CRLF 的 \\r 不畫，檔案自己帶顏色碼時照它上色、不再上語法顏色，其他控制字元畫成 Red 的名字（tdp components.5、file-picker.3）"
-      - "語言照檔名判斷（tdp note.2），判斷不出來是 Text"
+      - "格式照檔名判斷，同名的檔再看它在哪個資料夾（tdp note.2、file-picker.3：.ssh 的 config 是 SSH config、.git 的是 Git config，hosts 只有 /etc 的是 hosts 檔）：檔案的路徑整個交給 terminu.Syntax，由 lib 判斷，跟預覽同一套；判斷不出來是 Text"
       - "整個檔讀進來，不是預覽的 64 KB：上限 16 MB，超過時只畫前 16 MB，最後一列 Overlay0 寫還有多少沒畫（tdp P5 功能邏輯）"
       - "上語法顏色一 MB 要將近一秒：超過 64 KB 的檔先用 Text 畫出來、在背景上色，上色中 panel 是 loading（膠囊後面的 loading icon，tdp panel.15），好了只換顏色，捲動位置、命中、游標都不動（tdp K3：背景的事不移動任何東西）"
   - id: 4
@@ -52,21 +52,23 @@ tasks:
       - "十六進位最多畫前 1 MB，超過時最後一列 Overlay0 寫還有多少沒畫（tdp P5）"
       - "目錄樹、十六進位、PDF 是 app 排出來的內容，不畫行號（tdp note.2）"
   - id: 5
-    spec: 1
+    spec: 7
     request: 用 vim 的方式移動：j|k、u|d、gg|G 捲動；v 進 Visual，h|j|k|l、w|b|e、0|$ 移游標，再按 v 開始選，y 複製
-    tdp: [tdp K11, tdp K12, tdp terms.8, tdp note.3, tdp note.4, tdp panel.3, tdp M2, tdp M3, tdp M5, tdp note.7, tdp toast.2]
+    tdp: [tdp K11, tdp K12, tdp terms.8, tdp note.2, tdp note.3, tdp note.4, tdp panel.3, tdp M2, tdp M3, tdp M5, tdp note.7, tdp toast.2]
     remark:
+      - "選取的範圍 Yellow 底、Base 字，語法顏色與粗體、斜體、底線在範圍裡都不顯示（tdp note.2）"
       - "照 tdp：看的時候沒有游標，j|k 捲動（tdp K12、note.4）；edit mode 先不做（使用者 2026-11-03：先不要有 edit mode，單純看檔案就好）"
       - "折行時以畫面上的一列為單位捲（tdp note.3）"
       - "Visual 的游標、範圍、顏色、Visual>select 兩層、y 複製後 Success toast 照 tdp note.4；在 Space menu 的 panel operation 是 [v]isual（tdp M3）"
       - "DOCUMENT 與圖複製的是畫面上的字（webu 也是）"
       - "進出 Visual 不記 App Log（tdp K11、note.7），複製的結果是 toast，會記"
   - id: 6
-    spec: 6
+    spec: 7
     request: / 找字，所有找到的地方標出來，n|N 跳到下一個、上一個
     tdp: [tdp panel.14, tdp note.2, tdp note.3, tdp note.5, tdp text, tdp toast.2, tdp K4, tdp M6, tdp T1, tdp F2, tdp F4, tdp menu.3]
     remark:
-      - "從 Space menu 執行時，真的搜了（Enter）就連 Space menu 一起收起，有沒有找到都一樣，input popup 與 menu 一起收（tdp F2）；在 input popup 上按 Esc 回到 Space menu（tdp F4）。tdp v1.1.8 的 T1 表上沒有搜尋，是 app 自行決定：命中的字在 menu 底下，menu 留著會蓋住，n|N 也在底下跳（使用者 2026-11-03 發現）；tdp v1.2.0-beta.2 的 T1 把它寫進表裡（T1-10），做法一樣"
+      - "從 Space menu 執行時，真的搜了（Enter）就連 Space menu 一起收起，有沒有找到都一樣，input popup 與 menu 一起收（tdp T1 的表：搜尋底下的畫面清掉 source，搜尋的 input popup 是門；tdp F2、menu.3）；在 input popup 上按 Esc 回到 Space menu（tdp F4）。使用者 2026-11-03 在 viewu 發現 menu 蓋住命中的字，tdp v1.2.0-beta.2 把它寫進 T1"
+      - "App Log 與 ? 的 key reference 也有 /：tgo 給的（tdp note.3、note.5：每個 viewer 與按鍵說明都有搜尋），viewu 不另外做"
       - "這個 panel 沒有 cursor，照 tdp panel.14：/ 開 input popup 問要找的字，命中的字加底線、目前那一筆是 cursor 色塊，n|N 繞著跳，一筆都沒有時 Info toast；Esc 清掉命中的字（tdp K4 的往上一層）"
       - "n|N 只在有命中的時候出現在 Space menu 與 ?（tdp M6：對象不存在就不列）；Esc 也只在有命中的時候列在 ?（tdp note.5：Esc 在這裡有作用時才列）"
       - "找字不記 App Log：跟 panel filter 一樣只是換看得到的範圍（tdp note.7）；tgo 的 viewer 的搜尋也不記"
@@ -89,7 +91,7 @@ tasks:
       - "app 不寫設定檔，沒有就用預設值；不存狀態、資料、快取"
       - "讀不了時照 tdp E3 開 MOVE ASIDE 的 confirm（tgo MoveAside）"
   - id: 9
-    spec: 4
+    spec: 7
     request: Markdown 照 webu 顯示 markdown 的方式畫成文件；也看得到原始碼。第 6 層標題有自己的顏色；引用裡的引用，直槓也照標題的顏色層級
     tdp: [tdp P4, tdp P5, tdp F1, tdp terms.4, tdp panel.4, tdp K12, tdp note.2, tdp file-picker.3]
     remark:
@@ -97,7 +99,7 @@ tasks:
       - "層的顏色，標題與引用的直槓共用一組（使用者 2026-11-03）：第 1 到第 6 層依序 Peach、Rosewater、Green、Teal、Flamingo、Mauve，Markdown 只有 6 層，不輪迴。webu 的五色加 Mauve：Mauve 在文件裡只出現在程式碼區塊的語法顏色，在 Mantle 底上，跟標題不會並排（webu 選 Flamingo 的同一個理由）；Red（錯誤）、Yellow（Visual 的範圍）、Sapphire（連結）、Lavender（位置列）、Pink（行內程式碼）、Blue（focus 與清單記號）都有別的意思，不用（tdp P4）"
       - "引用的直槓照它是第幾層引用上色，巢狀的每一條各是自己那一層的顏色（原本 webu 是一律 Lavender；Lavender 在 tdp 是位置列，換掉也不撞色）"
       - "兩個 tab：DOCUMENT（畫好的文件，打開時在這裡）、SOURCE（原始碼，照 task 3 的文字檔）；h|l 切（tdp K12、terms.4、panel.4）"
-      - "程式碼區塊的語法顏色跟 task 3 同一套（tgo 的 terminu.Syntax，chroma 漏掉的照 tdp file-picker.3 的表補）：同一段 YAML 在文件裡與在檔案裡長得一樣"
+      - "程式碼區塊的語法顏色跟 task 3 同一套（tgo 的 terminu.Syntax，連 catppuccin-mocha 的粗體、斜體與底線，chroma 漏掉的照 tdp file-picker.3 的表補）：同一段 YAML 在文件裡與在檔案裡長得一樣；底是區塊自己的 Mantle"
       - "DOCUMENT 是 app 排出來的內容，不畫行號（tdp note.2）；照 panel 的寬度排，終端機大小變了重排"
       - "Markdown 用 goldmark 解析，含 GFM：表格、刪除線、任務清單、自動連結"
       - "任務清單的記號照 webu 畫勾選框的字 [x]、[ ]，Blue，放在清單記號的位置；不借 tdp checkbox 的 glyph（tdp P4：方框打勾是 checkbox，這裡不能勾）"
