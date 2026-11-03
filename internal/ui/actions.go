@@ -66,19 +66,21 @@ func (v *viewer) open() tea.Cmd {
 }
 
 // search is /: an input popup asks for the text; every place it is is a hit
-// (tdp panel.14, note.3).
+// (tdp panel.14, note.3). Once it has searched, the Space menu it was run
+// from goes with it, found or not, so the hits under the menu are seen; Esc
+// on the input popup goes back to the menu (tdp T1).
 func (v *viewer) search() tea.Cmd {
 	return v.app.Text(terminu.TextInput{
 		Title: "Search", Glyph: glyphSearch, Prompt: "Find in " + filepath.Base(v.cur.path), Verb: "find", Search: true,
 		Done: func(q string) tea.Cmd {
 			if v.body.find(q) == 0 {
 				v.panel.OnEsc = nil
-				return v.app.Toast(terminu.Info, "No line has "+q)
+				return tea.Batch(v.app.Toast(terminu.Info, "No line has "+q), v.app.CloseAll())
 			}
 			// Esc clears them: it does something here only while there are
 			// hits (tdp note.5).
 			v.panel.OnEsc = v.clearHits
-			return nil
+			return v.app.CloseAll()
 		},
 	})
 }

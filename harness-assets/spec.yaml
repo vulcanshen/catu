@@ -1,4 +1,4 @@
-id: 5
+id: 6
 from: v1.1.7
 to: v1.1.8
 tasks:
@@ -62,10 +62,11 @@ tasks:
       - "DOCUMENT 與圖複製的是畫面上的字（webu 也是）"
       - "進出 Visual 不記 App Log（tdp K11、note.7），複製的結果是 toast，會記"
   - id: 6
-    spec: 1
+    spec: 6
     request: / 找字，所有找到的地方標出來，n|N 跳到下一個、上一個
-    tdp: [tdp panel.14, tdp note.2, tdp note.3, tdp note.5, tdp text, tdp toast.2, tdp K4, tdp M6]
+    tdp: [tdp panel.14, tdp note.2, tdp note.3, tdp note.5, tdp text, tdp toast.2, tdp K4, tdp M6, tdp T1, tdp F2, tdp F4, tdp menu.3]
     remark:
+      - "從 Space menu 執行時，真的搜了（Enter）就連 Space menu 一起收起，有沒有找到都一樣，input popup 與 menu 一起收（tdp F2）；在 input popup 上按 Esc 回到 Space menu（tdp F4）。tdp v1.1.8 的 T1 表上沒有搜尋，是 app 自行決定：命中的字在 menu 底下，menu 留著會蓋住，n|N 也在底下跳（使用者 2026-11-03 發現）；tdp v1.2.0-beta.2 的 T1 把它寫進表裡（T1-10），做法一樣"
       - "這個 panel 沒有 cursor，照 tdp panel.14：/ 開 input popup 問要找的字，命中的字加底線、目前那一筆是 cursor 色塊，n|N 繞著跳，一筆都沒有時 Info toast；Esc 清掉命中的字（tdp K4 的往上一層）"
       - "n|N 只在有命中的時候出現在 Space menu 與 ?（tdp M6：對象不存在就不列）；Esc 也只在有命中的時候列在 ?（tdp note.5：Esc 在這裡有作用時才列）"
       - "找字不記 App Log：跟 panel filter 一樣只是換看得到的範圍（tdp note.7）；tgo 的 viewer 的搜尋也不記"

@@ -29,3 +29,10 @@
 - TOML 的 key 與表名也要有顏色：viewu 自己補（使用者選的）。
 - JSON 多一個排過版（pretty print）的 tab，預設還是看原檔。
 - mermaid 的菱形（與其他斜的線）用階梯狀的框線畫，不要一堆點。
+
+## 2026-11-03（使用者發現的 bug，terminu 的 session 轉來）
+
+使用者從 Space menu 執行 `/`，打字按 `Enter` 之後 menu 還蓋在文字上，看不到找到的字；要按 `Esc` 關掉 menu 才看得到。
+
+- 從 Space menu 搜尋，真的搜了就連 menu 一起收起，有沒有找到都一樣。
+- 在搜尋的 input popup 上按 `Esc` 回到 menu。

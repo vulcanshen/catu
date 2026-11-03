@@ -446,6 +446,31 @@ func TestSearchHitsDrawn(t *testing.T) {
 	}
 }
 
+// TestSearchFromTheSpaceMenu: the search's input popup is a gate. Esc on it
+// goes back to the menu; Enter searches, and the input popup and the menu
+// close together, found or not (tdp T1, menu.3, note.3).
+func TestSearchFromTheSpaceMenu(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": "needle one\nhay\n"})
+	d := start(t, filepath.Join(dir, "a.txt"), 60, 20)
+	d.Press("Space", "/")
+	want(t, d, "SEARCH")
+	d.Press("Esc")
+	want(t, d, "PANEL OPERATION") // cancelled: back to the menu (tdp F4)
+	wantNot(t, d, "SEARCH")
+	d.Press("/")
+	d.Type("needle")
+	d.Press("Enter")
+	wantNot(t, d, "PANEL OPERATION", "SEARCH") // searched: the menu went too (tdp T1)
+	if !strings.Contains(strings.Join(d.Styled(), "\n"), cursorStyle.SGR()) {
+		t.Error("the hit is not in sight")
+	}
+	d.Press("Space", "/")
+	d.Type("zzz")
+	d.Press("Enter")
+	want(t, d, "No line has zzz")
+	wantNot(t, d, "PANEL OPERATION", "SEARCH") // nothing found: the menu goes all the same
+}
+
 // --- task 7: opening another file ------------------------------------------
 
 func TestOpenAnotherFile(t *testing.T) {

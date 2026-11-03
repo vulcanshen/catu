@@ -71,17 +71,19 @@ tasks:
       進出模式不記 App Log；複製的 toast 由 tgo 記
     test: [TestScrollKeys, TestVisualSelectsAndCopies, TestVisualEscOneLayerAtATime, TestVisualMoves, TestVisualSpaceMenu]
   - id: 6
-    spec: 1
+    spec: 6
     implementation: |
       /（Space menu 的 panel operation [/] Search：find text in it；hint /:search；沒有內容時不出現）：tgo 的 text input popup，
       標題 Search、glyph nf-fa-search（U+F002）、提示 Find in <檔名>、Enter:find
       Enter：每一個找到的地方（不分大小寫）都是命中，加底線、保留原本的顏色；目前那一筆畫成 cursor 色塊（Subtext1 底、Base 粗體）；捲到看得到第一筆
       一筆都沒有時 Info toast「No line has <字>」
+      從 Space menu 執行時：Enter 搜了，有沒有找到都連 Space menu 一起收起（tgo App.CloseAll：input popup 與 menu 同時播收起的動畫）；
+      在 input popup 上按 Esc 回到 Space menu（tgo 預設保留 source）
       n、N（Space menu 的 [n]ext：the next place found、[N] Previous：the place found before；只在有命中時出現）：跳到下一筆、上一筆，到頭尾繞回，
       看不到時才捲到剛好看得到
       有命中時 panel 上的 Esc（tgo Panel.OnEsc）清掉命中；沒有命中時不設 OnEsc，? 不列 Esc；換檔案、換 tab 時命中跟著清掉
       找字不記 App Log
-    test: [TestSearchFindsAndSteps, TestSearchNoHit, TestSearchHitsDrawn]
+    test: [TestSearchFindsAndSteps, TestSearchNoHit, TestSearchHitsDrawn, TestSearchFromTheSpaceMenu]
   - id: 7
     spec: 1
     implementation: |
