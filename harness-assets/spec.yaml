@@ -42,6 +42,7 @@ tasks:
       - "整個檔讀進來，不是預覽的 64 KB：上限 16 MB，超過時只畫前 16 MB，最後一列 Overlay0 寫還有多少沒畫（tdp P5 功能邏輯）"
       - "上語法顏色一 MB 要將近一秒：超過 64 KB 的檔先用 Text 畫出來、在背景上色，上色中 panel 是 loading（膠囊後面的 loading icon，tdp panel.15），好了只換顏色，捲動位置、命中、游標都不動（tdp K3：背景的事不移動任何東西）"
       - note: "tgo 的 terminu.Syntax 說一行裡的 \\r 原樣留給 app 畫，實際上 chroma 把它讀成換行，後面的行都往下錯一行、最後一行不見。暫時照 tgo 自己預覽的做法：有 \\r 的行先換成最後的樣子（tdp note.2：一行裡的 \\r 只留最後的狀態）再交給 Syntax；回報 terminu-go"
+        issue: tgo #1
   - id: 4
     spec: 1
     request: 其他種類的檔案照 filu 的預覽畫：目錄樹、壓縮檔裡有什麼、PDF 的文字、圖片、二進位的十六進位

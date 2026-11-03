@@ -32,7 +32,7 @@ tasks:
       空白後、寬字前後可以斷，一個字比一列長才照格子切），折下來的列行號欄空白
       語法顏色：tgo 的 terminu.Syntax（檔案的路徑當語言），跟 o 選檔的預覽同一套：catppuccin-mocha 只上前景色，chroma 漏掉的照
       tdp file-picker.3 的表補（TOML 的表名 Mauve、key Blue，YAML 沒引號的值 Green……）；chroma 認不出語言的檔是 Text
-      一行裡有 \r 的，先換成最後的樣子再交給 Syntax（Syntax 會把它當換行，TODO(tgo #?)）
+      一行裡有 \r 的，先換成最後的樣子再交給 Syntax（Syntax 會把它當換行，TODO(tgo #1)）
       Tab 畫成 input_tab_width 格空白（複製時是 \t）；CRLF 的 \r 不畫；一行裡的 \r 回到行首、後面的字蓋過去（只留最後的狀態）；
       其他控制字元畫成 Red 的名字（\x07、\x1b……）
       檔案裡有 \x1b[ 時：照檔案自己的 SGR 上色（粗體、斜體、底線、刪除線、16 色換成 catppuccin 的、256 色、24 位元），不再上語法顏色；

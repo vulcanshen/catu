@@ -98,7 +98,7 @@ func Code(content, lang string, tabW int, ground terminu.Color) [][]Char {
 	return out
 }
 
-// TODO(tgo #?): terminu.Syntax says a \r stays in a line for the caller to
+// TODO(tgo #1): terminu.Syntax says a \r stays in a line for the caller to
 // draw, but chroma reads it as a line break, and the lines after it move
 // down one; until terminu-go keeps it, a line is given to Syntax in its
 // last state, as the lib's preview gives its own to chroma.
