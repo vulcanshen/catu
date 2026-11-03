@@ -12,8 +12,13 @@ tasks:
       空目錄 Empty directory / Press [o] to open a file，空壓縮檔 Empty archive / Press [o] to open another file
       最低尺寸 40×12（tgo App.MinWidth、MinHeight）
       q 與 Ctrl-C：tgo App.Quit 不設，直接離開；有 popup 開著時 tgo 先問
-      L4 的畫面測試在 40×12、80×24、120×40 量，icon 與 powerline 符號各跑 1/1、2/1、2/2 格（tdptest.EachIconWidth）；tdptest.Check 走一遍第一次啟動
-    test: [TestScreenShowsAFile, TestStatusbarModeAndDirectorySize, TestQuitAtOnce, TestEmptyFile, TestEmptyDirectory, TestFirstLaunch]
+      L4 的畫面測試（tdptest 每一格畫面都量；icon 與 powerline 符號各跑 1/1、2/1、2/2 格，tdptest.EachIconWidth）：
+      版面在 40×12、80×24、120×40 量；tdptest.Check 走第一次啟動，在最低尺寸、60×32、80×24、120×40、300×50、比最低尺寸少一欄或一列、
+      80×5、80×2、80×1、1×1 開 Space menu、global operation popup、App Log、key reference；viewu 自己開的 popup（搜尋的 input popup、
+      Info toast、file-picker、OPEN FAILED 的 error popup、splash、MOVE ASIDE 的 confirm）各在 80×24 打開，開著把終端機改成比它窄（50×24：
+      在 80 欄打開的搜尋 input popup 寬 78）、比它矮（80×12：在 24 列打開的 file-picker 高 22）、兩邊都小（50×12），都在最低尺寸以上、popup 疊在畫面上；
+      再改成最低尺寸 40×12、比它小（39×12、80×5、1×1，只畫三列，tdp screen.7），最後改回 80×24：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
+    test: [TestScreenShowsAFile, TestStatusbarModeAndDirectorySize, TestQuitAtOnce, TestEmptyFile, TestEmptyDirectory, TestEmptyArchive, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
     spec: 1
     implementation: |
@@ -49,17 +54,21 @@ tasks:
       PDF（.pdf）、文字、私鑰（第一行是私鑰的標頭）、其他是二進位
       目錄（label DIRECTORY）：三層的樹，第一層不畫樹枝，第二層起縮兩格、用 ├─ └─ │ 連起來（Overlay0）；目錄在前、檔案在後，各自照名字不分大小寫排；
       目錄 nf-md-folder（U+F024B）Blue，檔案 nf-md-file（U+F0214）Text，名字裡的控制字元畫成 Red 的名字；不列 . 開頭的；超過 5000 列最後一列 Overlay0 的 …
-      壓縮檔（label ARCHIVE）：裡面的路徑排成同樣的樹；讀不了寫 (unreadable)
-      PDF（label PDF）：第一列 Overlay0「N pages」（1 page），空一列，接前 20 頁的文字（最多 128 KB，空白行不畫）；抽不出字寫 (no extractable text)；讀不了寫 (unreadable)
+      壓縮檔（label ARCHIVE）：裡面的路徑排成同樣的樹
+      PDF（label PDF）：第一列 Overlay0「N pages」（1 page），空一列，接前 20 頁的文字（最多 128 KB，空白行不畫）；抽不出字寫 (no extractable text)
       圖片（label IMAGE）：第一列 Overlay0「data:image/png · <大小>」，空一列，接 base64 的 data URI（一行，照 panel 寬折）；超過 1 MB 寫「(<大小> — too large to inline as a data URI)」
-      其他（label BINARY）：一列 8 bytes 的十六進位（Text）、空一格、ASCII（Overlay0，不可見的字寫 .）；最多前 1 MB，超過時最後一列 Overlay0「(<大小> more not shown)」
+      其他（label BINARY）：一列 8 bytes 的十六進位（Text，每個 byte 後面一格）、空兩格、ASCII（Overlay0，不可見的字寫 .），一列 33 格；最多前 1 MB，
+      超過時最後一列 Overlay0「(<大小> more not shown)」
+      檔案打得開、內容讀不出來時（壞掉的壓縮檔、PDF，讀到一半出錯的圖片、二進位）：label 照種類，panel 中間照空狀態的樣子寫兩句，
+      Red「Can't read this archive|PDF|image|file: <原因>」、Overlay0「Press [o] to open another file」；App Log 在 Info「Opened <路徑>」後面記 Error，同一句話
       目錄樹、十六進位、PDF、圖片不畫行號
-      hide_secrets_in_preview 打開時：私鑰只畫第一行，下面 Overlay0「(sensitive content not shown)」，label PRIVATE KEY；group、other 都不能讀的檔只畫那一句
-    test: [TestDirectoryTree, TestEmptyDirectory, TestArchiveTree, TestImageDataURI, TestPDFText, TestBinaryHex, TestBinaryTooBig, TestHideSecrets]
+      hide_secrets_in_preview 不管 panel：panel 照樣畫使用者打開的檔（私鑰、只有擁有者能讀的檔也一樣）；這個設定只交給 tgo 的 file-picker 預覽（task 8）
+    test: [TestDirectoryTree, TestEmptyDirectory, TestArchiveTree, TestEmptyArchive, TestContentUnreadable, TestImageDataURI, TestPDFText, TestBinaryHex, TestBinaryTooBig, TestHideSecrets]
   - id: 5
     spec: 7
     implementation: |
       panel 上沒有游標：j|↓、k|↑ 捲一列（折行的一行一列一列捲），d|PgDn、u|PgUp 捲半頁，gg、G 到頭尾；Ctrl-U、Ctrl-D 不作用
+      （PgUp、PgDn 當 u|d 的別名，跟 tgo 每一個 surface 一樣：viewer、清單、menu、表單、finder、textarea 都收，tdp K7）
       下框右邊：放不下時寫 N-M of T（最上面那一列所屬的行到最下面那一列所屬的行，總行數）
       ? 的 MOVE 區列 j|k、u|d、gg|G（tgo Body.MoveKeys），內容全放得下時不列
       v（Space menu 的 panel operation [v]isual：select text to copy；hint v:visual；沒有內容時不出現）：進 tgo 的 panel 模式 Visual（tgo Panel.EnterMode），
@@ -94,20 +103,22 @@ tasks:
       o（Space menu 的 panel operation [o]pen：another file；hint o:open）：tgo 的 file-picker，標題 Open、glyph nf-md-file_find（U+F0DCF）；
       根目錄是正在看的檔案所在的目錄、cursor 停在它上面（Green）；看的是目錄時根目錄就是那個目錄
       選了一個檔案（Enter）：先讀（tgo FilePicker.Commit）；讀得到就換成看它、label 與位置列與 statusbar 跟著換、回到最上面，App Log 記 Info「Opened <路徑>」，
-      連打開它的 Space menu 一起收起（tgo App.CloseAll）；選同一個檔不做事
-      讀不到：file-picker 留著，tgo 在上面開 error popup（OPEN FAILED，寫原因），Enter|Esc 關掉回到 file-picker；原本看的內容不動
+      連打開它的 Space menu 一起收起（tgo App.CloseAll，file-picker 與 menu 同時播收起的動畫）
+      選的是正在看的那一個（值跟打開時一樣）：不讀、不換，tgo 直接關掉 file-picker；從 Space menu 打開時回到 Space menu；App Log 不記
+      讀不到：file-picker 留著，tgo 在上面開 error popup（OPEN FAILED，寫原因），Enter|Esc 關掉回到 file-picker；原本看的內容不動；
+      tgo 在 App Log 記 Error「Open failed: <原因>」
       從 Space menu 打開時，在 file-picker 上按 Esc 回到 Space menu（tgo 預設保留 source）
-    test: [TestOpenAnotherFile, TestOpenFromTheSpaceMenu, TestOpenUnreadable, TestOpenFromADirectory]
+    test: [TestOpenAnotherFile, TestOpenFromTheSpaceMenu, TestOpenUnreadable, TestOpenTheSameFile, TestOpenFromADirectory]
   - id: 8
     spec: 1
     implementation: |
       讀 <設定目錄>/config.yaml：設定目錄是 VIEWU__CONFIG，沒有就 $XDG_CONFIG_HOME/viewu，再沒有就 ~/.config/viewu；檔案不在就用預設值，viewu 不寫它
       input_tab_width（預設 4，小於 1 時用 4）：交給 tgo App.InputTabWidth，文字裡的 Tab 畫成這麼多格
-      hide_secrets_in_preview（預設 false）：交給 tgo App.HideSecretsInPreview（file-picker 的預覽），也用在 panel 上（task 4）
+      hide_secrets_in_preview（預設 false）：只交給 tgo App.HideSecretsInPreview（file-picker 的預覽），panel 不管（task 4）
       讀不了（格式錯、沒有權限）：先用預設值打開，啟動時 tgo MoveAside 開 MOVE ASIDE 的 confirm；Enter 改名成 config.yaml.bak、用預設值重讀看的檔；Esc 離開 viewu，
       路徑與原因印到 stderr
       不存狀態、資料、快取
-    test: [TestSettingsTabWidth, TestSettingsUnreadable, TestSettingsUnreadableQuit, TestHideSecrets]
+    test: [TestSettingsTabWidth, TestSettingsDirOrder, TestSettingsUnreadable, TestSettingsUnreadableQuit, TestHideSecrets]
   - id: 9
     spec: 7
     implementation: |
@@ -154,7 +165,7 @@ tasks:
       寫錯（pele 丟出錯誤）：照程式碼區塊畫原始碼（右上角 mermaid），下面 Red 一行一列寫 pele 的錯誤；App Log 記 Warning「Can't draw a mermaid diagram in <檔名>: <錯誤>」，
       同一個檔同一個錯只記一次
       打開含有 mermaid 區塊的 Markdown、或 mermaid 檔時，在背景先載入 pele
-    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDiamondAsSteps, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidTooWide, TestMermaidErrorLoggedOnce]
+    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDiamondAsSteps, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
   - id: 11
     spec: 1
     implementation: |
@@ -168,7 +179,8 @@ tasks:
       副檔名 .json 的文字檔：panel 兩個 tab，TEXT（原檔，打開時在這裡，照 task 3）、FORMATTED；h|l 切（tgo 做），下框 hint 前面多 h|l:tab
       FORMATTED：Go 的 json.Indent 縮排 2 格（key 的順序、數字的寫法照原檔，只動空白），照 task 3 上 JSON 的顏色、畫它自己的行號、折行；
       超過 64 KB 一樣先 Text、背景上色
+      行號欄照這個檔看過的 tab 裡最寬的：切到行數多的 tab 變寬，切回來不縮回；換一個檔才重新算
       不是合法的 JSON：FORMATTED 沒有行，位置列下面置中畫 Red 的「Not valid JSON: line N: <encoding/json 的原因>」、空一列、Overlay0 的「Press [h] to see the file as it is」
       空的檔：FORMATTED 也是 Empty file / Press [h] to see the file as it is
       找字、Visual 照 task 5、6，在 FORMATTED 裡找的是排過版的字
-    test: [TestJSONAsItIsThenFormatted, TestJSONNotValid, TestJSONFormattedSearch]
+    test: [TestJSONAsItIsThenFormatted, TestJSONNotValid, TestJSONFormattedSearch, TestJSONNumbersOnlyWiden, TestJSONEmpty, TestJSONBigColouredLater]

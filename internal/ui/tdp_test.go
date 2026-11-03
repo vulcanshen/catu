@@ -35,6 +35,63 @@ func TestFirstLaunch(t *testing.T) {
 	})
 }
 
+// TestOwnPopupsEverySize opens each popup viewu opens itself on each icon
+// width, then makes the terminal narrower than it, lower, both (at the least
+// size or over, so the popup is drawn over the screen), under the least size
+// and down to 1×1, and back: every frame is as wide as the
+// terminal (tdptest checks each, tdp L4) and nothing panics (tdp E5). The
+// Space menu, the global operation popup, the App Log and the key reference
+// are TestFirstLaunch's (tdptest.Check), a popup's own frame the lib's (tdp
+// E8).
+func TestOwnPopupsEverySize(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root reads everything: no file the picker cannot open")
+	}
+	dir := files(t, map[string]string{"a.txt": "first line\n", "b.txt": "second\n"})
+	os.Chmod(filepath.Join(dir, "b.txt"), 0)
+	cfg := filepath.Join(os.Getenv("VIEWU__CONFIG"), "config.yaml")
+	popups := []struct {
+		name       string
+		badConfig  bool
+		keys       []string
+		text, want string
+	}{
+		{name: "search", keys: []string{"/"}, want: "SEARCH"},
+		{name: "toast", keys: []string{"/"}, text: "zzz", want: "No line has zzz"},
+		{name: "file-picker", keys: []string{"o"}, want: "OPEN · "},
+		{name: "error popup", keys: []string{"o", "j", "Enter"}, want: "permission denied"},
+		{name: "splash", keys: []string{"V"}, want: "Press any key to close"},
+		{name: "move aside", badConfig: true, want: "MOVE ASIDE"},
+	}
+	tdptest.EachIconWidth(t, func(t *testing.T) {
+		for _, p := range popups {
+			os.Remove(cfg)
+			if p.badConfig {
+				os.WriteFile(cfg, []byte("input_tab_width: [\n"), 0o644)
+			}
+			d := start(t, filepath.Join(dir, "a.txt"), 80, 24)
+			d.Press(p.keys...)
+			if p.text != "" {
+				d.Type(p.text)
+				d.Press("Enter")
+			}
+			if !d.Has(p.want) {
+				t.Errorf("%s: no %q", p.name, p.want)
+			}
+			// Opened at 80×24, a popup keeps its size (tdp F7): at 50×24 the
+			// search input is wider than the screen, at 80×12 the
+			// file-picker higher, at 50×12 both, all at the least size or
+			// over; then under it.
+			for _, sz := range [][2]int{{50, 24}, {80, 12}, {50, 12}, {40, 12}, {39, 12}, {80, 5}, {1, 1}, {80, 24}} {
+				d.Resize(sz[0], sz[1])
+			}
+			if !d.Has(p.want) {
+				t.Errorf("%s: gone after the resizes", p.name)
+			}
+		}
+	})
+}
+
 // TestSplashIsTheIcon keeps the splash's copy of the mark the same as
 // docs/icon.svg, its master copy (tdp E6, S5).
 func TestSplashIsTheIcon(t *testing.T) {

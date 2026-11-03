@@ -35,6 +35,11 @@ type reader struct {
 	scroll      string
 	folds       [][]int // each line's rows, where they start, at textW; nil until asked
 
+	// seenNumW is the widest number column of the tabs seen of what is
+	// shown: switching tabs it only grows (tdp note.2). A new file starts
+	// it again.
+	seenNumW int
+
 	hits    []hit
 	current int
 
@@ -209,7 +214,8 @@ func (r *reader) measure(w int) {
 	}
 	textW := inner
 	if r.numbered {
-		r.numW = max(r.numW, len(strconv.Itoa(len(r.lines))), 3)
+		r.numW = max(r.numW, r.seenNumW, len(strconv.Itoa(len(r.lines))), 3)
+		r.seenNumW = r.numW
 		textW = max(inner-1-r.numW, 1)
 	}
 	if textW != r.textW {

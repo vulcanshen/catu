@@ -55,7 +55,7 @@ func Open(p string) (*terminu.App, error) {
 		return nil, err
 	}
 	a.Start = func() tea.Cmd {
-		a.Log(terminu.Info, "Opened "+tilde(s.path))
+		v.opened(s)
 		if cfgErr != nil {
 			// Settings that cannot be read: moved aside, or viewu leaves (tdp E3).
 			return tea.Batch(colour, a.MoveAside(cfgPath, cfgErr, func() tea.Cmd {
@@ -72,6 +72,15 @@ func Open(p string) (*terminu.App, error) {
 	return a, nil
 }
 
+// opened logs that s was opened, and why its content could not be made out
+// when it could not (tdp note.7, F5; the panel says it too, tdp panel.15).
+func (v *viewer) opened(s *shown) {
+	v.app.Log(terminu.Info, "Opened "+tilde(s.path))
+	if s.problem != "" {
+		v.app.Log(terminu.Error, s.problem)
+	}
+}
+
 // show puts s in the panel: its views' names on the label and the tabs, the
 // first view in the body. It returns the colouring of the views to be
 // coloured in the background; the panel is loading until they are.
@@ -84,6 +93,7 @@ func (v *viewer) show(s *shown) tea.Cmd {
 		v.panel.Tabs = append(v.panel.Tabs, vw.name)
 	}
 	v.panel.Tab = 0
+	v.body.seenNumW = 0 // a new file: its number column starts again
 	v.showView(0)
 	var cmds []tea.Cmd
 	for i, vw := range s.views {

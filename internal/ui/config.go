@@ -15,8 +15,9 @@ type config struct {
 	// TabWidth is input_tab_width: the spaces a tab in a text is drawn as
 	// (tdp note.2).
 	TabWidth int `yaml:"input_tab_width"`
-	// HideSecrets is hide_secrets_in_preview: a private key shows its first
-	// line only, a file only its owner may read shows nothing (tdp
+	// HideSecrets is hide_secrets_in_preview: in the file-picker's preview a
+	// private key shows its first line only, a file only its owner may read
+	// shows nothing. It is the popup previews' only, not the panel's (tdp
 	// file-picker.5).
 	HideSecrets bool `yaml:"hide_secrets_in_preview"`
 }

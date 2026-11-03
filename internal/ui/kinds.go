@@ -54,6 +54,9 @@ type shown struct {
 	info  fs.FileInfo // the target's, a link followed (tdp file-picker.4)
 	kind  string      // tdp file-picker.4's TYPE, or markdown, mermaid
 	views []view
+	// problem is why its content could not be made out, for the App Log
+	// (tdp F5); "" when it could.
+	problem string
 }
 
 // view is one way of showing it: a tab.
@@ -110,32 +113,30 @@ func load(p string, cfg config, warn func(error)) (*shown, error) {
 	}
 	head = head[:n]
 	s.kind = fileKind(abs, head)
-	if cfg.HideSecrets {
-		switch {
-		case s.kind == "private key":
-			s.views = []view{{name: "PRIVATE KEY", lines: []text.Line{
-				{Chars: text.Escape(firstLine(head), text.Style{Fg: terminu.Text})},
-				grey("(sensitive content not shown)"),
-			}}}
-			return s, nil
-		case info.Mode().Perm()&0o044 == 0:
-			s.views = []view{{name: strings.ToUpper(s.kind), lines: []text.Line{grey("(sensitive content not shown)")}}}
-			return s, nil
+	// One that opens but whose content cannot be made out (a damaged
+	// archive or PDF) says so in the middle of the panel, in Red (tdp
+	// panel.15); the App Log keeps it (tdp F5).
+	unreadable := func(vw view, what string, lines []text.Line, err error) []view {
+		vw.lines, vw.hint = lines, "Press [o] to open another file"
+		if err != nil {
+			s.problem = "Can't read this " + what + ": " + err.Error()
+			vw.lines, vw.fact, vw.red = nil, s.problem, true
 		}
+		return []view{vw}
 	}
 	switch s.kind {
 	case "archive":
 		lines, err := archiveTree(abs)
-		if err != nil {
-			lines = []text.Line{grey("(unreadable)")}
-		}
-		s.views = []view{{name: "ARCHIVE", lines: lines, fact: "Empty archive", hint: "Press [o] to open another file"}}
+		s.views = unreadable(view{name: "ARCHIVE", fact: "Empty archive"}, "archive", lines, err)
 	case "image":
-		s.views = []view{{name: "IMAGE", lines: imageLines(abs, info.Size())}}
+		lines, err := imageLines(abs, info.Size())
+		s.views = unreadable(view{name: "IMAGE"}, "image", lines, err)
 	case "PDF":
-		s.views = []view{{name: "PDF", lines: pdfLines(abs, info.Size())}}
+		lines, err := pdfLines(abs, info.Size())
+		s.views = unreadable(view{name: "PDF"}, "PDF", lines, err)
 	case "binary":
-		s.views = []view{{name: "BINARY", lines: hexLines(abs, info.Size())}}
+		lines, err := hexLines(abs, info.Size())
+		s.views = unreadable(view{name: "BINARY"}, "file", lines, err)
 	default: // text, a private key
 		content, rest, err := readText(f, head, info.Size())
 		if err != nil {
@@ -555,13 +556,13 @@ func imageMIME(p string) string {
 // imageLines is the type and the size in grey, a blank line, then the image
 // as a data URI, one line that folds at the panel's width; over 1 MB, a line
 // saying so.
-func imageLines(p string, sz int64) []text.Line {
+func imageLines(p string, sz int64) ([]text.Line, error) {
 	if sz > imageBytes {
-		return []text.Line{grey("(" + size(sz) + " — too large to inline as a data URI)")}
+		return []text.Line{grey("(" + size(sz) + " — too large to inline as a data URI)")}, nil
 	}
 	b, err := os.ReadFile(p)
 	if err != nil {
-		return []text.Line{grey("(unreadable)")}
+		return nil, err
 	}
 	mime := imageMIME(p)
 	uri := "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(b)
@@ -569,26 +570,26 @@ func imageLines(p string, sz int64) []text.Line {
 		grey("data:" + mime + " · " + size(sz)),
 		{},
 		{Chars: text.Chars(uri, text.Style{Fg: terminu.Text})},
-	}
+	}, nil
 }
 
 // pdfLines is the page count in grey, a blank line, then the text of the
 // first 20 pages, 128 KB of it at most; (no extractable text) when there is
 // none.
-func pdfLines(p string, sz int64) (out []text.Line) {
+func pdfLines(p string, sz int64) (out []text.Line, err error) {
 	defer func() {
-		if recover() != nil {
-			out = []text.Line{grey("(unreadable)")}
+		if recover() != nil { // the reader panics on some damaged files
+			out, err = nil, errors.New("it is damaged")
 		}
 	}()
 	f, err := os.Open(p)
 	if err != nil {
-		return []text.Line{grey("(unreadable)")}
+		return nil, err
 	}
 	defer f.Close()
 	r, err := pdf.NewReader(f, sz)
 	if err != nil {
-		return []text.Line{grey("(unreadable)")}
+		return nil, err
 	}
 	pages := r.NumPage()
 	unit := "pages"
@@ -614,15 +615,16 @@ func pdfLines(p string, sz int64) (out []text.Line) {
 	if !found {
 		out = append(out, grey("(no extractable text)"))
 	}
-	return out
+	return out, nil
 }
 
-// hexLines is eight bytes a row in hex, then their ASCII in Overlay0, 33
-// cells; the first 1 MB, and a line saying how much more there is.
-func hexLines(p string, sz int64) []text.Line {
+// hexLines is eight bytes a row in hex, two spaces, then their ASCII in
+// Overlay0, 33 cells; the first 1 MB, and a line saying how much more there
+// is.
+func hexLines(p string, sz int64) ([]text.Line, error) {
 	f, err := os.Open(p)
 	if err != nil {
-		return []text.Line{grey("(unreadable)")}
+		return nil, err
 	}
 	defer f.Close()
 	b := make([]byte, min(sz, hexBytes))
@@ -651,5 +653,5 @@ func hexLines(p string, sz int64) []text.Line {
 	if rest := sz - int64(len(b)); rest > 0 {
 		out = append(out, grey(fmt.Sprintf("(%s more not shown)", size(rest))))
 	}
-	return out
+	return out, nil
 }

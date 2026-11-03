@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	terminu "github.com/vulcanshen/terminu-go"
 	"github.com/vulcanshen/terminu-go/tdptest"
 )
 
@@ -251,6 +252,38 @@ func TestArchiveTree(t *testing.T) {
 	want(t, d, "[1] ARCHIVE", " "+glyphFolder+" src", "  └─ "+glyphFile+" main.go", " "+glyphFile+" README.md")
 }
 
+// TestEmptyArchive: an archive with nothing in it says so, as an empty
+// directory does (tdp screen.8).
+func TestEmptyArchive(t *testing.T) {
+	dir := files(t, nil)
+	var buf bytes.Buffer
+	zip.NewWriter(&buf).Close()
+	os.WriteFile(filepath.Join(dir, "a.zip"), buf.Bytes(), 0o644)
+	d := start(t, filepath.Join(dir, "a.zip"), 80, 24)
+	want(t, d, "[1] ARCHIVE", "Empty archive", "Press [o] to open another file")
+}
+
+// TestContentUnreadable: an archive or a PDF that opens but cannot be made
+// out says why in the middle of the panel, the fact in Red and a hint in
+// Overlay0, and the App Log keeps it (tdp panel.15, F5).
+func TestContentUnreadable(t *testing.T) {
+	dir := files(t, map[string]string{"a.zip": "PK\x03\x04 not a zip", "a.pdf": "%PDF-1.4\nnot a pdf\n"})
+	for _, c := range []struct{ file, fact string }{
+		{"a.zip", "Can't read this archive: "},
+		{"a.pdf", "Can't read this PDF: "},
+	} {
+		d := start(t, filepath.Join(dir, c.file), 80, 24)
+		want(t, d, c.fact, "Press [o] to open another file")
+		wantNot(t, d, "(unreadable)")
+		red := strings.TrimSuffix(terminu.Fg(terminu.Red).Render("Can't read this"), "\x1b[0m")
+		if !strings.Contains(strings.Join(d.Styled(), ""), red) {
+			t.Errorf("%s: the fact is not in Red", c.file)
+		}
+		d.Press("!")
+		want(t, d, "ERR  "+c.fact)
+	}
+}
+
 func TestImageDataURI(t *testing.T) {
 	png := "\x89PNG\r\n\x1a\n" + strings.Repeat("\x00", 200)
 	dir := files(t, map[string]string{"a.png": png})
@@ -305,6 +338,9 @@ func TestBinaryTooBig(t *testing.T) {
 	want(t, d, "(137 B more not shown)")
 }
 
+// TestHideSecrets: hide_secrets_in_preview is the popup previews' (tdp
+// file-picker.5): the file-picker's preview hides a private key, the panel
+// shows the file the user opened.
 func TestHideSecrets(t *testing.T) {
 	dir := files(t, map[string]string{
 		"id_ed25519": "-----BEGIN OPENSSH PRIVATE KEY-----\nsecret\n",
@@ -312,12 +348,13 @@ func TestHideSecrets(t *testing.T) {
 	})
 	os.Chmod(filepath.Join(dir, "token"), 0o600)
 	os.WriteFile(filepath.Join(os.Getenv("VIEWU__CONFIG"), "config.yaml"), []byte("hide_secrets_in_preview: true\n"), 0o644)
-	d := start(t, filepath.Join(dir, "id_ed25519"), 80, 24)
-	want(t, d, "[1] PRIVATE KEY", "-----BEGIN OPENSSH PRIVATE KEY-----", "(sensitive content not shown)")
-	wantNot(t, d, "secret\n")
-	d = start(t, filepath.Join(dir, "token"), 80, 24)
+	d := start(t, filepath.Join(dir, "id_ed25519"), 100, 30)
+	want(t, d, "[1] PRIVATE KEY", "  2 secret")
+	wantNot(t, d, "(sensitive content not shown)")
+	d.Press("o") // the cursor on the key: its preview
 	want(t, d, "(sensitive content not shown)")
-	wantNot(t, d, " secret")
+	d = start(t, filepath.Join(dir, "token"), 100, 30)
+	want(t, d, "  1 secret")
 }
 
 // --- task 5: moving, the Visual mode ---------------------------------------
@@ -535,6 +572,26 @@ func TestOpenUnreadable(t *testing.T) {
 	want(t, d, "permission denied", "OPEN · ")
 	d.Press("Enter", "Esc")
 	want(t, d, "  1 first")
+	d.Press("!") // the error is kept (tdp F5)
+	want(t, d, "ERR  Open failed")
+}
+
+// TestOpenTheSameFile: Enter on the file shown changes nothing: the
+// file-picker closes at once, back where it was opened from (tdp input.1,
+// K3).
+func TestOpenTheSameFile(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": "first\n", "b.txt": "second\n"})
+	d := start(t, filepath.Join(dir, "a.txt"), 100, 30)
+	d.Press("o", "Enter")
+	wantNot(t, d, "OPEN · ")
+	want(t, d, "  1 first")
+	d.Press("Space", "o", "Enter")
+	wantNot(t, d, "OPEN · ")
+	want(t, d, "PANEL OPERATION")
+	d.Press("Esc", "!")
+	if got := strings.Count(strings.Join(d.Screen(), "\n"), "Opened"); got != 1 {
+		t.Errorf("opened %d times, want once, at the start", got)
+	}
 }
 
 func TestOpenFromADirectory(t *testing.T) {
@@ -573,5 +630,25 @@ func TestSettingsUnreadableQuit(t *testing.T) {
 	d.Press("Esc")
 	if !d.Quit() {
 		t.Error("Esc did not leave")
+	}
+}
+
+// TestSettingsDirOrder: the settings directory is VIEWU__CONFIG, else
+// $XDG_CONFIG_HOME/viewu, else ~/.config/viewu (tdp E2, E3).
+func TestSettingsDirOrder(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("VIEWU__CONFIG", "/tmp/own")
+	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg")
+	if got := configDir(); got != "/tmp/own" {
+		t.Errorf("with VIEWU__CONFIG: %s", got)
+	}
+	t.Setenv("VIEWU__CONFIG", "")
+	if got := configDir(); got != filepath.Join("/tmp/xdg", "viewu") {
+		t.Errorf("with XDG_CONFIG_HOME: %s", got)
+	}
+	t.Setenv("XDG_CONFIG_HOME", "")
+	if got := configDir(); got != filepath.Join(home, ".config", "viewu") {
+		t.Errorf("with neither: %s", got)
 	}
 }

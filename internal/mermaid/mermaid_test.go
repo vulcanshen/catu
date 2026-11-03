@@ -2,6 +2,7 @@ package mermaid
 
 import (
 	"strings"
+	"sync"
 	"testing"
 
 	terminu "github.com/vulcanshen/terminu-go"
@@ -23,6 +24,21 @@ func drawRows(t *testing.T, src string, w int) []string {
 }
 
 func has(rows []string, s string) bool { return strings.Contains(strings.Join(rows, "\n"), s) }
+
+// TestWarmLoadsPele: Warm, called from the background as a file with a
+// diagram opens, loads pele once, however many call it at a time, ready for
+// the first diagram.
+func TestWarmLoadsPele(t *testing.T) {
+	var wg sync.WaitGroup
+	for range 4 {
+		wg.Add(1)
+		go func() { defer wg.Done(); Warm() }()
+	}
+	wg.Wait()
+	if loadErr != nil || render == nil {
+		t.Fatalf("pele is not loaded: %v", loadErr)
+	}
+}
 
 func TestFlowchartLeftToRight(t *testing.T) {
 	rs := drawRows(t, "flowchart LR\n  A[One] --> B[Two]\n", 80)

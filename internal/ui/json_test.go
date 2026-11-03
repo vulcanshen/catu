@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -10,6 +11,57 @@ import (
 )
 
 // --- task 12: JSON formatted ---------------------------------------------
+
+// TestJSONNumbersOnlyWiden: the number column is as wide as the widest tab
+// seen, and stays so back on the narrower one (tdp note.2).
+func TestJSONNumbersOnlyWiden(t *testing.T) {
+	var b strings.Builder
+	b.WriteString("{")
+	for i := range 1000 {
+		if i > 0 {
+			b.WriteString(",")
+		}
+		fmt.Fprintf(&b, `"k%d":%d`, i, i)
+	}
+	b.WriteString("}\n")
+	dir := files(t, map[string]string{"a.json": b.String()})
+	d := start(t, filepath.Join(dir, "a.json"), 80, 24)
+	want(t, d, `┃   1 {"k0":0`) // one line: three places
+	d.Press("l")
+	want(t, d, "┃    1 {") // 1002 lines: four
+	d.Press("h")
+	want(t, d, `┃    1 {"k0":0`) // back: still four
+}
+
+// TestJSONEmpty: an empty file is empty in both tabs, FORMATTED pointing
+// back to the file as it is (tdp screen.8).
+func TestJSONEmpty(t *testing.T) {
+	dir := files(t, map[string]string{"a.json": ""})
+	d := start(t, filepath.Join(dir, "a.json"), 80, 24)
+	want(t, d, "Empty file", "Press [o] to open another file")
+	d.Press("l")
+	want(t, d, "Empty file", "Press [h] to see the file as it is")
+}
+
+// TestJSONBigColouredLater: over 64 KB the formatted text is shown in Text
+// first and coloured in the background, as the file is (tdp panel.15).
+func TestJSONBigColouredLater(t *testing.T) {
+	old := colourNow
+	colourNow = 10
+	defer func() { colourNow = old }()
+	dir := files(t, map[string]string{"a.json": `{"alpha":[1,2,3],"beta":"x"}` + "\n"})
+	s, err := load(filepath.Join(dir, "a.json"), defaults(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := s.views[1]
+	if f.name != "FORMATTED" || f.colour == nil || f.lines[1].Chars[2].St.Fg != terminu.Text {
+		t.Fatal("the formatted text is not in Text first, to be coloured later")
+	}
+	if got := f.colour()[1].Chars[2].St.Fg; got == terminu.Text {
+		t.Error("the formatted text is never coloured")
+	}
+}
 
 func TestJSONAsItIsThenFormatted(t *testing.T) {
 	dir := files(t, map[string]string{"a.json": `{"zeta":1,"alpha":[true,null],"nested":{"k":"v"}}` + "\n"})
