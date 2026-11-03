@@ -41,9 +41,6 @@ func File(content, lang string, tabW int) []Line {
 		return out
 	}
 	if HasSyntax(lang) {
-		for i, l := range raw {
-			raw[i] = lastState(l)
-		}
 		for i, l := range terminu.Syntax(lang, raw) {
 			out[i] = Line{Chars: coloured(l, tabW), Num: i + 1}
 		}
@@ -96,29 +93,6 @@ func Code(content, lang string, tabW int, ground terminu.Color) [][]Char {
 		out[i] = l.Chars
 	}
 	return out
-}
-
-// TODO(tgo #1): terminu.Syntax says a \r stays in a line for the caller to
-// draw, but chroma reads it as a line break, and the lines after it move
-// down one; until terminu-go keeps it, a line is given to Syntax in its
-// last state, as the lib's preview gives its own to chroma.
-//
-// lastState is a line as a \r inside it leaves it: what follows the \r
-// written over what was there, the characters as they are in the file.
-func lastState(l string) string {
-	if !strings.Contains(l, "\r") {
-		return l
-	}
-	b := newBuilder(1)
-	gr := uniseg.NewGraphemes(l)
-	for gr.Next() {
-		b.add(gr.Str(), Style{})
-	}
-	var s strings.Builder
-	for _, c := range b.chars {
-		s.WriteString(c.Src)
-	}
-	return s.String()
 }
 
 // builder makes a line's characters as a terminal leaves them: a \r goes

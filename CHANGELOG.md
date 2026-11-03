@@ -20,4 +20,4 @@ Each release names the version of terminu design (tdp) it follows.
 - `j|k`, `u|d`, `gg|G` scroll; `v` selects with vim's moves and `y` copies; `/` finds text and `n|N` go through it; `o`
   opens another file
 - The settings are the family's `input_tab_width` and `hide_secrets_in_preview`, in `~/.config/viewu/config.yaml`
-- Built on terminu-go v1.1.8, following tdp v1.1.7
+- Built on terminu-go v1.1.9, following tdp v1.1.8

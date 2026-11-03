@@ -25,21 +25,21 @@ tasks:
       啟動時（tgo App.Start）App Log 記 Info「Opened <路徑，家目錄寫成 ~>」
     test: [TestVersionAndHelp, TestPathNotThere, TestPathNotReadable, TestBadArguments, TestOpenLogsWhatItOpened, TestOpenErrors]
   - id: 3
-    spec: 4
+    spec: 5
     implementation: |
       文字檔（前 64 KB 沒有 NUL、是合法的 UTF-8）：label TEXT；整個檔讀進來，最多 16 MB，超過時最後一列 Overlay0「(<大小> more not shown)」
       每一行左邊畫行號：靠右，欄寬 max(3, 總行數的位數)，Overlay0，後面空一格；一行比 panel 寬時在空白處折到下一列（照 tgo viewer 的 foldAt：
       空白後、寬字前後可以斷，一個字比一列長才照格子切），折下來的列行號欄空白
       語法顏色：tgo 的 terminu.Syntax（檔案的路徑當語言），跟 o 選檔的預覽同一套：catppuccin-mocha 只上前景色，chroma 漏掉的照
-      tdp file-picker.3 的表補（TOML 的表名 Mauve、key Blue，YAML 沒引號的值 Green……）；chroma 認不出語言的檔是 Text
-      一行裡有 \r 的，先換成最後的樣子再交給 Syntax（Syntax 會把它當換行，TODO(tgo #1)）
+      tdp file-picker.3 的表補（TOML 的表名 Mauve、key Blue，YAML 沒引號的值 Green，Makefile define 區塊裡的行……）；chroma 認不出語言的檔是 Text
+      檔案的行原樣交給 Syntax，拿回同樣多行，Tab 與一行裡的 \r 留在原位，由 viewu 照下面畫
       Tab 畫成 input_tab_width 格空白（複製時是 \t）；CRLF 的 \r 不畫；一行裡的 \r 回到行首、後面的字蓋過去（只留最後的狀態）；
       其他控制字元畫成 Red 的名字（\x07、\x1b……）
       檔案裡有 \x1b[ 時：照檔案自己的 SGR 上色（粗體、斜體、底線、刪除線、16 色換成 catppuccin 的、256 色、24 位元），不再上語法顏色；
       不是 SGR 的序列，ESC 畫成 Red 的 \x1b、後面的字照原樣
       超過 64 KB、chroma 認得語言的檔：先全部用 Text 畫出來，tgo Panel.Loading 打開（膠囊後面的 loading icon）；上色在背景跑（tea.Cmd），
       回來時（tgo App.OnMsg）只換掉那一個 view 的行的顏色，捲動位置、命中、Visual 的游標都不動，loading icon 拿掉；已經換成別的檔案時丟掉
-    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater, TestTOMLKeysAndTables, TestYAMLValuesAsThePreview]
+    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater, TestTOMLKeysAndTables, TestYAMLValuesAsThePreview, TestCarriageReturnKeepsTheLines]
   - id: 4
     spec: 1
     implementation: |

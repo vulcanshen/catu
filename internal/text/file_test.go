@@ -68,3 +68,17 @@ func TestYAMLValuesAsThePreview(t *testing.T) {
 		t.Errorf("the tab is drawn %q, want 4 spaces", got)
 	}
 }
+
+// TestCarriageReturnKeepsTheLines: a \r inside a line of a coloured file
+// leaves the line's last state, and the lines after it stay where they are
+// (tdp note.2; task 3).
+func TestCarriageReturnKeepsTheLines(t *testing.T) {
+	lines := File("10%\r100%\nnext\n", "build.yaml", 4)
+	var got []string
+	for _, l := range lines {
+		got = append(got, l.Drawn())
+	}
+	if strings.Join(got, "|") != "100%|next" {
+		t.Errorf("the lines are %q, want [100%% next]", got)
+	}
+}

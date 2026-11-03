@@ -1,6 +1,6 @@
-id: 4
-from: v1.1.6
-to: v1.1.7
+id: 5
+from: v1.1.7
+to: v1.1.8
 tasks:
   - id: 1
     spec: 1
@@ -31,7 +31,7 @@ tasks:
       - "只收一個路徑；多給、或不認得的旗標，印用法到 stderr，結束碼 2；檔名剛好叫 version、help 時寫 ./version（help 裡寫明）"
       - "啟動時打開的那個，App Log 記一筆 Info「Opened <路徑>」（tdp note.7：只看不改的動作也記）"
   - id: 3
-    spec: 4
+    spec: 5
     request: 文字檔：有語法顏色與行號，一行太長折到下一列，不截掉；TOML 的 key 與表名也要有顏色
     tdp: [tdp file-picker.3, tdp note.2, tdp components.3, tdp components.5, tdp E3, tdp P4, tdp P5, tdp panel.15, tdp K3]
     remark:
@@ -41,8 +41,6 @@ tasks:
       - "語言照檔名判斷（tdp note.2），判斷不出來是 Text"
       - "整個檔讀進來，不是預覽的 64 KB：上限 16 MB，超過時只畫前 16 MB，最後一列 Overlay0 寫還有多少沒畫（tdp P5 功能邏輯）"
       - "上語法顏色一 MB 要將近一秒：超過 64 KB 的檔先用 Text 畫出來、在背景上色，上色中 panel 是 loading（膠囊後面的 loading icon，tdp panel.15），好了只換顏色，捲動位置、命中、游標都不動（tdp K3：背景的事不移動任何東西）"
-      - note: "tgo 的 terminu.Syntax 說一行裡的 \\r 原樣留給 app 畫，實際上 chroma 把它讀成換行，後面的行都往下錯一行、最後一行不見。暫時照 tgo 自己預覽的做法：有 \\r 的行先換成最後的樣子（tdp note.2：一行裡的 \\r 只留最後的狀態）再交給 Syntax；回報 terminu-go"
-        issue: tgo #1
   - id: 4
     spec: 1
     request: 其他種類的檔案照 filu 的預覽畫：目錄樹、壓縮檔裡有什麼、PDF 的文字、圖片、二進位的十六進位
