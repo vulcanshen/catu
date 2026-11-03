@@ -60,7 +60,9 @@ func load() {
 	}
 	fn, err := vm.RunString(`(function (src, maxWidth) {
 	var measurer = { width: function (t) { return cellsOf(t) * ` + strconv.FormatFloat(cellW, 'f', -1, 64) + `; } };
-	return pele.render(src, { measurer: measurer, fontSize: 14, maxWidth: maxWidth, autoDirection: true, links: false, images: false }).svg;
+	// directionBreakpoint: turn a chart too wide for the panel top-down at any
+	// width, not only under pele's 640px.
+	return pele.render(src, { measurer: measurer, fontSize: 14, maxWidth: maxWidth, autoDirection: true, directionBreakpoint: 1e9, links: false, images: false }).svg;
 })`)
 	if err != nil {
 		loadErr = err

@@ -104,7 +104,8 @@ tasks:
     remark:
       - "pele（MIT）的 dist/pele.global.js 用 go:embed 放進執行檔，用 goja（純 Go 的 JavaScript 引擎）跑：照樣是單一靜態 binary，不必裝 Node（tdp E6）"
       - "給 pele 一個等寬的 measurer（一個字一格寬），排出來的字剛好落在格子上；pele 的 SVG 畫成字元：方框用框線字、線與斜線用點字（braille）、箭頭用三角形、字放在它的位置。不用終端機的圖片協定（task 4 的理由，tdp F8）"
-      - "比 panel 寬時先讓 pele 照 panel 的寬度排（maxWidth、autoDirection：LR 轉成 TB）；還是太寬，右邊切掉、最後一格畫 Overlay0 的 …（webu 的表格太寬也是這樣）"
+      - "比 panel 寬時先讓 pele 照 panel 的寬度排（maxWidth、autoDirection：LR 轉成 TB，任何寬度都轉）；還是太寬，右邊切掉、最後一格畫 Overlay0 的 …（webu 的表格太寬也是這樣）"
+      - "一列比一格高一倍（16.8px），pele 的字與線常常不到一列：列照圖裡的層（框邊、分隔線、字、線的端點）依序分配，近的併一列、遠的分開，字才不會壓在線上"
       - "mermaid 寫錯時畫原始碼（程式碼區塊的樣子），下面 Red 寫 pele 的錯誤，一行一列（tdp components.5：app 自己畫的好幾行字一列一列給）；App Log 記一筆 Warning，同一個檔同一個錯只記一次（終端機大小變了會重畫）"
       - ".mmd、.mermaid 檔有兩個 tab：DIAGRAM（畫好的圖，打開時在這裡）、SOURCE（原始碼）；DIAGRAM 照 Markdown 裡的 mermaid 區塊畫，寫錯時也一樣"
       - "顏色是內容的（tdp P4、P5）：節點的框 Blue、群組的框與 sequence 的生命線 Overlay0、線與箭頭 Overlay2、字 Text、邊上的字 Subtext0、群組的名字 Overlay1；虛線畫成 ╌ ╎；比一格還小的圖形畫成 ■ ● ○"

@@ -5,6 +5,7 @@ import (
 	"io"
 	"math"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -39,6 +40,67 @@ var boxChars = map[int]string{
 	up | down | left | right: "┼",
 }
 
+// --- the rows ---------------------------------------------------------------
+
+// minGap is how far apart, in pixels, two levels of the diagram must be to
+// get rows of their own; nearer, they share a row.
+const minGap = 0.4 * cellH
+
+// rows maps the diagram's y, in pixels, to rows: every level that matters
+// (a box's top and bottom, a divider, a line of words, a line's end) is a
+// row of its own when it is minGap from the one above, as many rows below it
+// as the gap rounds to but at least one, so words never fall on a line and a
+// word in a box sits in its middle; between the levels, y goes straight.
+type rows struct {
+	ys  []float64 // the levels, in order
+	rws []float64 // their rows
+}
+
+func newRows(levels []float64) *rows {
+	sort.Float64s(levels)
+	m := &rows{}
+	for _, y := range levels {
+		n := len(m.ys)
+		switch {
+		case n == 0:
+			m.ys, m.rws = append(m.ys, y), append(m.rws, math.Round(y/cellH))
+		case y-m.ys[n-1] < minGap:
+			// one level with the one above
+		default:
+			m.ys = append(m.ys, y)
+			m.rws = append(m.rws, m.rws[n-1]+math.Max(1, math.Round((y-m.ys[n-1])/cellH)))
+		}
+	}
+	return m
+}
+
+// at is the row of y, a fraction between the levels around it.
+func (m *rows) at(y float64) float64 {
+	n := len(m.ys)
+	switch {
+	case n == 0:
+		return y / cellH
+	case y <= m.ys[0]:
+		return m.rws[0] - (m.ys[0]-y)/cellH
+	case y >= m.ys[n-1]:
+		if y-m.ys[n-1] < minGap {
+			return m.rws[n-1]
+		}
+		return m.rws[n-1] + (y-m.ys[n-1])/cellH
+	}
+	i := sort.SearchFloat64s(m.ys, y)
+	if m.ys[i] == y {
+		return m.rws[i]
+	}
+	a, b := i-1, i
+	if y-m.ys[a] < minGap { // still the level above
+		return m.rws[a]
+	}
+	return m.rws[a] + (m.rws[b]-m.rws[a])*(y-m.ys[a])/(m.ys[b]-m.ys[a])
+}
+
+// --- the grid ---------------------------------------------------------------
+
 // cell is one cell of the grid: a glyph (a word's character, an arrow) over
 // the lines drawn with box-drawing characters over the dots of the curves.
 type cell struct {
@@ -54,13 +116,13 @@ type cell struct {
 }
 
 type grid struct {
-	w, h   int
-	cells  [][]cell
-	arrows []arrowMark // drawn last, over the lines they point along
+	w, h  int
+	cells [][]cell
+	rows  *rows
 }
 
-func newGrid(w, h int) *grid {
-	g := &grid{w: w, h: h, cells: make([][]cell, h)}
+func newGrid(w, h int, r *rows) *grid {
+	g := &grid{w: w, h: h, cells: make([][]cell, h), rows: r}
 	for i := range g.cells {
 		g.cells[i] = make([]cell, w)
 	}
@@ -74,12 +136,12 @@ func (g *grid) at(c, r int) *cell {
 	return &g.cells[r][c]
 }
 
-func col(x float64) int { return int(math.Round(x / cellW)) }
-func row(y float64) int { return int(math.Round(y / cellH)) }
+func col(x float64) int           { return int(math.Round(x / cellW)) }
+func (g *grid) row(y float64) int { return int(math.Round(g.rows.at(y))) }
 
 // hline joins the cells from x1 to x2 on the row of y.
 func (g *grid) hline(x1, x2, y float64, st text.Style, dashed bool) {
-	c1, c2, r := col(math.Min(x1, x2)), col(math.Max(x1, x2)), row(y)
+	c1, c2, r := col(math.Min(x1, x2)), col(math.Max(x1, x2)), g.row(y)
 	for c := c1; c <= c2; c++ {
 		k := g.at(c, r)
 		if k == nil {
@@ -104,7 +166,7 @@ func (g *grid) hline(x1, x2, y float64, st text.Style, dashed bool) {
 
 // vline joins the cells from y1 to y2 on the column of x.
 func (g *grid) vline(x, y1, y2 float64, st text.Style, dashed bool) {
-	r1, r2, c := row(math.Min(y1, y2)), row(math.Max(y1, y2)), col(x)
+	r1, r2, c := g.row(math.Min(y1, y2)), g.row(math.Max(y1, y2)), col(x)
 	for r := r1; r <= r2; r++ {
 		k := g.at(c, r)
 		if k == nil {
@@ -133,7 +195,7 @@ var brailleBits = [2][4]uint8{{0x01, 0x02, 0x04, 0x40}, {0x08, 0x10, 0x20, 0x80}
 
 // dot puts a dot at x, y.
 func (g *grid) dot(x, y float64, st text.Style) {
-	fx, fy := x/cellW+0.5, y/cellH+0.5
+	fx, fy := x/cellW+0.5, g.rows.at(y)+0.5
 	c, r := int(math.Floor(fx)), int(math.Floor(fy))
 	k := g.at(c, r)
 	if k == nil {
@@ -146,7 +208,7 @@ func (g *grid) dot(x, y float64, st text.Style) {
 }
 
 // line draws a straight line: across or down with box-drawing characters,
-// any other way with dots.
+// any other way with dots, as many as its length on the grid takes.
 func (g *grid) line(a, b point, st text.Style, dashed bool) {
 	switch {
 	case math.Abs(a.y-b.y) < 0.75:
@@ -154,15 +216,21 @@ func (g *grid) line(a, b point, st text.Style, dashed bool) {
 	case math.Abs(a.x-b.x) < 0.75:
 		g.vline(a.x, a.y, b.y, st, dashed)
 	default:
-		steps := int(math.Max(math.Abs(b.x-a.x)/(cellW/4), math.Abs(b.y-a.y)/(cellH/8))) + 1
-		for i := 0; i <= steps; i++ {
-			t := float64(i) / float64(steps)
-			g.dot(a.x+(b.x-a.x)*t, a.y+(b.y-a.y)*t, st)
-		}
+		g.dots(a, b, st)
 	}
 }
 
-// glyph puts a character at cell c, r.
+// dots draws a line from a to b with dots, whichever way it goes.
+func (g *grid) dots(a, b point, st text.Style) {
+	ra, rb := g.rows.at(a.y), g.rows.at(b.y)
+	steps := int(math.Max(math.Abs(b.x-a.x)/(cellW/4), math.Abs(rb-ra)*8)) + 1
+	for i := 0; i <= steps; i++ {
+		t := float64(i) / float64(steps)
+		g.dot(a.x+(b.x-a.x)*t, a.y+(b.y-a.y)*t, st)
+	}
+}
+
+// glyph puts a character at cell c, r, over what is there.
 func (g *grid) glyph(c, r int, s string, st text.Style) {
 	k := g.at(c, r)
 	if k == nil {
@@ -208,9 +276,62 @@ func (g *grid) words(c, r int, s string, st text.Style, pad int) {
 	}
 }
 
-// rows are the grid as rows of characters, the blank rows at the top and
+// arrow draws an edge's marker as a triangle pointing its way: on the cell
+// before the border it points at, the border keeping its own line; with no
+// border there, on the line's last cell.
+func (g *grid) arrow(tip, base point) {
+	dx, dy := tip.x-base.x, g.rows.at(tip.y)-g.rows.at(base.y)
+	c, r := col(tip.x), g.row(tip.y)
+	var mark string
+	var dc, dr int
+	switch {
+	case math.Abs(dx)/cellW >= math.Abs(dy) && dx >= 0:
+		mark, dc = "▶", 1
+	case math.Abs(dx)/cellW >= math.Abs(dy):
+		mark, dc = "◀", -1
+	case dy >= 0:
+		mark, dr = "▼", 1
+	default:
+		mark, dr = "▲", -1
+	}
+	perpendicular, along := up|down, left|right
+	if dr != 0 {
+		perpendicular, along = left|right, up|down
+	}
+	st := text.Style{Fg: overlay2}
+	c, r = c-dc, r-dr // the cell before the tip
+	for k := 0; k <= 2; k++ {
+		b := g.at(c+k*dc, r+k*dr)
+		if b == nil || b.glyph != "" || b.box&perpendicular == 0 {
+			continue
+		}
+		// The line ends at the arrow: no joint toward it (┴ back to ─).
+		switch {
+		case dr > 0:
+			b.box &^= up
+		case dr < 0:
+			b.box &^= down
+		case dc > 0:
+			b.box &^= left
+		default:
+			b.box &^= right
+		}
+		g.glyph(c+(k-1)*dc, r+(k-1)*dr, mark, st)
+		return
+	}
+	for k := 0; k < 2; k++ {
+		n := g.at(c+dc, r+dr)
+		if n == nil || n.glyph != "" || n.box&along == 0 {
+			break
+		}
+		c, r = c+dc, r+dr
+	}
+	g.glyph(c, r, mark, st)
+}
+
+// lines are the grid as rows of characters, the blank rows at the top and
 // the bottom and the blank columns on the left left out.
-func (g *grid) rows() [][]text.Char {
+func (g *grid) lines() [][]text.Char {
 	first, last := g.h, -1
 	leftmost := g.w
 	for r := range g.cells {
@@ -255,6 +376,87 @@ func (g *grid) rows() [][]text.Char {
 		out = append(out, line)
 	}
 	return out
+}
+
+// --- what is drawn ----------------------------------------------------------
+
+// drawing is what a diagram draws, in its pixels, and the levels of it the
+// rows are made from; it is drawn once they are all known.
+type drawing struct {
+	w, h   float64
+	levels []float64
+	ops    []func(g *grid) // lines and shapes, in the order of the SVG
+	words  []func(g *grid) // over the lines
+	arrows []func(g *grid) // over everything
+}
+
+func (d *drawing) level(ys ...float64) { d.levels = append(d.levels, ys...) }
+
+// line is a straight line; its ends are levels.
+func (d *drawing) line(a, b point, st text.Style, dashed bool) {
+	d.level(a.y, b.y)
+	d.ops = append(d.ops, func(g *grid) { g.line(a, b, st, dashed) })
+}
+
+// curve is a curve as points, drawn in dots all the way; only its ends are
+// levels.
+func (d *drawing) curve(pts []point, st text.Style) {
+	if len(pts) < 2 {
+		return
+	}
+	d.level(pts[0].y, pts[len(pts)-1].y)
+	d.ops = append(d.ops, func(g *grid) {
+		for i := 1; i < len(pts); i++ {
+			g.dots(pts[i-1], pts[i], st)
+		}
+	})
+}
+
+// mark is a character at a point, a level.
+func (d *drawing) mark(p point, s string, st text.Style) {
+	d.level(p.y)
+	d.ops = append(d.ops, func(g *grid) { g.glyph(col(p.x), g.row(p.y), s, st) })
+}
+
+// text is words whose middle is at p, from its left; a level.
+func (d *drawing) text(p point, s string, st text.Style, pad int) {
+	d.level(p.y)
+	d.words = append(d.words, func(g *grid) { g.words(col(p.x), g.row(p.y), s, st, pad) })
+}
+
+// arrow is an edge's marker, a triangle, as the arrow it is.
+func (d *drawing) arrow(pts []point) {
+	if len(pts) < 3 {
+		return
+	}
+	pts = pts[:3]
+	var tip, base point
+	far := -1.0
+	for i := range pts {
+		a, b := pts[(i+1)%3], pts[(i+2)%3]
+		mid := point{(a.x + b.x) / 2, (a.y + b.y) / 2}
+		if dist := math.Hypot(pts[i].x-mid.x, pts[i].y-mid.y); dist > far {
+			far, tip, base = dist, pts[i], mid
+		}
+	}
+	d.level(tip.y, base.y)
+	d.arrows = append(d.arrows, func(g *grid) { g.arrow(tip, base) })
+}
+
+// draw lays the levels out in rows and draws on them.
+func (d *drawing) draw() [][]text.Char {
+	r := newRows(d.levels)
+	g := newGrid(col(d.w)+3, int(math.Ceil(r.at(d.h)))+3, r)
+	for _, op := range d.ops {
+		op(g)
+	}
+	for _, op := range d.words {
+		op(g)
+	}
+	for _, op := range d.arrows {
+		op(g)
+	}
+	return g.lines()
 }
 
 // --- reading the SVG --------------------------------------------------------
@@ -417,7 +619,7 @@ type textRun struct {
 // drawSVG draws pele's SVG on a grid of cells.
 func drawSVG(svg string) ([][]text.Char, error) {
 	dec := xml.NewDecoder(strings.NewReader(svg))
-	var g *grid
+	d := &drawing{}
 	stack := []frame{{m: identity, fontSize: 14, anchor: "start"}}
 	var runs []*textRun
 	for {
@@ -457,13 +659,12 @@ func drawSVG(svg string) ([][]text.Char, error) {
 			stack = append(stack, f)
 			switch t.Name.Local {
 			case "svg":
-				w, h := num(t, "width"), num(t, "height")
-				if vb, ok := attr(t, "viewBox"); ok && (w == 0 || h == 0) {
+				d.w, d.h = num(t, "width"), num(t, "height")
+				if vb, ok := attr(t, "viewBox"); ok && (d.w == 0 || d.h == 0) {
 					if v := numbers(vb); len(v) == 4 {
-						w, h = v[2], v[3]
+						d.w, d.h = v[2], v[3]
 					}
 				}
-				g = newGrid(col(w)+3, row(h)+3)
 			case "text":
 				run := &textRun{f: f, x: num(t, "x"), y: num(t, "y")}
 				run.skip = strings.TrimSpace(f.fill) == "none"
@@ -488,9 +689,7 @@ func drawSVG(svg string) ([][]text.Char, error) {
 					runs = append(runs, span)
 				}
 			default:
-				if g != nil {
-					shape(g, t, f)
-				}
+				shape(d, t, f)
 			}
 		case xml.CharData:
 			if len(runs) > 0 {
@@ -500,20 +699,17 @@ func drawSVG(svg string) ([][]text.Char, error) {
 			if (t.Name.Local == "text" || t.Name.Local == "tspan") && len(runs) > 0 {
 				run := runs[len(runs)-1]
 				runs = runs[:len(runs)-1]
-				if g != nil && !run.skip && !(t.Name.Local == "text" && run.spans) {
-					place(g, run)
+				if !run.skip && !(t.Name.Local == "text" && run.spans) {
+					place(d, run)
 				}
 			}
 			stack = stack[:len(stack)-1]
 		}
 	}
-	if g == nil {
+	if d.w == 0 {
 		return nil, nil
 	}
-	for _, a := range g.arrows {
-		g.arrow(a)
-	}
-	return g.rows(), nil
+	return d.draw(), nil
 }
 
 // length is an SVG length in pixels: em counts the font size.
@@ -528,9 +724,9 @@ func length(s string, font float64) float64 {
 	return n[0]
 }
 
-// place puts a text's words on the grid: its baseline moved up to the
-// middle of its letters, its anchor kept.
-func place(g *grid, run *textRun) {
+// place puts a text's words: its baseline moved up to the middle of its
+// letters, its anchor kept.
+func place(d *drawing, run *textRun) {
 	words := strings.Join(strings.FieldsFunc(run.words.String(), func(r rune) bool { return r == '\n' || r == '\r' || r == '\t' }), " ")
 	words = strings.TrimFunc(words, unicode.IsSpace)
 	if words == "" {
@@ -552,12 +748,12 @@ func place(g *grid, run *textRun) {
 	if run.f.has("pele-edge-label") || run.f.has("pele-edge-labels") {
 		pad = 1
 	}
-	g.words(col(p.x), row(p.y), words, run.f.wordStyle(), pad)
+	d.text(p, words, run.f.wordStyle(), pad)
 }
 
 // shape draws a shape: its outline, an arrow where it is an edge's marker,
-// a dot where it is smaller than a cell.
-func shape(g *grid, t xml.StartElement, f frame) {
+// a mark where it is smaller than a cell.
+func shape(d *drawing, t xml.StartElement, f frame) {
 	st := f.lineStyle()
 	fill := strings.TrimSpace(f.fill)
 	stroked := f.stroke != "" && strings.TrimSpace(f.stroke) != "none"
@@ -570,6 +766,8 @@ func shape(g *grid, t xml.StartElement, f frame) {
 			st = text.Style{Fg: c}
 		}
 	}
+	cls, _ := attr(t, "class")
+	marker := strings.Contains(cls, "pele-marker")
 	switch t.Name.Local {
 	case "rect":
 		x, y, w, h := num(t, "x"), num(t, "y"), num(t, "width"), num(t, "height")
@@ -581,19 +779,13 @@ func shape(g *grid, t xml.StartElement, f frame) {
 		}
 		a, b := f.m.apply(point{x, y}), f.m.apply(point{x + w, y + h})
 		if math.Abs(b.x-a.x) < cellW*1.5 && math.Abs(b.y-a.y) < cellH*1.5 {
-			c := f.m.apply(point{x + w/2, y + h/2})
-			g.glyph(col(c.x), row(c.y), "■", st)
+			d.mark(f.m.apply(point{x + w/2, y + h/2}), "■", st)
 			return
 		}
-		// The top and the bottom an equal number of rows from the middle
-		// row, where the words and the edges at it are: the words centred.
-		mid := (a.y + b.y) / 2
-		half := float64(max(1, int(math.Round(math.Abs(b.y-a.y)/2/cellH)))) * cellH
-		top, bottom := float64(row(mid))*cellH-half, float64(row(mid))*cellH+half
-		g.line(point{a.x, top}, point{b.x, top}, st, f.dashed)
-		g.line(point{b.x, top}, point{b.x, bottom}, st, f.dashed)
-		g.line(point{b.x, bottom}, point{a.x, bottom}, st, f.dashed)
-		g.line(point{a.x, bottom}, point{a.x, top}, st, f.dashed)
+		d.line(point{a.x, a.y}, point{b.x, a.y}, st, f.dashed)
+		d.line(point{b.x, a.y}, point{b.x, b.y}, st, f.dashed)
+		d.line(point{b.x, b.y}, point{a.x, b.y}, st, f.dashed)
+		d.line(point{a.x, b.y}, point{a.x, a.y}, st, f.dashed)
 	case "circle", "ellipse":
 		cx, cy := num(t, "cx"), num(t, "cy")
 		rx, ry := num(t, "r"), num(t, "r")
@@ -606,19 +798,21 @@ func shape(g *grid, t xml.StartElement, f frame) {
 			if filled && !stroked {
 				mark = "●"
 			}
-			g.glyph(col(c.x), row(c.y), mark, st)
+			d.mark(c, mark, st)
 			return
 		}
 		n := int(2*math.Pi*math.Max(rx, ry)/2) + 8
-		for i := 0; i < n; i++ {
+		var pts []point
+		for i := 0; i <= n; i++ {
 			a := 2 * math.Pi * float64(i) / float64(n)
-			p := f.m.apply(point{cx + rx*math.Cos(a), cy + ry*math.Sin(a)})
-			g.dot(p.x, p.y, st)
+			pts = append(pts, f.m.apply(point{cx + rx*math.Cos(a), cy + ry*math.Sin(a)}))
 		}
+		d.level(c.y-ry, c.y, c.y+ry)
+		d.curve(pts, st)
 	case "line":
 		a := f.m.apply(point{num(t, "x1"), num(t, "y1")})
 		b := f.m.apply(point{num(t, "x2"), num(t, "y2")})
-		g.line(a, b, st, f.dashed)
+		d.line(a, b, st, f.dashed)
 	case "polyline", "polygon":
 		v, _ := attr(t, "points")
 		ns := numbers(v)
@@ -627,105 +821,36 @@ func shape(g *grid, t xml.StartElement, f frame) {
 			pts = append(pts, f.m.apply(point{ns[i], ns[i+1]}))
 		}
 		if t.Name.Local == "polygon" && len(pts) > 2 {
+			if marker && len(pts) == 3 {
+				d.arrow(pts)
+				return
+			}
 			pts = append(pts, pts[0])
 		}
 		for i := 1; i < len(pts); i++ {
-			g.line(pts[i-1], pts[i], st, f.dashed)
+			d.line(pts[i-1], pts[i], st, f.dashed)
 		}
 	case "path":
-		d, _ := attr(t, "d")
-		cls, _ := attr(t, "class")
-		if strings.Contains(cls, "pele-marker") {
-			if a, ok := arrowOf(flatten(d, f.m)); ok {
-				g.arrows = append(g.arrows, a)
+		dd, _ := attr(t, "d")
+		if marker {
+			// A filled triangle is an arrow; a marker of lines (an ER
+			// diagram's crow's foot, its bars) is drawn as it is.
+			if pts := corners(dd, f.m); len(pts) == 3 && strings.ContainsAny(dd, "Zz") {
+				d.arrow(pts)
+				return
 			}
-			return
 		}
-		pathLines(g, d, f, st)
+		pathLines(d, dd, f, st)
 	}
-}
-
-// arrowMark is an edge's marker waiting to be drawn: the cell of its tip
-// and the way it points, a cell at a time.
-type arrowMark struct {
-	c, r, dc, dr int
-	mark         string
-}
-
-// arrowOf is a marker's triangle as an arrow.
-func arrowOf(pts []point) (arrowMark, bool) {
-	if len(pts) < 3 {
-		return arrowMark{}, false
-	}
-	pts = pts[:3]
-	var tip, base point
-	far := -1.0
-	for i := range pts {
-		a, b := pts[(i+1)%3], pts[(i+2)%3]
-		mid := point{(a.x + b.x) / 2, (a.y + b.y) / 2}
-		if d := math.Hypot(pts[i].x-mid.x, pts[i].y-mid.y); d > far {
-			far, tip, base = d, pts[i], mid
-		}
-	}
-	dx, dy := tip.x-base.x, tip.y-base.y
-	a := arrowMark{c: col(tip.x), r: row(tip.y)}
-	switch {
-	case math.Abs(dx)/cellW >= math.Abs(dy)/cellH && dx >= 0:
-		a.mark, a.dc = "▶", 1
-	case math.Abs(dx)/cellW >= math.Abs(dy)/cellH:
-		a.mark, a.dc = "◀", -1
-	case dy >= 0:
-		a.mark, a.dr = "▼", 1
-	default:
-		a.mark, a.dr = "▲", -1
-	}
-	return a, true
-}
-
-// arrow draws an arrow once every line is drawn: on the cell before the
-// border it points at, the line run on to it, or on the cell before its
-// tip when there is no border there.
-func (g *grid) arrow(a arrowMark) {
-	border := func(k *cell) bool {
-		if k == nil || k.glyph != "" {
-			return false
-		}
-		if a.dr != 0 {
-			return k.box&(left|right) != 0
-		}
-		return k.box&(up|down) != 0
-	}
-	along := func(k *cell) bool {
-		if k == nil || k.glyph != "" {
-			return false
-		}
-		if a.dr != 0 {
-			return k.box&(up|down) != 0
-		}
-		return k.box&(left|right) != 0
-	}
-	c, r := a.c-a.dc, a.r-a.dr // the cell before the tip
-	for k := 0; k <= 2; k++ {
-		if bc, br := a.c-a.dc+k*a.dc, a.r-a.dr+k*a.dr; border(g.at(bc, br)) {
-			g.glyph(bc-a.dc, br-a.dr, a.mark, text.Style{Fg: overlay2})
-			return
-		}
-	}
-	// No border to stop at (a diamond, a circle): on the line's last cell.
-	for k := 0; k < 2 && along(g.at(c+a.dc, r+a.dr)); k++ {
-		c, r = c+a.dc, r+a.dr
-	}
-	g.glyph(c, r, a.mark, text.Style{Fg: overlay2})
 }
 
 // pathLines draws a path's lines: a cubic curve that leaves and arrives
 // level (or upright) as an elbow of box-drawing lines, any other curve as
 // dots.
-func pathLines(g *grid, d string, f frame, st text.Style) {
+func pathLines(d *drawing, path string, f frame, st text.Style) {
 	var cur, start, ctrl point
 	var last byte
-	cmds := pathCommands(d)
-	for _, cmd := range cmds {
+	for _, cmd := range pathCommands(path) {
 		rel := unicode.IsLower(rune(cmd.op))
 		v := cmd.args
 		abs := func(p point) point {
@@ -734,7 +859,7 @@ func pathLines(g *grid, d string, f frame, st text.Style) {
 			}
 			return p
 		}
-		seg := func(a, b point) { g.line(f.m.apply(a), f.m.apply(b), st, f.dashed) }
+		seg := func(a, b point) { d.line(f.m.apply(a), f.m.apply(b), st, f.dashed) }
 		switch unicode.ToUpper(rune(cmd.op)) {
 		case 'M':
 			for i := 0; i+1 < len(v); i += 2 {
@@ -786,28 +911,29 @@ func pathLines(g *grid, d string, f frame, st text.Style) {
 					}
 					c2, p = abs(point{v[i], v[i+1]}), abs(point{v[i+2], v[i+3]})
 				}
-				cubic(g, cur, c1, c2, p, f, st)
+				cubic(d, cur, c1, c2, p, f, st)
 				cur, ctrl, last = p, c2, 'C'
 			}
 			continue
 		case 'Q', 'T':
 			for i := 0; i+3 < len(v); i += 4 {
 				c, p := abs(point{v[i], v[i+1]}), abs(point{v[i+2], v[i+3]})
-				prev := cur
+				pts := []point{f.m.apply(cur)}
 				for k := 1; k <= 12; k++ {
 					t := float64(k) / 12
-					q := point{(1-t)*(1-t)*prev.x + 2*(1-t)*t*c.x + t*t*p.x, (1-t)*(1-t)*prev.y + 2*(1-t)*t*c.y + t*t*p.y}
-					seg(cur, q)
-					cur = q
+					pts = append(pts, f.m.apply(point{(1-t)*(1-t)*cur.x + 2*(1-t)*t*c.x + t*t*p.x, (1-t)*(1-t)*cur.y + 2*(1-t)*t*c.y + t*t*p.y}))
 				}
+				d.curve(pts, st)
+				cur = p
 			}
 		case 'A':
 			for i := 0; i+6 < len(v); i += 7 {
 				p := abs(point{v[i+5], v[i+6]})
+				pts := []point{f.m.apply(cur)}
 				for _, q := range arcPoints(cur, p, v[i], v[i+1], v[i+2], v[i+3] != 0, v[i+4] != 0) {
-					seg(cur, q)
-					cur = q
+					pts = append(pts, f.m.apply(q))
 				}
+				d.curve(pts, st)
 				cur = p
 			}
 		case 'Z':
@@ -820,8 +946,8 @@ func pathLines(g *grid, d string, f frame, st text.Style) {
 
 // cubic draws a cubic curve: as an elbow when it leaves and arrives level or
 // upright, else as dots.
-func cubic(g *grid, p0, c1, c2, p3 point, f frame, st text.Style) {
-	seg := func(a, b point) { g.line(f.m.apply(a), f.m.apply(b), st, f.dashed) }
+func cubic(d *drawing, p0, c1, c2, p3 point, f frame, st text.Style) {
+	seg := func(a, b point) { d.line(f.m.apply(a), f.m.apply(b), st, f.dashed) }
 	const near = 0.5
 	switch {
 	case math.Abs(c1.y-p0.y) < near && math.Abs(c2.y-p3.y) < near:
@@ -835,17 +961,16 @@ func cubic(g *grid, p0, c1, c2, p3 point, f frame, st text.Style) {
 		seg(point{p0.x, my}, point{p3.x, my})
 		seg(point{p3.x, my}, p3)
 	default:
-		prev := p0
+		pts := []point{f.m.apply(p0)}
 		for k := 1; k <= 16; k++ {
 			t := float64(k) / 16
 			u := 1 - t
-			q := point{
+			pts = append(pts, f.m.apply(point{
 				u*u*u*p0.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*p3.x,
 				u*u*u*p0.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*p3.y,
-			}
-			seg(prev, q)
-			prev = q
+			}))
 		}
+		d.curve(pts, st)
 	}
 }
 
@@ -908,8 +1033,8 @@ func pathCommands(d string) []pathCmd {
 	return out
 }
 
-// flatten is a path's points, transformed: what a marker's triangle needs.
-func flatten(d string, m matrix) []point {
+// corners are a path's points, transformed: a marker's triangle.
+func corners(d string, m matrix) []point {
 	var out []point
 	for _, c := range pathCommands(d) {
 		for i := 0; i+1 < len(c.args); i += 2 {

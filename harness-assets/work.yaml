@@ -125,12 +125,15 @@ tasks:
     spec: 1
     implementation: |
       internal/mermaid：Pele 1.13.0 的 dist/pele.global.js（MIT，LICENSE 一起放在 internal/mermaid/pele/）用 go:embed 放進執行檔，goja 跑；
-      pele.render 給的 measurer 把每個字量成一格（8.4px，寬字兩格），fontSize 14，maxWidth 是可以用的格數 × 8.4，autoDirection 開著（窄的時候 LR 轉成 TB），
-      不畫連結與圖片；一次 render 超過 3 秒就停下來，當成錯誤
-      SVG 畫成格子（一格 8.4 × 16.8px，座標四捨五入到格子）：rect、polygon、polyline、line、circle、ellipse、path（M L H V C S Q T A Z），套用 transform（translate、scale、rotate、matrix）；
-      水平與垂直的線用框線字，交會處依方向選 ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼（轉角一律圓角）；虛線 ╌ ╎；其他方向的線、曲線、圓用點字（braille）；
-      兩端都是水平（或垂直）的三次曲線畫成直角的轉折；框的上下邊離中間那一列一樣多列，字在中間；
-      箭頭（pele-marker）在所有線畫完後放：指向的框線前一格，沒有框線時蓋在線的最後一格，▶ ◀ ▲ ▼
+      pele.render 給的 measurer 把每個字量成一格（8.4px，寬字兩格），fontSize 14，maxWidth 是可以用的格數 × 8.4，autoDirection 開著、
+      directionBreakpoint 設成很大（放不下就把 LR 轉成 TB，不只在 pele 預設的 640px 以下），不畫連結與圖片；一次 render 超過 3 秒就停下來，當成錯誤
+      SVG 先整個讀完再畫：rect、polygon、polyline、line、circle、ellipse、path（M L H V C S Q T A Z），套用 transform（translate、scale、rotate、matrix）；
+      欄是 x ÷ 8.4 四捨五入；列不是直接除：框的上下邊、分隔線、字、線的端點這些「層」排序後一層一層分配，離上一層 0.4 列以上就是新的一列
+      （隔得遠的照距離多空幾列），近的併在同一列，層與層之間照比例 —— 字不會落在線上，框裡一行字時字在正中間
+      水平與垂直的線用框線字，交會處依方向選 ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼（轉角一律圓角）；虛線 ╌ ╎；其他方向的直線、曲線、圓、弧一律用點字（braille）；
+      兩端都是水平（或垂直）的三次曲線畫成直角的轉折
+      箭頭（填滿的三角形 pele-marker）在所有線與字畫完後放：指向的框線前一格、框線上不留朝箭頭的接頭，沒有框線時蓋在線的最後一格，▶ ◀ ▲ ▼；
+      線組成的 marker（ER 圖的鴨掌、短槓）照線畫
       字照原本的位置放（text-anchor、tspan 的每一行），邊上的字左右各清掉一格線；描邊用的字（fill none）不畫；比一格小的方塊畫 ■、小圓畫 ● ○
       顏色：節點的框 Blue、群組的框與生命線 Overlay0、線與箭頭 Overlay2（或 SVG 寫的顏色）、字 Text、邊上的字 Subtext0、群組的名字 Overlay1、標題粗體
       上下空白的列、左邊空白的欄拿掉；同一張圖同一個寬度畫過就記住

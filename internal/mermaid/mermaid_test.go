@@ -9,7 +9,7 @@ import (
 	"github.com/vulcanshen/viewu/internal/text"
 )
 
-func rows(t *testing.T, src string, w int) []string {
+func drawRows(t *testing.T, src string, w int) []string {
 	t.Helper()
 	rs, err := Draw(src, w)
 	if err != nil {
@@ -25,7 +25,7 @@ func rows(t *testing.T, src string, w int) []string {
 func has(rows []string, s string) bool { return strings.Contains(strings.Join(rows, "\n"), s) }
 
 func TestFlowchartLeftToRight(t *testing.T) {
-	rs := rows(t, "flowchart LR\n  A[One] --> B[Two]\n", 80)
+	rs := drawRows(t, "flowchart LR\n  A[One] --> B[Two]\n", 80)
 	for _, s := range []string{"│ One", "│ Two", "▶", "╭", "╯"} {
 		if !has(rs, s) {
 			t.Errorf("no %q:\n%s", s, strings.Join(rs, "\n"))
@@ -40,7 +40,7 @@ func TestFlowchartLeftToRight(t *testing.T) {
 }
 
 func TestNarrowTurnsTopDown(t *testing.T) {
-	rs := rows(t, "flowchart LR\n  A[Alpha] --> B[Bravo] --> C[Charlie]\n", 24)
+	rs := drawRows(t, "flowchart LR\n  A[Alpha] --> B[Bravo] --> C[Charlie]\n", 24)
 	if !has(rs, "▼") || has(rs, "▶") {
 		t.Errorf("not laid out top down at 24 cells:\n%s", strings.Join(rs, "\n"))
 	}
@@ -52,14 +52,14 @@ func TestNarrowTurnsTopDown(t *testing.T) {
 }
 
 func TestEdgeLabelOnTheLine(t *testing.T) {
-	rs := rows(t, "flowchart LR\n  A --> |yes| B\n", 80)
+	rs := drawRows(t, "flowchart LR\n  A --> |yes| B\n", 80)
 	if !has(rs, "─ yes ─") {
 		t.Errorf("the label does not sit on its edge:\n%s", strings.Join(rs, "\n"))
 	}
 }
 
 func TestSequence(t *testing.T) {
-	rs := rows(t, "sequenceDiagram\n  Alice->>Bob: Hello\n  Bob-->>Alice: Hi\n", 80)
+	rs := drawRows(t, "sequenceDiagram\n  Alice->>Bob: Hello\n  Bob-->>Alice: Hi\n", 80)
 	for _, s := range []string{"Alice", "Bob", "Hello", "Hi", "▶", "◀", "╌"} {
 		if !has(rs, s) {
 			t.Errorf("no %q:\n%s", s, strings.Join(rs, "\n"))
@@ -68,7 +68,7 @@ func TestSequence(t *testing.T) {
 }
 
 func TestCurvesAsDots(t *testing.T) {
-	rs := rows(t, "flowchart LR\n  A{Is it?} --> B\n", 80)
+	rs := drawRows(t, "flowchart LR\n  A{Is it?} --> B\n", 80)
 	braille := false
 	for _, r := range rs {
 		for _, c := range r {
@@ -83,7 +83,7 @@ func TestCurvesAsDots(t *testing.T) {
 }
 
 func TestWideWords(t *testing.T) {
-	rs := rows(t, "flowchart LR\n  A[中文] --> B[日本語]\n", 80)
+	rs := drawRows(t, "flowchart LR\n  A[中文] --> B[日本語]\n", 80)
 	if !has(rs, "中文") || !has(rs, "日本語") {
 		t.Errorf("%s", strings.Join(rs, "\n"))
 	}
@@ -124,14 +124,14 @@ func TestSyntaxError(t *testing.T) {
 }
 
 func TestBoxJoins(t *testing.T) {
-	g := newGrid(6, 4)
+	g := newGrid(6, 4, newRows(nil))
 	g.hline(0, 5*cellW, 0, text.Style{}, false)
 	g.vline(0, 0, 3*cellH, text.Style{}, false)
 	g.vline(5*cellW, 0, 3*cellH, text.Style{}, false)
 	g.hline(0, 5*cellW, 3*cellH, text.Style{}, false)
 	g.vline(2*cellW, 0, 3*cellH, text.Style{}, true)
 	want := []string{"╭─┬──╮", "│ ╎  │", "│ ╎  │", "╰─┴──╯"}
-	for i, r := range g.rows() {
+	for i, r := range g.lines() {
 		if got := (text.Line{Chars: r}).Drawn(); got != want[i] {
 			t.Errorf("row %d %q, want %q", i, got, want[i])
 		}
