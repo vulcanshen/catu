@@ -41,6 +41,7 @@ var (
 	textBytes = 16 << 20
 	hexBytes  = int64(1 << 20)
 	treeRows  = 5000
+	colourNow = 64 << 10 // a text up to this size is coloured before it is shown
 )
 
 // shown is what the panel shows: a file or a directory, in one view or two
@@ -59,6 +60,9 @@ type view struct {
 	numbered bool
 	// layout, when set, lays the lines out at the panel's width.
 	layout func(w int) []text.Line
+	// colour, when set, is the lines in colour, made in the background:
+	// lines are the same in Text until then.
+	colour func() []text.Line
 	// fact and hint, when lines is empty, say why (tdp screen.8).
 	fact, hint string
 }
@@ -134,9 +138,13 @@ func load(p string, cfg config, warn func(error)) (*shown, error) {
 		}
 		s.views = textViews(s, content, cfg.TabWidth, warn)
 		if rest > 0 {
+			note := grey(fmt.Sprintf("(%s more not shown)", size(rest)))
 			for i := range s.views {
 				if s.views[i].layout == nil {
-					s.views[i].lines = append(s.views[i].lines, grey(fmt.Sprintf("(%s more not shown)", size(rest))))
+					s.views[i].lines = append(s.views[i].lines, note)
+				}
+				if colour := s.views[i].colour; colour != nil {
+					s.views[i].colour = func() []text.Line { return append(colour(), note) }
 				}
 			}
 		}
@@ -152,9 +160,14 @@ func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 	if s.kind == "private key" {
 		name = "PRIVATE KEY"
 	}
-	source := view{
-		name: name, lines: text.File(content, text.Lexer(s.path), tabW), numbered: true,
-		fact: "Empty file", hint: "Press [o] to open another file",
+	source := view{name: name, numbered: true, fact: "Empty file", hint: "Press [o] to open another file"}
+	// Lexing takes about a second a megabyte: a big text is shown at once in
+	// Text and coloured in the background (tdp panel.15: the panel loading).
+	if lexer := text.Lexer(s.path); lexer != nil && len(content) > colourNow {
+		source.lines = text.File(content, nil, tabW)
+		source.colour = func() []text.Line { return text.File(content, lexer, tabW) }
+	} else {
+		source.lines = text.File(content, lexer, tabW)
 	}
 	opt := doc.Options{TabW: tabW, Diagram: mermaid.Draw, OnDiagramError: warn}
 	switch {

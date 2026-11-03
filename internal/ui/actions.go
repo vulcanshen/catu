@@ -58,9 +58,9 @@ func (v *viewer) open() tea.Cmd {
 			if next == nil {
 				return nil
 			}
-			v.show(next)
+			colour := v.show(next)
 			v.app.Log(terminu.Info, "Opened "+tilde(next.path))
-			return v.app.CloseAll()
+			return tea.Batch(colour, v.app.CloseAll())
 		},
 	})
 }

@@ -53,6 +53,15 @@ func (r *reader) set(lines []text.Line, numbered bool) {
 	r.reset()
 }
 
+// recolour puts the same lines in their colours in place, where they are:
+// the view, the hits and the cursor stay.
+func (r *reader) recolour(lines []text.Line) {
+	if len(lines) != len(r.lines) {
+		r.folds = nil
+	}
+	r.lines = lines
+}
+
 // setLayout shows what layout lays out at the panel's width.
 func (r *reader) setLayout(layout func(w int) []text.Line) {
 	r.lines, r.numbered, r.layout, r.laidW = nil, false, layout, -1

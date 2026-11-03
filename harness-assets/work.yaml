@@ -35,7 +35,9 @@ tasks:
       其他控制字元畫成 Red 的名字（\x07、\x1b……）
       檔案裡有 \x1b[ 時：照檔案自己的 SGR 上色（粗體、斜體、底線、刪除線、16 色換成 catppuccin 的、256 色、24 位元），不再上語法顏色；
       不是 SGR 的序列，ESC 畫成 Red 的 \x1b、後面的字照原樣
-    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky]
+      超過 64 KB、有 lexer 的檔：先全部用 Text 畫出來，tgo Panel.Loading 打開（膠囊後面的 loading icon）；上色在背景跑（tea.Cmd），
+      回來時（tgo App.OnMsg）只換掉那一個 view 的行的顏色，捲動位置、命中、Visual 的游標都不動，loading icon 拿掉；已經換成別的檔案時丟掉
+    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater]
   - id: 4
     spec: 1
     implementation: |

@@ -60,19 +60,45 @@ func File(content string, lexer chroma.Lexer, tabW int) []Line {
 	colours := lex(raw, lexer)
 	for i, l := range raw {
 		b := newBuilder(tabW)
-		k := 0
-		gr := uniseg.NewGraphemes(l)
-		for gr.Next() {
-			fg := terminu.Text
+		fg := func(k int) terminu.Color {
 			if k < len(colours[i]) && colours[i][k].Set {
-				fg = colours[i][k]
+				return colours[i][k]
 			}
-			b.add(gr.Str(), Style{Fg: fg})
-			k++
+			return terminu.Text
+		}
+		if isASCII(l) { // a character a byte: no graphemes to find
+			b.chars = make([]Char, 0, len(l))
+			for k := 0; k < len(l); k++ {
+				b.add(ascii[l[k]], Style{Fg: fg(k)})
+			}
+		} else {
+			k := 0
+			gr := uniseg.NewGraphemes(l)
+			for gr.Next() {
+				b.add(gr.Str(), Style{Fg: fg(k)})
+				k++
+			}
 		}
 		out[i] = Line{Chars: b.chars, Num: i + 1}
 	}
 	return out
+}
+
+// ascii are the 128 ASCII characters as strings.
+var ascii = func() (a [128]string) {
+	for i := range a {
+		a[i] = string(rune(i))
+	}
+	return a
+}()
+
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return false
+		}
+	}
+	return true
 }
 
 // Code is a code block's lines, as File draws a file's but not numbered.
@@ -137,7 +163,11 @@ func (b *builder) add(g string, st Style) {
 		b.at = 0
 		return
 	}
-	c := Char{Draw: g, W: terminu.Width(g), St: st, Src: g}
+	w := 1
+	if len(g) > 1 || g[0] < 0x20 || g[0] >= 0x7f {
+		w = terminu.Width(g) // not a printable ASCII character: measure it
+	}
+	c := Char{Draw: g, W: w, St: st, Src: g}
 	switch name, ctrl := CtrlName(g); {
 	case g == "\t":
 		c.Draw, c.W = strings.Repeat(" ", b.tabW), b.tabW

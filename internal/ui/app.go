@@ -11,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 
+	"github.com/vulcanshen/viewu/internal/text"
 	"github.com/vulcanshen/viewu/internal/version"
 )
 
@@ -46,9 +47,10 @@ func Open(p string) (*terminu.App, error) {
 	a.MinWidth, a.MinHeight = 40, 12
 	a.InputTabWidth, a.HideSecretsInPreview = cfg.TabWidth, cfg.HideSecrets
 	a.Status = v.status
+	a.OnMsg = v.onMsg
 	v.panel = &terminu.Panel{Body: v.body, Actions: v.actions(), OnTab: v.onTab}
 	a.AddScreen(&terminu.Screen{Name: "View", Panels: []*terminu.Panel{v.panel}})
-	v.show(s)
+	colour := v.show(s)
 	if a.Splash, err = terminu.NewSplash(icon, "viewu", version.Display(), intro); err != nil {
 		return nil, err
 	}
@@ -56,23 +58,24 @@ func Open(p string) (*terminu.App, error) {
 		a.Log(terminu.Info, "Opened "+tilde(s.path))
 		if cfgErr != nil {
 			// Settings that cannot be read: moved aside, or viewu leaves (tdp E3).
-			return a.MoveAside(cfgPath, cfgErr, func() tea.Cmd {
+			return tea.Batch(colour, a.MoveAside(cfgPath, cfgErr, func() tea.Cmd {
 				v.cfg = defaults()
 				a.InputTabWidth, a.HideSecretsInPreview = v.cfg.TabWidth, v.cfg.HideSecrets
 				if again, err := load(v.cur.path, v.cfg, v.diagramError); err == nil {
-					v.show(again)
+					return v.show(again)
 				}
 				return nil
-			})
+			}))
 		}
-		return nil
+		return colour
 	}
 	return a, nil
 }
 
 // show puts s in the panel: its views' names on the label and the tabs, the
-// first view in the body.
-func (v *viewer) show(s *shown) {
+// first view in the body. It returns the colouring of the views to be
+// coloured in the background; the panel is loading until they are.
+func (v *viewer) show(s *shown) tea.Cmd {
 	v.cur, v.warned = s, map[string]bool{}
 	v.panel.LeaveMode()
 	v.panel.Label = s.views[0].name
@@ -82,6 +85,40 @@ func (v *viewer) show(s *shown) {
 	}
 	v.panel.Tab = 0
 	v.showView(0)
+	var cmds []tea.Cmd
+	for i, vw := range s.views {
+		if colour := vw.colour; colour != nil {
+			cmds = append(cmds, func() tea.Msg { return coloured{s: s, view: i, lines: colour()} })
+		}
+	}
+	v.panel.Loading = len(cmds) > 0
+	return tea.Batch(cmds...)
+}
+
+// coloured is a view's lines in colour, made in the background.
+type coloured struct {
+	s     *shown
+	view  int
+	lines []text.Line
+}
+
+// onMsg takes a view's colours when they are made: in their place, where
+// they are, nothing moving (tdp K3: the background moves nothing).
+func (v *viewer) onMsg(msg tea.Msg) tea.Cmd {
+	c, ok := msg.(coloured)
+	if !ok || c.s != v.cur {
+		return nil // what was shown when it started is not any more
+	}
+	vw := &v.cur.views[c.view]
+	vw.lines, vw.colour = c.lines, nil
+	if v.panel.Tab == c.view && vw.layout == nil {
+		v.body.recolour(c.lines)
+	}
+	v.panel.Loading = false
+	for _, vw := range v.cur.views {
+		v.panel.Loading = v.panel.Loading || vw.colour != nil
+	}
+	return nil
 }
 
 // showView puts view i of what is shown in the body.

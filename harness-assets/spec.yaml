@@ -33,12 +33,13 @@ tasks:
   - id: 3
     spec: 1
     request: 文字檔：有語法顏色與行號，一行太長折到下一列，不截掉
-    tdp: [tdp file-picker.3, tdp note.2, tdp components.3, tdp components.5, tdp E3, tdp P4, tdp P5]
+    tdp: [tdp file-picker.3, tdp note.2, tdp components.3, tdp components.5, tdp E3, tdp P4, tdp P5, tdp panel.15, tdp K3]
     remark:
       - "照 viewer 的內容（tdp note.2）：chroma 的 catppuccin-mocha 只上前景色；行號 Overlay0、靠右，欄寬 max(3, 總行數的位數)；一律折行，在空白處斷（tdp components.3），折下來的列行號欄空白"
       - "Tab 畫成 input_tab_width 格空白，CRLF 的 \\r 不畫，檔案自己帶顏色碼時照它上色、不再上語法顏色，其他控制字元畫成 Red 的名字（tdp components.5、file-picker.3）"
       - "語言照檔名判斷（tdp note.2），判斷不出來是 Text"
       - "整個檔讀進來，不是預覽的 64 KB：上限 16 MB，超過時只畫前 16 MB，最後一列 Overlay0 寫還有多少沒畫（tdp P5 功能邏輯）"
+      - "上語法顏色一 MB 要將近一秒：超過 64 KB 的檔先用 Text 畫出來、在背景上色，上色中 panel 是 loading（膠囊後面的 loading icon，tdp panel.15），好了只換顏色，捲動位置、命中、游標都不動（tdp K3：背景的事不移動任何東西）"
   - id: 4
     spec: 1
     request: 其他種類的檔案照 filu 的預覽畫：目錄樹、壓縮檔裡有什麼、PDF 的文字、圖片、二進位的十六進位
