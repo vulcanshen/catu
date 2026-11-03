@@ -21,7 +21,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/alecthomas/chroma/v2"
 	"github.com/dslipak/pdf"
 	terminu "github.com/vulcanshen/terminu-go"
 
@@ -167,7 +166,7 @@ func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 		name = "PRIVATE KEY"
 	}
 	source := view{name: name, numbered: true, fact: "Empty file", hint: "Press [o] to open another file"}
-	source.lines, source.colour = textLines(content, text.Lexer(s.path), tabW)
+	source.lines, source.colour = textLines(content, s.path, tabW)
 	opt := doc.Options{TabW: tabW, Diagram: mermaid.Draw, OnDiagramError: warn}
 	switch {
 	case s.kind == "text" && isJSON(s.path):
@@ -179,7 +178,7 @@ func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 		case err != nil:
 			formatted.fact, formatted.red = "Not valid JSON: "+jsonError(content, err), true
 		default:
-			formatted.lines, formatted.colour = textLines(b.String()+"\n", text.Lexer(s.path), tabW)
+			formatted.lines, formatted.colour = textLines(b.String()+"\n", s.path, tabW)
 		}
 		return []view{source, formatted}
 	case s.kind == "text" && isMarkdown(s.path):
@@ -214,15 +213,15 @@ func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 	return []view{source}
 }
 
-// textLines are a text's lines in the colours lexer reads them in. Lexing
-// takes about a second a megabyte: a big text is given in Text, colour the
-// lines in colour, to be made in the background (tdp panel.15: the panel
-// loading meanwhile).
-func textLines(content string, lexer chroma.Lexer, tabW int) (lines []text.Line, colour func() []text.Line) {
-	if lexer != nil && len(content) > colourNow {
-		return text.File(content, nil, tabW), func() []text.Line { return text.File(content, lexer, tabW) }
+// textLines are a text's lines in the colours of lang's syntax, a file's
+// name or a language's. Colouring takes about a second a megabyte: a big
+// text is given in Text, colour the lines in colour, to be made in the
+// background (tdp panel.15: the panel loading meanwhile).
+func textLines(content, lang string, tabW int) (lines []text.Line, colour func() []text.Line) {
+	if text.HasSyntax(lang) && len(content) > colourNow {
+		return text.File(content, "", tabW), func() []text.Line { return text.File(content, lang, tabW) }
 	}
-	return text.File(content, lexer, tabW), nil
+	return text.File(content, lang, tabW), nil
 }
 
 // isJSON reports a JSON file by its name.

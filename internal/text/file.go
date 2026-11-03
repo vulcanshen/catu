@@ -1,45 +1,28 @@
 package text
 
 import (
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/lexers"
-	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/rivo/uniseg"
 	terminu "github.com/vulcanshen/terminu-go"
 )
 
-// mocha is the colours text is highlighted in: catppuccin-mocha, the
-// foreground only (tdp note.2, file-picker.3).
-var mocha = styles.Get("catppuccin-mocha")
-
-// Lexer is the lexer for a file named name, nil when none matches: the
-// language is judged by the name (tdp note.2).
-func Lexer(name string) chroma.Lexer {
-	return lexers.Match(filepath.Base(name))
-}
-
-// LexerFor is the lexer a code block's language names ("go", "yaml"); nil
-// when there is none.
-func LexerFor(lang string) chroma.Lexer {
-	if lang == "" {
-		return nil
-	}
-	return lexers.Get(lang)
-}
+// HasSyntax reports whether lang, a file's name or a language's, names a
+// language terminu.Syntax colours: chroma's registry knows it, the lib's
+// lexers in it (tdp note.2, file-picker.3).
+func HasSyntax(lang string) bool { return lang != "" && lexers.Get(lang) != nil }
 
 // File is a text's lines as a viewer draws them (tdp note.2, file-picker.3,
-// components.5), numbered from 1: in the colours lexer reads them in,
-// catppuccin-mocha, the foreground only, Text where it leaves them (and with
-// no lexer); a tab as tabW spaces; the \r of a CRLF not drawn; any other
-// control character by its name in Red. A text with colour codes of its own
-// is drawn in them instead, not lexed, a \r inside a line leaving the line's
-// last state, as a terminal does.
-func File(content string, lexer chroma.Lexer, tabW int) []Line {
+// components.5), numbered from 1: in the colours of lang's syntax, a file's
+// name or a language's, as the lib colours a file in its preview
+// (terminu.Syntax), Text with no syntax; a tab as tabW spaces; the \r of a
+// CRLF not drawn; any other control character by its name in Red. A text
+// with colour codes of its own is drawn in them instead, a \r inside a line
+// leaving the line's last state, as a terminal does.
+func File(content, lang string, tabW int) []Line {
 	if content == "" {
 		return nil // an empty file has no lines
 	}
@@ -57,26 +40,27 @@ func File(content string, lexer chroma.Lexer, tabW int) []Line {
 		}
 		return out
 	}
-	colours := lex(raw, lexer)
+	if HasSyntax(lang) {
+		for i, l := range raw {
+			raw[i] = lastState(l)
+		}
+		for i, l := range terminu.Syntax(lang, raw) {
+			out[i] = Line{Chars: coloured(l, tabW), Num: i + 1}
+		}
+		return out
+	}
+	text := Style{Fg: terminu.Text}
 	for i, l := range raw {
 		b := newBuilder(tabW)
-		fg := func(k int) terminu.Color {
-			if k < len(colours[i]) && colours[i][k].Set {
-				return colours[i][k]
-			}
-			return terminu.Text
-		}
 		if isASCII(l) { // a character a byte: no graphemes to find
 			b.chars = make([]Char, 0, len(l))
 			for k := 0; k < len(l); k++ {
-				b.add(ascii[l[k]], Style{Fg: fg(k)})
+				b.add(ascii[l[k]], text)
 			}
 		} else {
-			k := 0
 			gr := uniseg.NewGraphemes(l)
 			for gr.Next() {
-				b.add(gr.Str(), Style{Fg: fg(k)})
-				k++
+				b.add(gr.Str(), text)
 			}
 		}
 		out[i] = Line{Chars: b.chars, Num: i + 1}
@@ -102,8 +86,8 @@ func isASCII(s string) bool {
 }
 
 // Code is a code block's lines, as File draws a file's but not numbered.
-func Code(content string, lexer chroma.Lexer, tabW int, ground terminu.Color) [][]Char {
-	lines := File(content, lexer, tabW)
+func Code(content, lang string, tabW int, ground terminu.Color) [][]Char {
+	lines := File(content, lang, tabW)
 	out := make([][]Char, len(lines))
 	for i, l := range lines {
 		for k := range l.Chars {
@@ -114,72 +98,27 @@ func Code(content string, lexer chroma.Lexer, tabW int, ground terminu.Color) []
 	return out
 }
 
-// lex is the foreground of each grapheme of each line as lexer reads them;
-// an unset colour where it gives none.
-func lex(lines []string, lexer chroma.Lexer) [][]terminu.Color {
-	out := make([][]terminu.Color, len(lines))
-	if lexer == nil {
-		return out
-	}
-	it, err := chroma.Coalesce(lexer).Tokenise(nil, strings.Join(lines, "\n"))
-	if err != nil {
-		return out
-	}
-	toml := lexer.Config() != nil && lexer.Config().Name == "TOML"
-	row, startOfLine, header := 0, true, false
-	for tok := it(); tok != chroma.EOF; tok = it() {
-		kind := tok.Type
-		if toml {
-			kind, startOfLine, header = tomlKind(tok, startOfLine, header)
-		}
-		c := mocha.Get(kind).Colour
-		fg := terminu.Color{}
-		if c.IsSet() {
-			fg = terminu.Color{RGB: terminu.RGB{c.Red(), c.Green(), c.Blue()}, Set: true}
-		}
-		for i, part := range strings.Split(tok.Value, "\n") {
-			if i > 0 {
-				row++
-			}
-			if row >= len(out) {
-				break
-			}
-			gr := uniseg.NewGraphemes(part)
-			for gr.Next() {
-				out[row] = append(out[row], fg)
-			}
-		}
-	}
-	return out
-}
-
-// TODO(tdp #1): tdp note.2 has the viewer coloured as the file-picker's
-// preview is, and terminu-go's preview leaves these uncoloured; until tdp
-// says who fills a lexer's gap, viewu does it here (the user's choice).
+// TODO(tgo #?): terminu.Syntax says a \r stays in a line for the caller to
+// draw, but chroma reads it as a line break, and the lines after it move
+// down one; until terminu-go keeps it, a line is given to Syntax in its
+// last state, as the lib's preview gives its own to chroma.
 //
-// tomlKind is the kind a TOML token is coloured as. chroma's TOML lexer
-// calls a table's name and a key both NameOther, which catppuccin-mocha
-// leaves uncoloured; they are coloured as the INI lexer's are, a table
-// (a line that starts with [) a Keyword, a key a NameAttribute. It is told
-// whether the token starts a line and whether the line is a table's; it
-// gives them back for the next token.
-func tomlKind(tok chroma.Token, startOfLine, header bool) (chroma.TokenType, bool, bool) {
-	kind := tok.Type
-	switch {
-	case strings.Contains(tok.Value, "\n"):
-		return kind, true, false
-	case startOfLine && strings.TrimSpace(tok.Value) == "":
-		return kind, true, false // the indent before the line's first token
-	case startOfLine:
-		header = tok.Type == chroma.Punctuation && strings.HasPrefix(tok.Value, "[")
+// lastState is a line as a \r inside it leaves it: what follows the \r
+// written over what was there, the characters as they are in the file.
+func lastState(l string) string {
+	if !strings.Contains(l, "\r") {
+		return l
 	}
-	if kind == chroma.NameOther {
-		kind = chroma.NameAttribute
-		if header {
-			kind = chroma.Keyword
-		}
+	b := newBuilder(1)
+	gr := uniseg.NewGraphemes(l)
+	for gr.Next() {
+		b.add(gr.Str(), Style{})
 	}
-	return kind, false, header
+	var s strings.Builder
+	for _, c := range b.chars {
+		s.WriteString(c.Src)
+	}
+	return s.String()
 }
 
 // builder makes a line's characters as a terminal leaves them: a \r goes

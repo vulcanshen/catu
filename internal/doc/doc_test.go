@@ -146,6 +146,16 @@ func TestCodeBlock(t *testing.T) {
 	}
 }
 
+// TestCodeBlockColoursAsThePreview: a code block is coloured as the lib
+// colours its language, the gaps chroma leaves filled (tdp file-picker.3):
+// a YAML value without quotes is Green.
+func TestCodeBlockColoursAsThePreview(t *testing.T) {
+	lines := render("```yaml\nkind: Pod\n```\n", 40)
+	if i, k := find(lines, "Pod"); i < 0 || lines[i].Chars[k].St.Fg != terminu.Hex("#a6e3a1") {
+		t.Error("the value without quotes is not Green")
+	}
+}
+
 func TestCodeLineFolds(t *testing.T) {
 	long := strings.Repeat("x", 50)
 	rows := drawnRows(render("```\n"+long+"\n```\n", 30))

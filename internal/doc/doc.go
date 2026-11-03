@@ -429,7 +429,7 @@ func (r *renderer) code(src, lang string, c *ctx) {
 		pre = c.hang
 	}
 	room := max(r.w-width(c.hang), 1)
-	for _, line := range text.Code(src, text.LexerFor(lang), r.opt.TabW, mantle) {
+	for _, line := range text.Code(src, lang, r.opt.TabW, mantle) {
 		for _, part := range fold(line, room) {
 			r.row(append(clone(pre), part...), mantle)
 			pre = c.hang
@@ -453,7 +453,7 @@ func (r *renderer) diagram(src string, c *ctx) bool {
 		pre := c.next()
 		pad := max(0, r.w-width(pre)-len("mermaid"))
 		r.row(append(append(clone(pre), text.Spaces(pad, text.Style{})...), text.Chars("mermaid", text.Style{Fg: terminu.Overlay0})...), mantle)
-		for _, line := range text.Code(src, nil, r.opt.TabW, mantle) {
+		for _, line := range text.Code(src, "", r.opt.TabW, mantle) {
 			for _, part := range fold(line, room) {
 				r.row(append(clone(c.hang), part...), mantle)
 			}

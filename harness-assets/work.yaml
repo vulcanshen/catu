@@ -25,21 +25,21 @@ tasks:
       啟動時（tgo App.Start）App Log 記 Info「Opened <路徑，家目錄寫成 ~>」
     test: [TestVersionAndHelp, TestPathNotThere, TestPathNotReadable, TestBadArguments, TestOpenLogsWhatItOpened, TestOpenErrors]
   - id: 3
-    spec: 3
+    spec: 4
     implementation: |
       文字檔（前 64 KB 沒有 NUL、是合法的 UTF-8）：label TEXT；整個檔讀進來，最多 16 MB，超過時最後一列 Overlay0「(<大小> more not shown)」
       每一行左邊畫行號：靠右，欄寬 max(3, 總行數的位數)，Overlay0，後面空一格；一行比 panel 寬時在空白處折到下一列（照 tgo viewer 的 foldAt：
       空白後、寬字前後可以斷，一個字比一列長才照格子切），折下來的列行號欄空白
-      語法顏色：chroma 照檔名找 lexer，catppuccin-mocha 只上前景色，lexer 沒上色的與找不到 lexer 的是 Text
-      TOML（chroma 的 TOML lexer）：NameOther 換成 INI 的種類再查 catppuccin-mocha —— 開頭是 [ 的那一行（表）裡的是 Keyword（Mauve），
-      其他（key，含 inline table 裡的）是 NameAttribute（Blue）；字串、數字、true 照 chroma
+      語法顏色：tgo 的 terminu.Syntax（檔案的路徑當語言），跟 o 選檔的預覽同一套：catppuccin-mocha 只上前景色，chroma 漏掉的照
+      tdp file-picker.3 的表補（TOML 的表名 Mauve、key Blue，YAML 沒引號的值 Green……）；chroma 認不出語言的檔是 Text
+      一行裡有 \r 的，先換成最後的樣子再交給 Syntax（Syntax 會把它當換行，TODO(tgo #?)）
       Tab 畫成 input_tab_width 格空白（複製時是 \t）；CRLF 的 \r 不畫；一行裡的 \r 回到行首、後面的字蓋過去（只留最後的狀態）；
       其他控制字元畫成 Red 的名字（\x07、\x1b……）
       檔案裡有 \x1b[ 時：照檔案自己的 SGR 上色（粗體、斜體、底線、刪除線、16 色換成 catppuccin 的、256 色、24 位元），不再上語法顏色；
       不是 SGR 的序列，ESC 畫成 Red 的 \x1b、後面的字照原樣
-      超過 64 KB、有 lexer 的檔：先全部用 Text 畫出來，tgo Panel.Loading 打開（膠囊後面的 loading icon）；上色在背景跑（tea.Cmd），
+      超過 64 KB、chroma 認得語言的檔：先全部用 Text 畫出來，tgo Panel.Loading 打開（膠囊後面的 loading icon）；上色在背景跑（tea.Cmd），
       回來時（tgo App.OnMsg）只換掉那一個 view 的行的顏色，捲動位置、命中、Visual 的游標都不動，loading icon 拿掉；已經換成別的檔案時丟掉
-    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater, TestTOMLKeysAndTables]
+    test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater, TestTOMLKeysAndTables, TestYAMLValuesAsThePreview]
   - id: 4
     spec: 1
     implementation: |
@@ -103,18 +103,18 @@ tasks:
       不存狀態、資料、快取
     test: [TestSettingsTabWidth, TestSettingsUnreadable, TestSettingsUnreadableQuit, TestHideSecrets]
   - id: 9
-    spec: 2
+    spec: 4
     implementation: |
       檔名是 .md .markdown .mdown .mkd .mkdn 的文字檔：panel 有兩個 tab（tgo Panel.Label、Tabs），DOCUMENT（打開時在這裡）、SOURCE；h|l 切（tgo 做），
       下框 hint 前面多 h|l:tab；換 tab 時回到最上面、命中與 Visual 清掉
-      SOURCE：照 task 3 的文字檔（chroma 的 markdown 上色、行號、折行）
+      SOURCE：照 task 3 的文字檔（terminu.Syntax 的 markdown 上色、行號、折行）
       DOCUMENT：goldmark（GFM：表格、刪除線、任務清單、自動連結）解析，照 panel 的寬度排成一列一列（每列剛好 panel 內寬、不畫行號、不再折），寬度變了重排；
       畫面上沒有 markdown 的符號，元件照 webu：
       層的顏色（標題與引用的直槓共用）：第 1 到第 6 層 Peach、Rosewater、Green、Teal、Flamingo、Mauve，六個都不一樣
       標題：字的前後各一格空白、整段鋪在它那一層的顏色上，字 Base 粗體；只包住字，不鋪滿整列
       段落 Text；粗體、斜體、刪除線照終端機的樣式；行內程式碼 Pink 字、Surface0 底
       無序清單每一層都是 Blue 的 -，靠縮排分層；任務清單換成 Blue 的 [x]、[ ]；有序清單依層 1.、a.、i. 輪迴，從清單寫的起始數字開始；項目折行時對齊到字的開頭
-      程式碼區塊：整列 Mantle 底，照語言名（chroma）上色，語言名 Overlay0 寫在第一列右邊；Tab 畫成 input_tab_width 格；一行太長在空白處折行
+      程式碼區塊：整列 Mantle 底，照語言名上色（tgo 的 terminu.Syntax，跟 task 3 同一套，chroma 漏掉的照 tdp file-picker.3 補），語言名 Overlay0 寫在第一列右邊；Tab 畫成 input_tab_width 格；一行太長在空白處折行
       引用：開頭 ▎ 加一格空白，整列 Mantle 底；▎ 是那一層引用的顏色（第 1 層 Peach、引用裡的引用 Rosewater……），巢狀時每一條各是自己那一層的顏色，
       第 6 層之後顏色從頭輪
       連結：Sapphire 的 nf-md-link（U+F0337）加一格空白，連結的字 Sapphire 加底線；沒有字時寫網址
@@ -124,7 +124,7 @@ tasks:
       區塊之間空一列（清單裡不空）
       找字、Visual 照 task 5、6：命中與游標在排好的列上；複製的是畫面上的字，一列尾端補滿的空白不複製
       內容是空的時候照 task 1 的空狀態
-    test: [TestMarkdownDocumentAndSource, TestMarkdownLaidOutAgainOnResize, TestMarkdownSearchAndCopy, TestEmptyMarkdown, TestEveryRowIsTheWidth, TestNoMarkdownSymbols, TestHeadingIsAChipOfItsLevel, TestLists, TestListItemFolds, TestCodeBlock, TestCodeLineFolds, TestQuote, TestTable, TestTableTooWide, TestLinkAndImage, TestInlineStyles, TestRule, TestControlCharacters]
+    test: [TestMarkdownDocumentAndSource, TestMarkdownLaidOutAgainOnResize, TestMarkdownSearchAndCopy, TestEmptyMarkdown, TestEveryRowIsTheWidth, TestNoMarkdownSymbols, TestHeadingIsAChipOfItsLevel, TestLists, TestListItemFolds, TestCodeBlock, TestCodeBlockColoursAsThePreview, TestCodeLineFolds, TestQuote, TestTable, TestTableTooWide, TestLinkAndImage, TestInlineStyles, TestRule, TestControlCharacters]
   - id: 10
     spec: 3
     implementation: |
