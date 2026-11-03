@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	terminu "github.com/vulcanshen/terminu-go"
 	"github.com/vulcanshen/terminu-go/tdptest"
 )
 
@@ -97,6 +98,30 @@ func TestMermaidTooWide(t *testing.T) {
 	dir := files(t, map[string]string{"seq.mmd": b.String()})
 	d := start(t, filepath.Join(dir, "seq.mmd"), 40, 20)
 	want(t, d, "…", "Alpha")
+}
+
+// TestMermaidFileCannotBeDrawn: a diagram file pele cannot draw leaves the
+// whole DIAGRAM tab with nothing to show: why in Red in the middle, a hint
+// under it (tdp panel.15); the App Log keeps all of pele's message, once;
+// the source is a tab away.
+func TestMermaidFileCannotBeDrawn(t *testing.T) {
+	dir := files(t, map[string]string{"bad.mmd": "flowchart LR\n  A --> B[[[\n"})
+	d := start(t, filepath.Join(dir, "bad.mmd"), 80, 24)
+	want(t, d, "Can't draw this diagram: Parse error on line 2:", "Press [l] to see the source, [!] for the whole error", "!:1 warning")
+	wantNot(t, d, "B[[[")
+	red := strings.TrimSuffix(terminu.Fg(terminu.Red).Render("Can't draw this diagram"), "\x1b[0m")
+	if !strings.Contains(strings.Join(d.Styled(), ""), red) {
+		t.Error("the reason is not in Red")
+	}
+	d.Resize(70, 24)
+	d.Resize(80, 24)
+	d.Press("l")
+	want(t, d, "  2   A --> B[[[")
+	d.Press("!")
+	want(t, d, "Expecting")
+	if n := strings.Count(strings.Join(d.Screen(), "\n"), "WARN Can't draw a mermaid diagram in bad.mmd"); n != 1 {
+		t.Errorf("%d warnings, want 1", n)
+	}
 }
 
 func TestMermaidErrorLoggedOnce(t *testing.T) {

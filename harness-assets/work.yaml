@@ -162,10 +162,12 @@ tasks:
       上下空白的列、左邊空白的欄拿掉；同一張圖同一個寬度畫過就記住
       Markdown 的 ```mermaid 區塊（task 9）畫成圖；.mmd、.mermaid 檔有 DIAGRAM（打開時在這裡）、SOURCE 兩個 tab，DIAGRAM 當成一個 mermaid 區塊畫
       比 panel 寬的圖：那一列切掉，最後一格 Overlay0 的 …（task 5 的 reader）
-      寫錯（pele 丟出錯誤）：照程式碼區塊畫原始碼（右上角 mermaid），下面 Red 一行一列寫 pele 的錯誤；App Log 記 Warning「Can't draw a mermaid diagram in <檔名>: <錯誤>」，
-      同一個檔同一個錯只記一次
+      寫錯（pele 丟出錯誤）：Markdown 裡的區塊照程式碼區塊畫原始碼（右上角 mermaid），下面 Red 一行一列寫 pele 的錯誤；
+      .mmd、.mermaid 檔的 DIAGRAM 整個 tab 沒有東西，位置列下面置中畫 Red 的「Can't draw this diagram: <pele 錯誤的第一行>」、空一列、
+      Overlay0 的「Press [l] to see the source, [!] for the whole error」（照 panel 寬折行；寬度變了重畫一次）；
+      兩種都在 App Log 記 Warning「Can't draw a mermaid diagram in <檔名>: <pele 的整段錯誤>」，同一個檔同一個錯只記一次
       打開含有 mermaid 區塊的 Markdown、或 mermaid 檔時，在背景先載入 pele
-    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDiamondAsSteps, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
+    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDiamondAsSteps, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidFileCannotBeDrawn, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
   - id: 11
     spec: 1
     implementation: |

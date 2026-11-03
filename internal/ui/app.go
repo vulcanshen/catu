@@ -135,7 +135,7 @@ func (v *viewer) onMsg(msg tea.Msg) tea.Cmd {
 func (v *viewer) showView(i int) {
 	vw := v.cur.views[i]
 	if vw.layout != nil {
-		v.body.setLayout(vw.layout)
+		v.body.setLayout(vw.layout, vw.failHint)
 	} else {
 		v.body.set(vw.lines, vw.numbered)
 	}

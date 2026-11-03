@@ -64,8 +64,11 @@ type view struct {
 	name     string // the tab's name, upper case (tdp components.4)
 	lines    []text.Line
 	numbered bool
-	// layout, when set, lays the lines out at the panel's width.
-	layout func(w int) []text.Line
+	// layout, when set, lays the lines out at the panel's width; an error
+	// is why the whole tab could not be made, failHint under it (tdp
+	// panel.15).
+	layout   func(w int) ([]text.Line, error)
+	failHint string
 	// colour, when set, is the lines in colour, made in the background:
 	// lines are the same in Text until then.
 	colour func() []text.Line
@@ -190,23 +193,32 @@ func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 		}
 		document := view{
 			name: "DOCUMENT", fact: "Empty file", hint: "Press [o] to open another file",
-			layout: func(w int) []text.Line { return doc.Render([]byte(content), w, opt) },
+			layout: func(w int) ([]text.Line, error) { return doc.Render([]byte(content), w, opt), nil },
 		}
 		return []view{document, source}
 	case s.kind == "text" && isMermaid(s.path):
-		// A diagram is drawn as a mermaid block in a document is, its
-		// error the same (tdp P5).
+		// A diagram is drawn as a mermaid block in a document is (tdp P5).
+		// One that cannot be drawn leaves the whole tab with nothing to
+		// show: why, in the middle (tdp panel.15), the App Log keeping all
+		// of pele's message.
 		s.kind = "mermaid"
 		source.name = "SOURCE"
 		go mermaid.Warm()
-		block := []byte("```mermaid\n" + strings.TrimRight(content, "\n") + "\n```\n")
+		src := strings.TrimRight(content, "\n")
+		block := []byte("```mermaid\n" + src + "\n```\n")
 		diagram := view{
 			name: "DIAGRAM", fact: "Empty file", hint: "Press [o] to open another file",
-			layout: func(w int) []text.Line {
+			failHint: "Press [l] to see the source, [!] for the whole error",
+			layout: func(w int) ([]text.Line, error) {
 				if strings.TrimSpace(content) == "" {
-					return nil
+					return nil, nil
 				}
-				return doc.Render(block, w, opt)
+				if _, err := opt.Diagram(src, w); err != nil {
+					warn(err)
+					first, _, _ := strings.Cut(err.Error(), "\n")
+					return nil, errors.New("Can't draw this diagram: " + first)
+				}
+				return doc.Render(block, w, opt), nil
 			},
 		}
 		return []view{diagram, source}

@@ -1,8 +1,7 @@
 spec: 7
 tasks:
   - id: 1
-    accepted: false
-    reason: tdp 不清楚：位置列寫在 tdp panel.10 的清單上面一列，viewu 的 panel 沒有清單（沒有 cursor 的內容 panel），能不能有位置列 tdp 沒寫；已送給 terminu session，等回覆，viewu 先留著這一列
+    accepted: true
   - id: 2
     accepted: true
   - id: 3
@@ -11,7 +10,7 @@ tasks:
     accepted: true
   - id: 5
     accepted: false
-    reason: tdp 不清楚：PgUp、PgDn 在 tgo 每一個 surface 都是 u|d 的別名，tdp K12 沒寫收不收、收了 ? 要不要列；select 的複製照 tdp M5 是 Cop[y]，tdp K11 與 menu.4 寫 [y] Copy，兩處矛盾；都已送給 terminu session，等回覆
+    reason: tdp 不清楚：PgUp、PgDn 在 tgo 每一個 surface 都是 u|d 的別名，tdp K12 沒寫收不收、收了 ? 要不要列；terminu session 2026-11-04 回覆是真的缺漏，交給使用者決定，在等；暫時跟 tgo 一樣收（合 tdp K7）。Cop[y] 已照 terminu session 的回覆確定（tdp M5）
   - id: 6
     accepted: true
   - id: 7
@@ -21,8 +20,7 @@ tasks:
   - id: 9
     accepted: true
   - id: 10
-    accepted: false
-    reason: tdp 不清楚：.mmd、.mermaid 的 DIAGRAM 整張畫不出來時，算內容（照程式碼區塊畫原始碼加 Red 的錯誤）還是 tdp panel.15 的錯誤，tdp 沒寫；已送給 terminu session，等回覆
+    accepted: true
   - id: 11
     accepted: true
   - id: 12

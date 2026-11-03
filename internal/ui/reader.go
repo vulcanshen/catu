@@ -21,9 +21,13 @@ type reader struct {
 	// numbered draws the lines' numbers in a column of their own.
 	numbered bool
 	// layout, when set, lays the lines out at a width (a document, a
-	// diagram): it is asked again whenever the width changes.
-	layout func(w int) []text.Line
-	laidW  int
+	// diagram): it is asked again whenever the width changes. An error is
+	// why it could make nothing of the whole tab: said in Red in the
+	// middle, failHint under it (tdp panel.15).
+	layout   func(w int) ([]text.Line, error)
+	laidW    int
+	laidErr  error
+	failHint string
 	// fact and hint say why there is nothing to show, in the middle (tdp
 	// screen.8); red marks the fact an error (tdp panel.15).
 	fact, hint string
@@ -68,10 +72,12 @@ func (r *reader) recolour(lines []text.Line) {
 	r.lines = lines
 }
 
-// setLayout shows what layout lays out at the panel's width.
-func (r *reader) setLayout(layout func(w int) []text.Line) {
+// setLayout shows what layout lays out at the panel's width; failHint is
+// the hint under its error, when it has one.
+func (r *reader) setLayout(layout func(w int) ([]text.Line, error), failHint string) {
 	r.lines, r.numbered, r.layout, r.laidW = nil, false, layout, -1
 	r.reset()
+	r.failHint = failHint
 }
 
 func (r *reader) reset() {
@@ -79,6 +85,7 @@ func (r *reader) reset() {
 	r.hits, r.current = nil, 0
 	r.visual, r.selecting = false, false
 	r.fact, r.hint, r.red = "", "", false
+	r.laidErr, r.failHint = nil, ""
 	r.numW = 0
 }
 
@@ -202,7 +209,8 @@ func (r *reader) measure(w int) {
 	if r.layout != nil {
 		if r.laidW != inner {
 			top := r.top
-			r.lines, r.laidW, r.folds = r.layout(inner), inner, nil
+			r.lines, r.laidErr = r.layout(inner)
+			r.laidW, r.folds = inner, nil
 			r.top, r.sub = min(top, max(len(r.lines)-1, 0)), 0
 			r.hits = nil
 			if r.visual {
@@ -327,20 +335,25 @@ func (r *reader) row(i, from, to int, lastRow bool) string {
 
 // emptyRows is the middle of an empty panel: the fact, then the hint, each
 // folded and centred, a blank row between them, in Overlay0; a fact that is
-// an error in Red (tdp screen.8, panel.15).
+// an error in Red, as is why a layout made nothing (tdp screen.8,
+// panel.15).
 func (r *reader) emptyRows(w, h int) []string {
 	inner := max(w-2, 1)
 	var rows []string
+	said, hint, red := r.fact, r.hint, r.red
+	if r.laidErr != nil {
+		said, hint, red = r.laidErr.Error(), r.failHint, true
+	}
 	fact := terminu.Fg(terminu.Overlay0)
-	if r.red {
+	if red {
 		fact = terminu.Fg(terminu.Red)
 	}
-	for _, l := range terminu.Wrap(r.fact, inner) {
+	for _, l := range terminu.Wrap(said, inner) {
 		rows = append(rows, fact.Render(l))
 	}
-	if r.hint != "" {
+	if hint != "" {
 		rows = append(rows, "")
-		for _, l := range terminu.Wrap(r.hint, inner) {
+		for _, l := range terminu.Wrap(hint, inner) {
 			rows = append(rows, terminu.Fg(terminu.Overlay0).Render(l))
 		}
 	}
