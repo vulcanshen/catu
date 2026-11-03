@@ -1,5 +1,5 @@
-id: 1
-from: 0
+id: 2
+from: v1.1.6
 to: v1.1.6
 tasks:
   - id: 1
@@ -87,11 +87,13 @@ tasks:
       - "app 不寫設定檔，沒有就用預設值；不存狀態、資料、快取"
       - "讀不了時照 tdp E3 開 MOVE ASIDE 的 confirm（tgo MoveAside）"
   - id: 9
-    spec: 1
-    request: Markdown 照 webu 顯示 markdown 的方式畫成文件；也看得到原始碼
+    spec: 2
+    request: Markdown 照 webu 顯示 markdown 的方式畫成文件；也看得到原始碼。第 6 層標題有自己的顏色；引用裡的引用，直槓也照標題的顏色層級
     tdp: [tdp P4, tdp P5, tdp F1, tdp terms.4, tdp panel.4, tdp K12, tdp note.2]
     remark:
-      - "畫法照 webu 的元件（webu docs/reader.md）：畫面上沒有 markdown 的符號；標題底色只包住字、字 Base，依層 Peach、Rosewater、Green、Teal、Flamingo；行內程式碼 Surface0 底；無序清單每層 Blue 的 -；有序清單依層 1.、a.、i.；程式碼區塊 Mantle 底、照語言上色、語言名寫在右上角；引用 Lavender 的直槓、Mantle 底；連結 link icon 加字；圖片 image icon 加 alt；表格畫格子、表頭粗體；分隔線 Overlay0（內容本身的顏色與符號屬於領域，tdp P4、P5；表格的格子是內容自己畫的框，tdp F1）"
+      - "畫法照 webu 的元件（webu docs/reader.md）：畫面上沒有 markdown 的符號；標題底色只包住字、字 Base；行內程式碼 Surface0 底；無序清單每層 Blue 的 -；有序清單依層 1.、a.、i.；程式碼區塊 Mantle 底、照語言上色、語言名寫在右上角；引用 Mantle 底；連結 link icon 加字；圖片 image icon 加 alt；表格畫格子、表頭粗體；分隔線 Overlay0（內容本身的顏色與符號屬於領域，tdp P4、P5；表格的格子是內容自己畫的框，tdp F1）"
+      - "層的顏色，標題與引用的直槓共用一組（使用者 2026-11-03）：第 1 到第 6 層依序 Peach、Rosewater、Green、Teal、Flamingo、Mauve，Markdown 只有 6 層，不輪迴。webu 的五色加 Mauve：Mauve 在文件裡只出現在程式碼區塊的語法顏色，在 Mantle 底上，跟標題不會並排（webu 選 Flamingo 的同一個理由）；Red（錯誤）、Yellow（Visual 的範圍）、Sapphire（連結）、Lavender（位置列）、Pink（行內程式碼）、Blue（focus 與清單記號）都有別的意思，不用（tdp P4）"
+      - "引用的直槓照它是第幾層引用上色，巢狀的每一條各是自己那一層的顏色（原本 webu 是一律 Lavender；Lavender 在 tdp 是位置列，換掉也不撞色）"
       - "兩個 tab：DOCUMENT（畫好的文件，打開時在這裡）、SOURCE（原始碼，照 task 3 的文字檔）；h|l 切（tdp K12、terms.4、panel.4）"
       - "DOCUMENT 是 app 排出來的內容，不畫行號（tdp note.2）；照 panel 的寬度排，終端機大小變了重排"
       - "Markdown 用 goldmark 解析，含 GFM：表格、刪除線、任務清單、自動連結"

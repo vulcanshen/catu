@@ -31,15 +31,21 @@ var (
 	surface0 = terminu.Hex("#313244")
 	pink     = terminu.Hex("#f5c2e7") // code in a line
 	sapphire = terminu.Hex("#74c7ec") // a link: press it
-	// levels are a heading's colours by its level, cycled.
+	// levels are the colours of a level, one each: a heading's by its level,
+	// a quote's bar by how deep the quote is. Markdown has six levels.
 	levels = []terminu.Color{
 		terminu.Hex("#fab387"), // peach
 		terminu.Hex("#f5e0dc"), // rosewater
 		terminu.Hex("#a6e3a1"), // green
 		terminu.Hex("#94e2d5"), // teal
 		terminu.Hex("#f2cdcd"), // flamingo
+		terminu.Hex("#cba6f7"), // mauve
 	}
 )
+
+// level is the colour of level n, counting from 1; past the sixth (a quote
+// that deep) they come round again.
+func level(n int) terminu.Color { return levels[(max(n, 1)-1)%len(levels)] }
 
 // Diagram draws a diagram's source (mermaid) at most w cells wide: its rows,
 // or why it could not.
@@ -80,13 +86,13 @@ type renderer struct {
 
 // ctx is what a block's rows start with — head on the first, hang on the
 // rest — and the ground they are on; a list's blocks have no blank rows
-// between them.
+// between them. The depths are how deep in lists and quotes it is.
 type ctx struct {
-	head, hang     []text.Char
-	used           *bool
-	ground         terminu.Color
-	tight          bool
-	udepth, odepth int
+	head, hang             []text.Char
+	used                   *bool
+	ground                 terminu.Color
+	tight                  bool
+	udepth, odepth, qdepth int
 }
 
 func (c *ctx) next() []text.Char {
@@ -98,7 +104,7 @@ func (c *ctx) next() []text.Char {
 }
 
 func (c *ctx) inner() ctx {
-	return ctx{hang: c.hang, ground: c.ground, tight: c.tight, udepth: c.udepth, odepth: c.odepth}
+	return ctx{hang: c.hang, ground: c.ground, tight: c.tight, udepth: c.udepth, odepth: c.odepth, qdepth: c.qdepth}
 }
 
 func width(cs []text.Char) int {
@@ -258,7 +264,7 @@ func (r *renderer) block(n ast.Node, c *ctx) {
 		for k := n.FirstChild(); k != nil; k = k.NextSibling() {
 			run = r.inline(run, k, text.Style{Fg: terminu.Text, Bold: true})
 		}
-		r.flow(run, c, levels[(max(n.Level, 1)-1)%len(levels)])
+		r.flow(run, c, level(n.Level))
 	case *ast.Paragraph, *ast.TextBlock:
 		r.blank(c)
 		var run []text.Char
@@ -280,10 +286,13 @@ func (r *renderer) block(n ast.Node, c *ctx) {
 		}
 	case *ast.Blockquote:
 		r.blank(c)
-		bar := append(text.Chars("▎", text.Style{Fg: terminu.Lavender}), text.Spaces(1, text.Style{})...)
+		// The bar is in the colour of the quote's depth, a heading's colours:
+		// each bar of a quote in a quote its own.
+		depth := c.qdepth + 1
+		bar := append(text.Chars("▎", text.Style{Fg: level(depth)}), text.Spaces(1, text.Style{})...)
 		used := false
 		in := ctx{head: append(clone(c.next()), bar...), hang: append(clone(c.hang), bar...),
-			used: &used, ground: mantle, udepth: c.udepth, odepth: c.odepth}
+			used: &used, ground: mantle, udepth: c.udepth, odepth: c.odepth, qdepth: depth}
 		r.blocks(n, &in)
 	case *ast.ThematicBreak:
 		r.blank(c)

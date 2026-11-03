@@ -101,18 +101,20 @@ tasks:
       不存狀態、資料、快取
     test: [TestSettingsTabWidth, TestSettingsUnreadable, TestSettingsUnreadableQuit, TestHideSecrets]
   - id: 9
-    spec: 1
+    spec: 2
     implementation: |
       檔名是 .md .markdown .mdown .mkd .mkdn 的文字檔：panel 有兩個 tab（tgo Panel.Label、Tabs），DOCUMENT（打開時在這裡）、SOURCE；h|l 切（tgo 做），
       下框 hint 前面多 h|l:tab；換 tab 時回到最上面、命中與 Visual 清掉
       SOURCE：照 task 3 的文字檔（chroma 的 markdown 上色、行號、折行）
       DOCUMENT：goldmark（GFM：表格、刪除線、任務清單、自動連結）解析，照 panel 的寬度排成一列一列（每列剛好 panel 內寬、不畫行號、不再折），寬度變了重排；
       畫面上沒有 markdown 的符號，元件照 webu：
-      標題：字的前後各一格空白、整段鋪在依層的顏色上（Peach、Rosewater、Green、Teal、Flamingo，第六層起輪迴），字 Base 粗體；只包住字，不鋪滿整列
+      層的顏色（標題與引用的直槓共用）：第 1 到第 6 層 Peach、Rosewater、Green、Teal、Flamingo、Mauve，六個都不一樣
+      標題：字的前後各一格空白、整段鋪在它那一層的顏色上，字 Base 粗體；只包住字，不鋪滿整列
       段落 Text；粗體、斜體、刪除線照終端機的樣式；行內程式碼 Pink 字、Surface0 底
       無序清單每一層都是 Blue 的 -，靠縮排分層；任務清單換成 Blue 的 [x]、[ ]；有序清單依層 1.、a.、i. 輪迴，從清單寫的起始數字開始；項目折行時對齊到字的開頭
       程式碼區塊：整列 Mantle 底，照語言名（chroma）上色，語言名 Overlay0 寫在第一列右邊；Tab 畫成 input_tab_width 格；一行太長在空白處折行
-      引用：開頭 Lavender 的 ▎ 加一格空白（巢狀多一條），整列 Mantle 底
+      引用：開頭 ▎ 加一格空白，整列 Mantle 底；▎ 是那一層引用的顏色（第 1 層 Peach、引用裡的引用 Rosewater……），巢狀時每一條各是自己那一層的顏色，
+      第 6 層之後顏色從頭輪
       連結：Sapphire 的 nf-md-link（U+F0337）加一格空白，連結的字 Sapphire 加底線；沒有字時寫網址
       圖片：Overlay0 的 nf-md-image（U+F02E9）加 alt，沒有 alt 時寫網址的檔名
       表格：Overlay0 的框線畫成格子，表頭粗體、下面一條分隔線；太寬時最寬的欄先縮，切掉的格子結尾畫 Overlay0 的 …

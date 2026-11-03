@@ -12,3 +12,12 @@
 - 用 pele（https://github.com/obsidianmd/pele）出 mermaid 圖。
 - 用 vim motion 控制 cursor。
 - 先不要有 edit mode，單純看檔案就好。
+
+## 2026-11-03（看過 samples 之後）
+
+> md 檔
+> 1. head 6 也給一個獨立顏色，不要和 head 1 一樣
+> 2. ouotes in quotes 的那個直槓，也 follow header 的顏色層級
+
+- Markdown 的第 6 層標題有自己的顏色，不要跟第 1 層一樣。
+- 引用裡的引用，那條直槓也照標題的顏色層級。

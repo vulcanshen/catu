@@ -86,11 +86,16 @@ func TestHeadingIsAChipOfItsLevel(t *testing.T) {
 			t.Errorf("level %d: the chip runs to the row's end", level+1)
 		}
 	}
-	// The sixth level starts the colours over.
-	lines := render("###### Six\n", 40)
-	i, k := find(lines, "Six")
-	if lines[i].Chars[k].St.Bg != levels[0] {
-		t.Error("the sixth level is not the first colour again")
+	// Six levels, six colours: the sixth is not the first again.
+	if len(levels) != 6 {
+		t.Fatalf("%d colours for Markdown's six levels", len(levels))
+	}
+	seen := map[terminu.Color]int{}
+	for i, c := range levels {
+		if j, ok := seen[c]; ok {
+			t.Errorf("levels %d and %d are the same colour", j+1, i+1)
+		}
+		seen[c] = i
 	}
 }
 
@@ -151,12 +156,23 @@ func TestCodeLineFolds(t *testing.T) {
 
 func TestQuote(t *testing.T) {
 	lines := render("> said\n>\n> > again\n", 30)
-	if c := lines[0].Chars[0]; c.Draw != "▎" || c.St.Fg != terminu.Lavender || c.St.Bg != mantle {
-		t.Errorf("the bar: %+v", c)
+	if c := lines[0].Chars[0]; c.Draw != "▎" || c.St.Fg != levels[0] || c.St.Bg != mantle {
+		t.Errorf("the bar is not the first level's colour: %+v", c)
 	}
 	rows := drawnRows(lines)
 	if !strings.HasPrefix(rows[len(rows)-1], "▎ ▎ again") {
 		t.Errorf("the inner quote:\n%s", strings.Join(rows, "\n"))
+	}
+	// A quote in a quote: each bar the colour of its own depth.
+	inner := lines[len(lines)-1].Chars
+	if inner[0].St.Fg != levels[0] || inner[2].St.Fg != levels[1] {
+		t.Errorf("the bars are %v and %v, want the first and the second level's", inner[0].St.Fg, inner[2].St.Fg)
+	}
+	deep := render(strings.Repeat("> ", 6)+"deep\n", 40)
+	for d := range 6 {
+		if c := deep[0].Chars[2*d]; c.Draw != "▎" || c.St.Fg != levels[d] {
+			t.Errorf("bar %d: %+v", d+1, c)
+		}
 	}
 	for i, r := range rows {
 		if strings.Trim(r, "▎ ") == "" && i+1 < len(rows) && strings.Trim(rows[i+1], "▎ ") == "" {
