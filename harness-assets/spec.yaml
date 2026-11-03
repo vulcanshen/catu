@@ -41,7 +41,7 @@ tasks:
       - "整個檔讀進來，不是預覽的 64 KB：上限 16 MB，超過時只畫前 16 MB，最後一列 Overlay0 寫還有多少沒畫（tdp P5 功能邏輯）"
       - "上語法顏色一 MB 要將近一秒：超過 64 KB 的檔先用 Text 畫出來、在背景上色，上色中 panel 是 loading（膠囊後面的 loading icon，tdp panel.15），好了只換顏色，捲動位置、命中、游標都不動（tdp K3：背景的事不移動任何東西）"
       - note: "chroma 的 TOML lexer 把表名與 key 都標成 NameOther，catppuccin-mocha 不上色。使用者 2026-11-03 選 viewu 自己補：照 catppuccin-mocha 上 INI 的方式，表名當 Keyword（Mauve）、key 當 NameAttribute（Blue）。tdp note.2 要 viewer 照 file-picker 的預覽上色、同一個檔在兩處長得一樣，viewu 的 file-picker 預覽（tgo 畫的）還是沒有這兩個顏色：回報 tdp，等它定 lexer 的缺漏由誰補"
-        issue: "tdp #（待發）"
+        issue: tdp #1
   - id: 4
     spec: 1
     request: 其他種類的檔案照 filu 的預覽畫：目錄樹、壓縮檔裡有什麼、PDF 的文字、圖片、二進位的十六進位

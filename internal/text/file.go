@@ -153,6 +153,10 @@ func lex(lines []string, lexer chroma.Lexer) [][]terminu.Color {
 	return out
 }
 
+// TODO(tdp #1): tdp note.2 has the viewer coloured as the file-picker's
+// preview is, and terminu-go's preview leaves these uncoloured; until tdp
+// says who fills a lexer's gap, viewu does it here (the user's choice).
+//
 // tomlKind is the kind a TOML token is coloured as. chroma's TOML lexer
 // calls a table's name and a key both NameOther, which catppuccin-mocha
 // leaves uncoloured; they are coloured as the INI lexer's are, a table
