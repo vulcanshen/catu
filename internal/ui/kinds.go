@@ -21,6 +21,8 @@ import (
 	"github.com/dslipak/pdf"
 	terminu "github.com/vulcanshen/terminu-go"
 
+	"github.com/vulcanshen/viewu/internal/doc"
+	"github.com/vulcanshen/viewu/internal/mermaid"
 	"github.com/vulcanshen/viewu/internal/text"
 )
 
@@ -67,8 +69,8 @@ func grey(s string) text.Line {
 }
 
 // load reads p for showing. An error is one reading it: it does not exist,
-// it may not be read.
-func load(p string, cfg config) (*shown, error) {
+// it may not be read. warn is told when a diagram in it cannot be drawn.
+func load(p string, cfg config, warn func(error)) (*shown, error) {
 	abs, err := filepath.Abs(p)
 	if err != nil {
 		return nil, err
@@ -130,7 +132,7 @@ func load(p string, cfg config) (*shown, error) {
 		if err != nil {
 			return nil, err
 		}
-		s.views = textViews(s, content, cfg.TabWidth)
+		s.views = textViews(s, content, cfg.TabWidth, warn)
 		if rest > 0 {
 			for i := range s.views {
 				if s.views[i].layout == nil {
@@ -143,16 +145,67 @@ func load(p string, cfg config) (*shown, error) {
 }
 
 // textViews are a text file's views: its text, numbered, in the colours its
-// name says (tdp note.2).
-func textViews(s *shown, content string, tabW int) []view {
+// name says (tdp note.2); a Markdown file is first drawn as a document, as
+// webu draws a page.
+func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 	name := "TEXT"
 	if s.kind == "private key" {
 		name = "PRIVATE KEY"
 	}
-	return []view{{
+	source := view{
 		name: name, lines: text.File(content, text.Lexer(s.path), tabW), numbered: true,
 		fact: "Empty file", hint: "Press [o] to open another file",
-	}}
+	}
+	opt := doc.Options{TabW: tabW, Diagram: mermaid.Draw, OnDiagramError: warn}
+	switch {
+	case s.kind == "text" && isMarkdown(s.path):
+		s.kind = "markdown"
+		source.name = "SOURCE"
+		if strings.Contains(content, "```mermaid") || strings.Contains(content, "~~~mermaid") {
+			go mermaid.Warm()
+		}
+		document := view{
+			name: "DOCUMENT", fact: "Empty file", hint: "Press [o] to open another file",
+			layout: func(w int) []text.Line { return doc.Render([]byte(content), w, opt) },
+		}
+		return []view{document, source}
+	case s.kind == "text" && isMermaid(s.path):
+		// A diagram is drawn as a mermaid block in a document is, its
+		// error the same (tdp P5).
+		s.kind = "mermaid"
+		source.name = "SOURCE"
+		go mermaid.Warm()
+		block := []byte("```mermaid\n" + strings.TrimRight(content, "\n") + "\n```\n")
+		diagram := view{
+			name: "DIAGRAM", fact: "Empty file", hint: "Press [o] to open another file",
+			layout: func(w int) []text.Line {
+				if strings.TrimSpace(content) == "" {
+					return nil
+				}
+				return doc.Render(block, w, opt)
+			},
+		}
+		return []view{diagram, source}
+	}
+	return []view{source}
+}
+
+// isMermaid reports a mermaid file by its name.
+func isMermaid(p string) bool {
+	switch strings.ToLower(filepath.Ext(p)) {
+	case ".mmd", ".mermaid":
+		return true
+	}
+	return false
+}
+
+// isMarkdown reports a Markdown file by its name.
+func isMarkdown(p string) bool {
+	switch strings.ToLower(filepath.Ext(p)) {
+	case ".md", ".markdown", ".mdown", ".mkd", ".mkdn":
+		return true
+	}
+	return false
 }
 
 // readText is the text of f, its first textBytes; rest is how much more

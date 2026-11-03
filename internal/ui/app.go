@@ -27,17 +27,20 @@ type viewer struct {
 	body  *reader
 	cfg   config
 	cur   *shown
+	// warned are the diagrams' errors logged for what is shown: a diagram
+	// is drawn again at every width, its error logged once.
+	warned map[string]bool
 }
 
 // Open makes viewu showing p, a file or a directory; the error is reading p
 // (it is not there, it may not be read), before anything is drawn.
 func Open(p string) (*terminu.App, error) {
 	cfg, cfgPath, cfgErr := readConfig()
-	s, err := load(p, cfg)
+	v := &viewer{app: terminu.New("viewu"), body: &reader{}, cfg: cfg}
+	s, err := load(p, cfg, v.diagramError)
 	if err != nil {
 		return nil, err
 	}
-	v := &viewer{app: terminu.New("viewu"), body: &reader{}, cfg: cfg}
 	a := v.app
 	// One panel: 80×24 terminals and a half of a tmux window are enough (tdp L1).
 	a.MinWidth, a.MinHeight = 40, 12
@@ -56,7 +59,7 @@ func Open(p string) (*terminu.App, error) {
 			return a.MoveAside(cfgPath, cfgErr, func() tea.Cmd {
 				v.cfg = defaults()
 				a.InputTabWidth, a.HideSecretsInPreview = v.cfg.TabWidth, v.cfg.HideSecrets
-				if again, err := load(v.cur.path, v.cfg); err == nil {
+				if again, err := load(v.cur.path, v.cfg, v.diagramError); err == nil {
 					v.show(again)
 				}
 				return nil
@@ -70,7 +73,7 @@ func Open(p string) (*terminu.App, error) {
 // show puts s in the panel: its views' names on the label and the tabs, the
 // first view in the body.
 func (v *viewer) show(s *shown) {
-	v.cur = s
+	v.cur, v.warned = s, map[string]bool{}
 	v.panel.LeaveMode()
 	v.panel.Label = s.views[0].name
 	v.panel.Tabs = nil
@@ -88,12 +91,20 @@ func (v *viewer) showView(i int) {
 		v.body.setLayout(vw.layout)
 	} else {
 		v.body.set(vw.lines, vw.numbered)
-		if len(vw.lines) == 0 {
-			v.body.fact, v.body.hint = vw.fact, vw.hint
-		}
 	}
+	v.body.fact, v.body.hint = vw.fact, vw.hint // when there is nothing to show
 	v.body.where = tilde(v.cur.path)
 	v.panel.OnEsc = nil // no hits to clear
+}
+
+// diagramError logs a diagram that cannot be drawn, once for what is shown
+// (tdp note.7: the app's own doing).
+func (v *viewer) diagramError(err error) {
+	if v.warned[err.Error()] {
+		return
+	}
+	v.warned[err.Error()] = true
+	v.app.Log(terminu.Warning, "Can't draw a mermaid diagram in "+filepath.Base(v.cur.path)+": "+err.Error())
 }
 
 // onTab shows the tab h|l went to (tdp panel.4, K12).

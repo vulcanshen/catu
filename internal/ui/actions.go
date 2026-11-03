@@ -47,7 +47,7 @@ func (v *viewer) open() tea.Cmd {
 	return v.app.PickFile(terminu.FilePicker{
 		Title: "Open", Glyph: glyphOpen, Root: root, Value: value,
 		Commit: func(p string) error {
-			s, err := load(p, v.cfg)
+			s, err := load(p, v.cfg, v.diagramError)
 			if err != nil {
 				return err
 			}

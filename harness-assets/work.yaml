@@ -98,6 +98,46 @@ tasks:
       路徑與原因印到 stderr
       不存狀態、資料、快取
     test: [TestSettingsTabWidth, TestSettingsUnreadable, TestSettingsUnreadableQuit, TestHideSecrets]
+  - id: 9
+    spec: 1
+    implementation: |
+      檔名是 .md .markdown .mdown .mkd .mkdn 的文字檔：panel 有兩個 tab（tgo Panel.Label、Tabs），DOCUMENT（打開時在這裡）、SOURCE；h|l 切（tgo 做），
+      下框 hint 前面多 h|l:tab；換 tab 時回到最上面、命中與 Visual 清掉
+      SOURCE：照 task 3 的文字檔（chroma 的 markdown 上色、行號、折行）
+      DOCUMENT：goldmark（GFM：表格、刪除線、任務清單、自動連結）解析，照 panel 的寬度排成一列一列（每列剛好 panel 內寬、不畫行號、不再折），寬度變了重排；
+      畫面上沒有 markdown 的符號，元件照 webu：
+      標題：字的前後各一格空白、整段鋪在依層的顏色上（Peach、Rosewater、Green、Teal、Flamingo，第六層起輪迴），字 Base 粗體；只包住字，不鋪滿整列
+      段落 Text；粗體、斜體、刪除線照終端機的樣式；行內程式碼 Pink 字、Surface0 底
+      無序清單每一層都是 Blue 的 -，靠縮排分層；任務清單換成 Blue 的 [x]、[ ]；有序清單依層 1.、a.、i. 輪迴，從清單寫的起始數字開始；項目折行時對齊到字的開頭
+      程式碼區塊：整列 Mantle 底，照語言名（chroma）上色，語言名 Overlay0 寫在第一列右邊；Tab 畫成 input_tab_width 格；一行太長在空白處折行
+      引用：開頭 Lavender 的 ▎ 加一格空白（巢狀多一條），整列 Mantle 底
+      連結：Sapphire 的 nf-md-link（U+F0337）加一格空白，連結的字 Sapphire 加底線；沒有字時寫網址
+      圖片：Overlay0 的 nf-md-image（U+F02E9）加 alt，沒有 alt 時寫網址的檔名
+      表格：Overlay0 的框線畫成格子，表頭粗體、下面一條分隔線；太寬時最寬的欄先縮，切掉的格子結尾畫 Overlay0 的 …
+      分隔線：Overlay0 的 ─ 鋪滿；HTML 照原樣畫成 Overlay0；外面來的字裡的控制字元畫成 Red 的名字
+      區塊之間空一列（清單裡不空）
+      找字、Visual 照 task 5、6：命中與游標在排好的列上；複製的是畫面上的字，一列尾端補滿的空白不複製
+      內容是空的時候照 task 1 的空狀態
+    test: [TestMarkdownDocumentAndSource, TestMarkdownLaidOutAgainOnResize, TestMarkdownSearchAndCopy, TestEmptyMarkdown, TestEveryRowIsTheWidth, TestNoMarkdownSymbols, TestHeadingIsAChipOfItsLevel, TestLists, TestListItemFolds, TestCodeBlock, TestCodeLineFolds, TestQuote, TestTable, TestTableTooWide, TestLinkAndImage, TestInlineStyles, TestRule, TestControlCharacters]
+  - id: 10
+    spec: 1
+    implementation: |
+      internal/mermaid：Pele 1.13.0 的 dist/pele.global.js（MIT，LICENSE 一起放在 internal/mermaid/pele/）用 go:embed 放進執行檔，goja 跑；
+      pele.render 給的 measurer 把每個字量成一格（8.4px，寬字兩格），fontSize 14，maxWidth 是可以用的格數 × 8.4，autoDirection 開著（窄的時候 LR 轉成 TB），
+      不畫連結與圖片；一次 render 超過 3 秒就停下來，當成錯誤
+      SVG 畫成格子（一格 8.4 × 16.8px，座標四捨五入到格子）：rect、polygon、polyline、line、circle、ellipse、path（M L H V C S Q T A Z），套用 transform（translate、scale、rotate、matrix）；
+      水平與垂直的線用框線字，交會處依方向選 ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼（轉角一律圓角）；虛線 ╌ ╎；其他方向的線、曲線、圓用點字（braille）；
+      兩端都是水平（或垂直）的三次曲線畫成直角的轉折；框的上下邊離中間那一列一樣多列，字在中間；
+      箭頭（pele-marker）在所有線畫完後放：指向的框線前一格，沒有框線時蓋在線的最後一格，▶ ◀ ▲ ▼
+      字照原本的位置放（text-anchor、tspan 的每一行），邊上的字左右各清掉一格線；描邊用的字（fill none）不畫；比一格小的方塊畫 ■、小圓畫 ● ○
+      顏色：節點的框 Blue、群組的框與生命線 Overlay0、線與箭頭 Overlay2（或 SVG 寫的顏色）、字 Text、邊上的字 Subtext0、群組的名字 Overlay1、標題粗體
+      上下空白的列、左邊空白的欄拿掉；同一張圖同一個寬度畫過就記住
+      Markdown 的 ```mermaid 區塊（task 9）畫成圖；.mmd、.mermaid 檔有 DIAGRAM（打開時在這裡）、SOURCE 兩個 tab，DIAGRAM 當成一個 mermaid 區塊畫
+      比 panel 寬的圖：那一列切掉，最後一格 Overlay0 的 …（task 5 的 reader）
+      寫錯（pele 丟出錯誤）：照程式碼區塊畫原始碼（右上角 mermaid），下面 Red 一行一列寫 pele 的錯誤；App Log 記 Warning「Can't draw a mermaid diagram in <檔名>: <錯誤>」，
+      同一個檔同一個錯只記一次
+      打開含有 mermaid 區塊的 Markdown、或 mermaid 檔時，在背景先載入 pele
+    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestCurvesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidTooWide, TestMermaidErrorLoggedOnce]
   - id: 11
     spec: 1
     implementation: |

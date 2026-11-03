@@ -94,18 +94,20 @@ tasks:
       - "兩個 tab：DOCUMENT（畫好的文件，打開時在這裡）、SOURCE（原始碼，照 task 3 的文字檔）；h|l 切（tdp K12、terms.4、panel.4）"
       - "DOCUMENT 是 app 排出來的內容，不畫行號（tdp note.2）；照 panel 的寬度排，終端機大小變了重排"
       - "Markdown 用 goldmark 解析，含 GFM：表格、刪除線、任務清單、自動連結"
-      - "任務清單的記號不借 tdp checkbox 的 glyph（tdp P4：方框打勾是 checkbox）"
+      - "任務清單的記號照 webu 畫勾選框的字 [x]、[ ]，Blue，放在清單記號的位置；不借 tdp checkbox 的 glyph（tdp P4：方框打勾是 checkbox，這裡不能勾）"
+      - "找字、Visual 照 task 5、6，複製的是畫面上的字，排滿一列的空白不複製（webu 也是）"
   - id: 10
     spec: 1
     request: mermaid 圖用 pele 畫：Markdown 裡的 mermaid 區塊，與 .mmd、.mermaid 檔
-    tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp note.7]
+    tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp note.7, tdp components.5]
     remark:
       - "pele（MIT）的 dist/pele.global.js 用 go:embed 放進執行檔，用 goja（純 Go 的 JavaScript 引擎）跑：照樣是單一靜態 binary，不必裝 Node（tdp E6）"
       - "給 pele 一個等寬的 measurer（一個字一格寬），排出來的字剛好落在格子上；pele 的 SVG 畫成字元：方框用框線字、線與斜線用點字（braille）、箭頭用三角形、字放在它的位置。不用終端機的圖片協定（task 4 的理由，tdp F8）"
       - "比 panel 寬時先讓 pele 照 panel 的寬度排（maxWidth、autoDirection：LR 轉成 TB）；還是太寬，右邊切掉、最後一格畫 Overlay0 的 …（webu 的表格太寬也是這樣）"
-      - "mermaid 寫錯時畫原始碼（程式碼區塊的樣子），下面一列 Red 寫 pele 的錯誤，App Log 記一筆 Warning"
-      - ".mmd、.mermaid 檔有兩個 tab：DIAGRAM（畫好的圖，打開時在這裡）、SOURCE（原始碼）"
-      - "顏色是內容的（tdp P4、P5）：框線 Blue、字 Text、線與箭頭 Overlay2、邊上的字 Subtext0"
+      - "mermaid 寫錯時畫原始碼（程式碼區塊的樣子），下面 Red 寫 pele 的錯誤，一行一列（tdp components.5：app 自己畫的好幾行字一列一列給）；App Log 記一筆 Warning，同一個檔同一個錯只記一次（終端機大小變了會重畫）"
+      - ".mmd、.mermaid 檔有兩個 tab：DIAGRAM（畫好的圖，打開時在這裡）、SOURCE（原始碼）；DIAGRAM 照 Markdown 裡的 mermaid 區塊畫，寫錯時也一樣"
+      - "顏色是內容的（tdp P4、P5）：節點的框 Blue、群組的框與 sequence 的生命線 Overlay0、線與箭頭 Overlay2、字 Text、邊上的字 Subtext0、群組的名字 Overlay1；虛線畫成 ╌ ╎；比一格還小的圖形畫成 ■ ● ○"
+      - "pele 第一次載入要一下子：打開有 mermaid 的檔時在背景先載入"
   - id: 11
     spec: 1
     request: 家族的 splash：在 panel 上按 V
