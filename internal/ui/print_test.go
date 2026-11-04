@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -29,5 +30,29 @@ func TestPrintInColour(t *testing.T) {
 	}
 	if len(failed) != 1 || failed[0] != "nope" {
 		t.Errorf("failed %q", failed)
+	}
+}
+
+// TestStandardInput: what came down a pipe is shown as a file of its format
+// is, named standard input: the location row, the App Log; the statusbar has
+// its size only; o opens a file in the directory catu was started in
+// (task 15).
+func TestStandardInput(t *testing.T) {
+	t.Setenv("CATU__CONFIG", t.TempDir())
+	p, done, err := Spool(strings.NewReader("# Title\n\nwords\n"), "markdown")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer done()
+	d := start(t, p, 60, 20)
+	want(t, d, "standard input", "DOCUMENT", "SOURCE", " Title ", "Size: 15 B")
+	wantNot(t, d, "Modified:", "Mode:", "stdin.md")
+	d.Press("!")
+	want(t, d, "INFO Opened standard input")
+	d.Press("Esc", "o")
+	wd, _ := os.Getwd()
+	want(t, d, filepath.Base(wd))
+	if _, _, err := Spool(strings.NewReader("x"), "nosuch"); err == nil {
+		t.Error("an unknown format")
 	}
 }

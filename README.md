@@ -100,11 +100,15 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/uninstall.sh |
 ## Usage
 
 ```
-catu [path]       look at a file or a directory (the current directory when left out)
-catu -p [path]    print it instead, in colour, and quit (--print)
-catu version      print the version (-v, --version)
-catu help         print the command-line usage (-h, --help)
+catu [path]           look at a file or a directory (the current directory when left out)
+cmd | catu [-l fmt]   look at what comes down a pipe (also catu -)
+catu -p [path]        print it instead, in colour, and quit (--print)
+catu version          print the version (-v, --version)
+catu help             print the command-line usage (-h, --help)
 ```
+
+What comes down a pipe is a plain text unless `-l` (`--lang`) names its format: `md`, `mermaid`, `json`, or a language
+by its name or its extension, as `git diff | catu -l diff` or `curl -s https://… | catu -l md`.
 
 A path that is not there, or that you may not read, is said on the command line, as `cat` says it. A file named `version`
 or `help`: `catu ./version`.

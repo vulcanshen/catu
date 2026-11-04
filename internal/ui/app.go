@@ -75,7 +75,7 @@ func Open(p string) (*terminu.App, error) {
 // opened logs that s was opened, and why its content could not be made out
 // when it could not (tdp note.7, F5; the panel says it too, tdp panel.15).
 func (v *viewer) opened(s *shown) {
-	v.app.Log(terminu.Info, "Opened "+tilde(s.path))
+	v.app.Log(terminu.Info, "Opened "+s.name())
 	if s.problem != "" {
 		v.app.Log(terminu.Error, s.problem)
 	}
@@ -151,7 +151,7 @@ func (v *viewer) showView(i int) {
 	}
 	v.body.fact, v.body.hint = vw.fact, vw.hint // when there is nothing to show
 	// The location row (tdp panel.10).
-	v.panel.Location = tilde(v.cur.path)
+	v.panel.Location = v.cur.name()
 	v.panel.OnEsc = nil // no hits to clear
 }
 
@@ -162,7 +162,7 @@ func (v *viewer) diagramError(err error) {
 		return
 	}
 	v.warned[err.Error()] = true
-	v.app.Log(terminu.Warning, "Can't draw a mermaid diagram in "+filepath.Base(v.cur.path)+": "+err.Error())
+	v.app.Log(terminu.Warning, "Can't draw a mermaid diagram in "+v.cur.base()+": "+err.Error())
 }
 
 // onTab shows the tab h|l went to (tdp panel.4, K12).

@@ -104,6 +104,55 @@ func TestPrintWhenNotATerminal(t *testing.T) {
 	}
 }
 
+// captureIn runs catu with args and input coming down a pipe as its
+// standard input.
+func captureIn(t *testing.T, input string, args ...string) (int, string, string) {
+	t.Helper()
+	p := filepath.Join(t.TempDir(), "in")
+	os.WriteFile(p, []byte(input), 0o644)
+	f, _ := os.Open(p)
+	defer f.Close()
+	stdin := os.Stdin
+	os.Stdin = f
+	defer func() { os.Stdin = stdin }()
+	return capture(t, args...)
+}
+
+// TestReadFromAPipe: with nothing named and input coming down a pipe, or
+// with -, catu reads it (task 15); printed as it is when it is a text, as
+// cat does, drawn when -l names a document's format; -l names a format
+// catu knows, and is for the pipe only.
+func TestReadFromAPipe(t *testing.T) {
+	t.Setenv("CATU__CONFIG", t.TempDir())
+	t.Setenv("COLUMNS", "60")
+	raw := "a\tb\r\nno newline"
+	for _, args := range [][]string{nil, {"-"}, {"-l", "go"}} {
+		if code, out, errs := captureIn(t, raw, args...); code != 0 || out != raw || errs != "" {
+			t.Errorf("catu %v: %d %q %q", args, code, out, errs)
+		}
+	}
+	code, out, _ := captureIn(t, "# Title\n\nSome **bold** words.\n", "-l", "md")
+	if code != 0 || !strings.Contains(out, "Title") || strings.Contains(out, "#") || strings.Contains(out, "**") {
+		t.Errorf("a document: %d %q", code, out)
+	}
+	code, out, _ = captureIn(t, "flowchart LR\n  A[Start] --> B[End]\n", "--lang=mermaid")
+	if code != 0 || !strings.Contains(out, "│ Start") || strings.Contains(out, "flowchart") {
+		t.Errorf("a diagram: %d %q", code, out)
+	}
+	if code, _, errs := captureIn(t, "flowchart LR\n  B[[[\n", "-l", "mmd"); code != 1 || !strings.HasPrefix(errs, "catu: standard input: Can't draw this diagram") {
+		t.Errorf("a diagram that cannot be drawn: %d %q", code, errs)
+	}
+	if code, _, errs := captureIn(t, "x", "-l", "nosuch"); code != 2 || errs != "catu: unknown format \"nosuch\"\n" {
+		t.Errorf("an unknown format: %d %q", code, errs)
+	}
+	if code, _, errs := captureIn(t, "x", "-l", "md", "a.md"); code != 2 || !strings.Contains(errs, "--lang is for what comes down a pipe") {
+		t.Errorf("-l with a file: %d %q", code, errs)
+	}
+	if code, _, errs := captureIn(t, "x", "-l"); code != 2 || !strings.Contains(errs, "-l needs a format") {
+		t.Errorf("-l with no format: %d %q", code, errs)
+	}
+}
+
 func TestBadArguments(t *testing.T) {
 	if code, _, errs := capture(t, "a", "b"); code != 2 || !strings.Contains(errs, "one path at a time") {
 		t.Errorf("two paths: %d %q", code, errs)

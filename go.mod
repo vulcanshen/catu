@@ -3,6 +3,7 @@ module github.com/vulcanshen/catu
 go 1.26.0
 
 require (
+	github.com/alecthomas/chroma/v2 v2.27.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/x/term v0.2.1
 	github.com/dop251/goja v0.0.0-20261102223426-a177d211bf60
@@ -14,7 +15,6 @@ require (
 )
 
 require (
-	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
 	github.com/charmbracelet/lipgloss v1.1.0 // indirect

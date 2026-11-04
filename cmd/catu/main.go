@@ -5,6 +5,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"strconv"
@@ -19,10 +20,15 @@ import (
 const usage = `catu: a file viewer for the terminal
 
 Usage:
-  catu [path]       look at a file or a directory (the current directory when left out)
-  catu -p [path]    print it instead, in colour, and quit (--print)
-  catu version      print the version (-v, --version)
-  catu help         print this help (-h, --help)
+  catu [path]           look at a file or a directory (the current directory when left out)
+  cmd | catu [-l fmt]   look at what comes down a pipe (also catu -)
+  catu -p [path]        print it instead, in colour, and quit (--print)
+  catu version          print the version (-v, --version)
+  catu help             print this help (-h, --help)
+
+-l, --lang fmt: the format of what comes down the pipe: md, mermaid, json,
+or a language by its name or its extension (go, python, py); without it, a
+plain text.
 
 When the output is not a terminal (catu a.md | less, catu a.md > out.txt),
 catu prints instead of opening its screen, with no colours: a text file
@@ -49,11 +55,20 @@ func run(args []string) int {
 		}
 	}
 	var paths []string
-	printing := false
-	for _, a := range args {
-		switch {
+	printing, lang := false, ""
+	for i := 0; i < len(args); i++ {
+		switch a := args[i]; {
 		case a == "-p" || a == "--print":
 			printing = true
+		case a == "-l" || a == "--lang":
+			if i+1 == len(args) {
+				fmt.Fprintf(os.Stderr, "catu: %s needs a format\n\n%s", a, usage)
+				return 2
+			}
+			i++
+			lang = args[i]
+		case strings.HasPrefix(a, "--lang="):
+			lang = strings.TrimPrefix(a, "--lang=")
 		case strings.HasPrefix(a, "-") && a != "-":
 			fmt.Fprintf(os.Stderr, "catu: unknown flag %q\n\n%s", a, usage)
 			return 2
@@ -61,19 +76,52 @@ func run(args []string) int {
 			paths = append(paths, a)
 		}
 	}
-	switch len(paths) {
-	case 0:
+	if len(paths) == 0 {
+		// Nothing named: what comes down a pipe, else the directory catu is in.
 		paths = []string{"."}
-	case 1:
-	default:
+		if !term.IsTerminal(os.Stdin.Fd()) {
+			paths = []string{"-"}
+		}
+	}
+	if len(paths) > 1 {
 		fmt.Fprint(os.Stderr, "catu: one path at a time\n\n"+usage)
 		return 2
 	}
-	if toTerminal := term.IsTerminal(os.Stdout.Fd()); printing || !toTerminal {
+	if lang != "" {
+		if paths[0] != "-" {
+			fmt.Fprintf(os.Stderr, "catu: --lang is for what comes down a pipe\n\n%s", usage)
+			return 2
+		}
+		if err := ui.CheckFormat(lang); err != nil {
+			fmt.Fprintf(os.Stderr, "catu: %s\n", err)
+			return 2
+		}
+	}
+	toTerminal := term.IsTerminal(os.Stdout.Fd())
+	path, shown := paths[0], paths[0]
+	if path == "-" {
+		shown = "standard input"
+		if !toTerminal && !ui.IsDocument(lang) {
+			// As cat does: every byte, as it comes, however much.
+			if _, err := io.Copy(os.Stdout, os.Stdin); err != nil {
+				fmt.Fprintf(os.Stderr, "catu: %s: %s\n", shown, reason(err))
+				return 1
+			}
+			return 0
+		}
+		spooled, done, err := ui.Spool(os.Stdin, lang)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "catu: %s: %s\n", shown, reason(err))
+			return 1
+		}
+		defer done()
+		path = spooled
+	}
+	if printing || !toTerminal {
 		// Printed (tasks 13, 14): in colour only on a terminal.
 		failed := false
-		ui.Print(paths, os.Stdout, toTerminal, width(toTerminal), func(p string, err error) {
-			fmt.Fprintf(os.Stderr, "catu: %s: %s\n", p, reason(err))
+		ui.Print([]string{path}, os.Stdout, toTerminal, width(toTerminal), func(_ string, err error) {
+			fmt.Fprintf(os.Stderr, "catu: %s: %s\n", shown, reason(err))
 			failed = true
 		})
 		if failed {
@@ -81,10 +129,9 @@ func run(args []string) int {
 		}
 		return 0
 	}
-	path := paths[0]
 	app, err := ui.Open(path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "catu: %s: %s\n", path, reason(err))
+		fmt.Fprintf(os.Stderr, "catu: %s: %s\n", shown, reason(err))
 		return 1
 	}
 	if err := app.Run(); err != nil {

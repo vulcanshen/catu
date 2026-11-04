@@ -40,8 +40,14 @@ func (v *viewer) actions() []terminu.Action {
 // file shown, the Space menu it was opened from goes too (tdp T1).
 func (v *viewer) open() tea.Cmd {
 	root, value := filepath.Dir(v.cur.path), v.cur.path
-	if v.cur.info.IsDir() {
+	switch {
+	case v.cur.info.IsDir():
 		root, value = v.cur.path, ""
+	case v.cur.stdin: // in no directory: the one catu was started in
+		root, value = ".", ""
+		if wd, err := os.Getwd(); err == nil {
+			root = wd
+		}
 	}
 	var next *shown
 	return v.app.PickFile(terminu.FilePicker{
@@ -71,7 +77,7 @@ func (v *viewer) open() tea.Cmd {
 // on the input popup goes back to the menu (tdp T1).
 func (v *viewer) search() tea.Cmd {
 	return v.app.Text(terminu.TextInput{
-		Title: "Search", Glyph: glyphSearch, Prompt: "Find in " + filepath.Base(v.cur.path), Verb: "find", Search: true,
+		Title: "Search", Glyph: glyphSearch, Prompt: "Find in " + v.cur.base(), Verb: "find", Search: true,
 		Done: func(q string) tea.Cmd {
 			if v.body.find(q) == 0 {
 				v.panel.OnEsc = nil
@@ -134,6 +140,9 @@ func (v *viewer) status(w int) []terminu.Span {
 		sz = items(v.cur.path)
 	}
 	quiet := terminu.Fg(terminu.Overlay0)
+	if v.cur.stdin { // not a file: no time it was modified, no mode (tdp screen.4)
+		return []terminu.Span{{Text: "Size: " + sz, Style: quiet}}
+	}
 	return []terminu.Span{
 		{Text: "Size: " + terminu.Pad(sz, 11) + "  ", Style: quiet},
 		{Text: "Modified: " + info.ModTime().Format("2006-01-02 15:04") + "  ", Style: quiet},

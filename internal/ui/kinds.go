@@ -51,6 +51,7 @@ var (
 // (the panel's tabs).
 type shown struct {
 	path  string      // absolute
+	stdin bool        // it is standard input, put in path (stdin.go)
 	info  fs.FileInfo // the target's, a link followed (tdp file-picker.4)
 	kind  string      // tdp file-picker.4's TYPE, or markdown, mermaid
 	views []view
@@ -95,7 +96,7 @@ func load(p string, cfg config, warn func(error)) (*shown, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &shown{path: abs, info: info}
+	s := &shown{path: abs, info: info, stdin: stdinPath != "" && abs == stdinPath}
 	if info.IsDir() {
 		lines, err := dirTree(abs)
 		if err != nil {
@@ -147,8 +148,11 @@ func load(p string, cfg config, warn func(error)) (*shown, error) {
 			return nil, err
 		}
 		s.views = textViews(s, content, cfg.TabWidth, warn)
-		if rest > 0 {
+		if rest > 0 || s.stdin && stdinMore {
 			note := grey(fmt.Sprintf("(%s more not shown)", size(rest)))
+			if s.stdin {
+				note = grey("(more not shown)") // how much more did not come down the pipe
+			}
 			for i := range s.views {
 				if s.views[i].layout == nil {
 					s.views[i].lines = append(s.views[i].lines, note)
