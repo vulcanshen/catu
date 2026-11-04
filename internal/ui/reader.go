@@ -20,17 +20,15 @@ type reader struct {
 	// numbered draws the lines' numbers in a column of their own.
 	numbered bool
 	// layout, when set, lays the lines out at a width (a document, a
-	// diagram): it is asked again whenever the width changes. An error is
-	// why it could make nothing of the whole tab: said in Red in the
-	// middle, failHint under it (tdp panel.15).
-	layout   func(w int) ([]text.Line, error)
-	laidW    int
-	laidErr  error
-	failHint string
+	// diagram): it is asked again whenever the width changes, and failed
+	// is told what it said: an error is why it could make nothing of the
+	// whole tab (tdp panel.15), nil that it could.
+	layout func(w int) ([]text.Line, error)
+	failed func(error)
+	laidW  int
 	// fact and hint say why there is nothing to show, in the middle (tdp
-	// screen.8); red marks the fact an error (tdp panel.15).
+	// screen.8).
 	fact, hint string
-	red        bool
 
 	textW, numW int
 	top, sub    int // the line the first row in sight belongs to, and that row among its rows
@@ -71,26 +69,26 @@ func (r *reader) recolour(lines []text.Line) {
 	r.lines = lines
 }
 
-// setLayout shows what layout lays out at the panel's width; failHint is
-// the hint under its error, when it has one.
-func (r *reader) setLayout(layout func(w int) ([]text.Line, error), failHint string) {
+// setLayout shows what layout lays out at the panel's width; failed is told
+// each time whether it could.
+func (r *reader) setLayout(layout func(w int) ([]text.Line, error), failed func(error)) {
 	r.lines, r.numbered, r.layout, r.laidW = nil, false, layout, -1
 	r.reset()
-	r.failHint = failHint
+	r.failed = failed
 }
 
 func (r *reader) reset() {
 	r.top, r.sub, r.folds = 0, 0, nil
 	r.hits, r.current = nil, 0
 	r.visual, r.selecting = false, false
-	r.fact, r.hint, r.red = "", "", false
-	r.laidErr, r.failHint = nil, ""
+	r.fact, r.hint, r.failed = "", "", nil
 	r.numW = 0
 }
 
-// Empty is false: the position row stays when there is nothing to show (tdp
-// panel.10), so the reader draws its own empty state.
-func (r *reader) Empty() bool { return false }
+// Empty reports that there is nothing to show: the panel then draws its Fail
+// in the middle, when it has one (tdp panel.15), and the reader's empty state
+// otherwise.
+func (r *reader) Empty() bool { return len(r.lines) == 0 }
 
 // HasItem is false: a text has no items (tdp K3).
 func (r *reader) HasItem() bool { return false }
@@ -154,7 +152,7 @@ func (r *reader) Draw(w, h int, focused bool) []string {
 	r.measure(w)
 	if len(r.lines) == 0 {
 		r.scroll = ""
-		return append(out, r.emptyRows(w, r.visible)...)
+		return terminu.EmptyState(w, r.visible, r.fact, r.hint) // tdp screen.8
 	}
 	if r.visual {
 		r.line = min(max(r.line, 0), len(r.lines)-1)
@@ -203,8 +201,11 @@ func (r *reader) measure(w int) {
 	if r.layout != nil {
 		if r.laidW != inner {
 			top := r.top
-			r.lines, r.laidErr = r.layout(inner)
-			r.laidW, r.folds = inner, nil
+			lines, err := r.layout(inner)
+			if r.failed != nil {
+				r.failed(err)
+			}
+			r.lines, r.laidW, r.folds = lines, inner, nil
 			r.top, r.sub = min(top, max(len(r.lines)-1, 0)), 0
 			r.hits = nil
 			if r.visual {
@@ -325,42 +326,6 @@ func (r *reader) row(i, from, to int, lastRow bool) string {
 		}
 	}
 	return text.Render(out) + strings.Repeat(" ", max(r.textW-used, 0))
-}
-
-// emptyRows is the middle of an empty panel: the fact, then the hint, each
-// folded and centred, a blank row between them, in Overlay0; a fact that is
-// an error in Red, as is why a layout made nothing (tdp screen.8,
-// panel.15).
-func (r *reader) emptyRows(w, h int) []string {
-	inner := max(w-2, 1)
-	var rows []string
-	said, hint, red := r.fact, r.hint, r.red
-	if r.laidErr != nil {
-		said, hint, red = r.laidErr.Error(), r.failHint, true
-	}
-	fact := terminu.Fg(terminu.Overlay0)
-	if red {
-		fact = terminu.Fg(terminu.Red)
-	}
-	for _, l := range terminu.Wrap(said, inner) {
-		rows = append(rows, fact.Render(l))
-	}
-	if hint != "" {
-		rows = append(rows, "")
-		for _, l := range terminu.Wrap(hint, inner) {
-			rows = append(rows, terminu.Fg(terminu.Overlay0).Render(l))
-		}
-	}
-	out := make([]string, h)
-	top := max((h-len(rows))/2, 0)
-	for i := range out {
-		line := ""
-		if k := i - top; k >= 0 && k < len(rows) {
-			line = rows[k]
-		}
-		out[i] = " " + terminu.Center(line, inner) + " "
-	}
-	return out
 }
 
 // wrap is where line i's rows start, as indices into its characters: a line

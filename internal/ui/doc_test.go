@@ -102,12 +102,15 @@ func TestMermaidTooWide(t *testing.T) {
 
 // TestMermaidFileCannotBeDrawn: a diagram file pele cannot draw leaves the
 // whole DIAGRAM tab with nothing to show: why in Red in the middle, a hint
-// under it (tdp panel.15); the App Log keeps all of pele's message, once;
-// the source is a tab away.
+// under it (tdp panel.15), the location row over them (panel.10); the App
+// Log keeps all of pele's message, once; the source is a tab away.
 func TestMermaidFileCannotBeDrawn(t *testing.T) {
 	dir := files(t, map[string]string{"bad.mmd": "flowchart LR\n  A --> B[[[\n"})
 	d := start(t, filepath.Join(dir, "bad.mmd"), 80, 24)
 	want(t, d, "Can't draw this diagram: Parse error on line 2:", "Press [l] to see the source, [!] for the whole error", "!:1 warning")
+	if !strings.HasSuffix(strings.TrimRight(d.Screen()[2], " ┃"), "bad.mmd") {
+		t.Errorf("no location row over the reason: %q", d.Screen()[2])
+	}
 	wantNot(t, d, "B[[[")
 	red := strings.TrimSuffix(terminu.Fg(terminu.Red).Render("Can't draw this diagram"), "\x1b[0m")
 	if !strings.Contains(strings.Join(d.Styled(), ""), red) {
@@ -117,6 +120,9 @@ func TestMermaidFileCannotBeDrawn(t *testing.T) {
 	d.Resize(80, 24)
 	d.Press("l")
 	want(t, d, "  2   A --> B[[[")
+	wantNot(t, d, "Can't draw this diagram")
+	d.Press("h")
+	want(t, d, "Can't draw this diagram: Parse error on line 2:")
 	d.Press("!")
 	want(t, d, "Expecting")
 	if n := strings.Count(strings.Join(d.Screen(), "\n"), "WARN Can't draw a mermaid diagram in bad.mmd"); n != 1 {

@@ -5,7 +5,7 @@ tasks:
   - id: 1
     spec: 9
     request: 看一個檔案的畫面：一個 panel 放檔案的內容，上面看得到檔案的路徑、大小、修改時間、權限；q 直接離開
-    tdp: [tdp terms.2, tdp screen.1, tdp screen.2, tdp screen.4, tdp screen.8, tdp panel.1, tdp panel.4, tdp panel.10, tdp panel.15, tdp file-picker.4, tdp components.2, tdp components.4, tdp K9, tdp L1, tdp L2, tdp L3, tdp L4, tdp E5, tdp components.5, tdp E8, tdp E6, tdp screen.7]
+    tdp: [tdp terms.2, tdp screen.1, tdp screen.2, tdp screen.4, tdp screen.8, tdp panel.1, tdp panel.4, tdp panel.10, tdp panel.15, tdp file-picker.4, tdp components.2, tdp components.4, tdp K9, tdp L1, tdp L2, tdp L3, tdp L4, tdp E5, tdp components.5, tdp E8, tdp E6, tdp screen.7, tdp M5]
     remark:
       - "位置列：沒有清單、沒有 cursor 的 panel 也可以在文字上面有位置列，理由一樣（你現在在哪，label 照樣是 panel 的名字），要不要有由 app 決定（tdp panel.10，v1.2.0-beta.3 寫明 reader 也可以有；review 2026-11-04 問，terminu session 同一天回覆）；catu 留著，由 tgo Panel.Location 畫，跟 webu 的網址列一樣"
       - |
@@ -45,7 +45,7 @@ tasks:
   - id: 4
     spec: 9
     request: 其他種類的檔案照 filu 的預覽畫：目錄樹、壓縮檔裡有什麼、PDF 的文字、圖片、二進位的十六進位
-    tdp: [tdp file-picker.3, tdp file-picker.2, tdp file-picker.5, tdp E3, tdp F8, tdp P4, tdp P5, tdp note.2, tdp panel.15, tdp components.2, tdp components.5, tdp F5, tdp note.7]
+    tdp: [tdp file-picker.3, tdp file-picker.2, tdp file-picker.5, tdp E3, tdp F8, tdp P4, tdp P5, tdp note.2, tdp panel.15, tdp components.2, tdp components.5, tdp F5, tdp note.7, tdp screen.8, tdp M5, tdp E8]
     remark:
       - "照 tdp file-picker.3 的表：目錄與壓縮檔畫三層的樹、PDF 第一列頁數再接前 20 頁的文字、圖片是 data URI、其他是一列 8 bytes 的十六進位；這裡是 panel，能捲，所以畫到內容完，不是畫到預覽區滿"
       - "圖片不用終端機的圖片協定：不是每個終端機都有、tmux 會擋、放不進一格一格的排版，也淡化不了（tdp F8；webu 不畫 favicon 是同一個理由）"
@@ -114,7 +114,7 @@ tasks:
   - id: 10
     spec: 9
     request: mermaid 圖用 pele 畫：Markdown 裡的 mermaid 區塊，與 .mmd、.mermaid 檔；菱形與其他斜的直線用階梯狀的框線畫，不要一堆點
-    tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp note.7, tdp components.5, tdp panel.15, tdp screen.8, tdp M5]
+    tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp note.7, tdp components.5, tdp panel.15, tdp screen.8, tdp M5, tdp E8]
     remark:
       - ".mmd、.mermaid 的 DIAGRAM 整張畫不出來（pele 丟錯）時，整個 tab 生不出東西，照 tdp panel.15：中間 Red 的事實「Can't draw this diagram: <pele 的錯誤第一行>」、Overlay0 的提示「Press [l] to see the source, [!] for the whole error」，跟 JSON 不合法的 FORMATTED、讀不出來的壓縮檔一樣（review 2026-11-04 問，terminu session 同一天回覆；tdp v1.2.0-beta.3 的 panel.15 寫明「做不出內容的 tab」）；Markdown 文件裡一個區塊寫錯照舊是內容：原始碼加 Red 的錯誤"
       - "pele（MIT）的 dist/pele.global.js 用 go:embed 放進執行檔，用 goja（純 Go 的 JavaScript 引擎）跑：照樣是單一靜態 binary，不必裝 Node（tdp E6）"
@@ -134,7 +134,7 @@ tasks:
   - id: 12
     spec: 9
     request: JSON 多一個排過版（pretty print）的 tab，預設還是看原檔
-    tdp: [tdp P5, tdp terms.4, tdp panel.4, tdp K12, tdp note.2, tdp screen.8, tdp panel.15, tdp panel.1]
+    tdp: [tdp P5, tdp terms.4, tdp panel.4, tdp K12, tdp note.2, tdp screen.8, tdp panel.15, tdp panel.1, tdp M5, tdp E8, tdp components.5]
     remark:
       - "兩個 tab：TEXT（原檔，打開時在這裡）、FORMATTED（排過版）；h|l 切（tdp K12、terms.4、panel.4）。原檔在前：行號對得上別的工具報的行、找字與複製是檔案裡真的內容（使用者 2026-11-03 選）"
       - "排版是 tdp P5 的功能邏輯：縮排 2 格，key 的順序、數字的寫法照原檔（Go 的 json.Indent），只動空白；照 task 3 上 JSON 的顏色、畫行號（它自己的行）"

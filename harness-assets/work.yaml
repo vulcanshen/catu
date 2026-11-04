@@ -9,7 +9,7 @@ tasks:
       panel 裡第一列是位置列（tgo Panel.Location 畫）：看的東西的完整路徑，家目錄寫成 ~，Lavender，太長從前面截，名稱裡的控制字元畫成名字；
       不捲，空狀態與 panel.15 的錯誤上面也留著，panel 沒有焦點時跟著變暗（tgo 做）
       下框 hint：o:open /:search v:visual（tgo Action.Hint）；footer 由 tgo 畫：Space:menu ?:help !:log q:quit
-      內容一行也沒有時，位置列下面置中畫空狀態（Overlay0，照 panel 寬折行）：空檔案 Empty file / Press [o] to open another file，
+      內容一行也沒有時，位置列下面置中畫空狀態（tgo EmptyState：Overlay0，照 panel 寬折行）：空檔案 Empty file / Press [o] to open another file，
       空目錄 Empty directory / Press [o] to open a file，空壓縮檔 Empty archive / Press [o] to open another file
       最低尺寸 40×12（tgo App.MinWidth、MinHeight）
       q 與 Ctrl-C：tgo App.Quit 不設，直接離開；有 popup 開著時 tgo 先問
@@ -60,7 +60,7 @@ tasks:
       圖片（label IMAGE）：第一列 Overlay0「data:image/png · <大小>」，空一列，接 base64 的 data URI（一行，照 panel 寬折）；超過 1 MB 寫「(<大小> — too large to inline as a data URI)」
       其他（label BINARY）：一列 8 bytes 的十六進位（Text，每個 byte 後面一格）、空兩格、ASCII（Overlay0，不可見的字寫 .），一列 33 格；最多前 1 MB，
       超過時最後一列 Overlay0「(<大小> more not shown)」
-      檔案打得開、內容讀不出來時（壞掉的壓縮檔、PDF，讀到一半出錯的圖片、二進位）：label 照種類，panel 中間照空狀態的樣子寫兩句，
+      檔案打得開、內容讀不出來時（壞掉的壓縮檔、PDF，讀到一半出錯的圖片、二進位）：label 照種類，panel 中間照空狀態的樣子寫兩句（tgo Panel.Fail 畫），
       Red「Can't read this archive|PDF|image|file: <原因>」、Overlay0「Press [o] to open another file」；App Log 在 Info「Opened <路徑>」後面記 Error，同一句話
       目錄樹、十六進位、PDF、圖片不畫行號
       hide_secrets_in_preview 不管 panel：panel 照樣畫使用者打開的檔（私鑰、只有擁有者能讀的檔也一樣）；這個設定只交給 tgo 的 file-picker 預覽（task 8）
@@ -164,8 +164,8 @@ tasks:
       Markdown 的 ```mermaid 區塊（task 9）畫成圖；.mmd、.mermaid 檔有 DIAGRAM（打開時在這裡）、SOURCE 兩個 tab，DIAGRAM 當成一個 mermaid 區塊畫
       比 panel 寬的圖：那一列切掉，最後一格 Overlay0 的 …（task 5 的 reader）
       寫錯（pele 丟出錯誤）：Markdown 裡的區塊照程式碼區塊畫原始碼（右上角 mermaid），下面 Red 一行一列寫 pele 的錯誤；
-      .mmd、.mermaid 檔的 DIAGRAM 整個 tab 沒有東西，位置列下面置中畫 Red 的「Can't draw this diagram: <pele 錯誤的第一行>」、空一列、
-      Overlay0 的「Press [l] to see the source, [!] for the whole error」（照 panel 寬折行；寬度變了重畫一次）；
+      .mmd、.mermaid 檔的 DIAGRAM 整個 tab 沒有東西，位置列下面置中畫（tgo Panel.Fail，排版回錯誤時設）Red 的「Can't draw this diagram: <pele 錯誤的第一行>」、空一列、
+      Overlay0 的「Press [l] to see the source, [!] for the whole error」（照 panel 寬折行；寬度變了重畫一次）；切到 SOURCE 時拿掉 Panel.Fail，切回來再排一次；
       兩種都在 App Log 記 Warning「Can't draw a mermaid diagram in <檔名>: <pele 的整段錯誤>」，同一個檔同一個錯只記一次
       打開含有 mermaid 區塊的 Markdown、或 mermaid 檔時，在背景先載入 pele
     test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDiamondAsSteps, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidFileCannotBeDrawn, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
@@ -183,7 +183,7 @@ tasks:
       FORMATTED：Go 的 json.Indent 縮排 2 格（key 的順序、數字的寫法照原檔，只動空白），照 task 3 上 JSON 的顏色、畫它自己的行號、折行；
       超過 64 KB 一樣先 Text、背景上色
       行號欄照這個檔看過的 tab 裡最寬的：切到行數多的 tab 變寬，切回來不縮回；換一個檔才重新算
-      不是合法的 JSON：FORMATTED 沒有行，位置列下面置中畫 Red 的「Not valid JSON: line N: <encoding/json 的原因>」、空一列、Overlay0 的「Press [h] to see the file as it is」
+      不是合法的 JSON：FORMATTED 沒有行，位置列下面置中畫（tgo Panel.Fail，切到這個 tab 時設）Red 的「Not valid JSON: line N: <encoding/json 的原因>」、空一列、Overlay0 的「Press [h] to see the file as it is」；切回 TEXT 時拿掉 Panel.Fail
       空的檔：FORMATTED 也是 Empty file / Press [h] to see the file as it is
       找字、Visual 照 task 5、6，在 FORMATTED 裡找的是排過版的字
     test: [TestJSONAsItIsThenFormatted, TestJSONNotValid, TestJSONFormattedSearch, TestJSONNumbersOnlyWiden, TestJSONEmpty, TestJSONBigColouredLater]

@@ -134,12 +134,20 @@ func (v *viewer) onMsg(msg tea.Msg) tea.Cmd {
 // showView puts view i of what is shown in the body.
 func (v *viewer) showView(i int) {
 	vw := v.cur.views[i]
+	// Why the tab could not be made, drawn by tgo in the middle when there
+	// is nothing to show (tdp panel.15).
+	v.panel.Fail = vw.fail
 	if vw.layout != nil {
-		v.body.setLayout(vw.layout, vw.failHint)
+		v.body.setLayout(vw.layout, func(err error) {
+			v.panel.Fail = nil
+			if err != nil {
+				v.panel.Fail = &terminu.Failure{Fact: err.Error(), Hint: vw.failHint}
+			}
+		})
 	} else {
 		v.body.set(vw.lines, vw.numbered)
 	}
-	v.body.fact, v.body.hint, v.body.red = vw.fact, vw.hint, vw.red // when there is nothing to show
+	v.body.fact, v.body.hint = vw.fact, vw.hint // when there is nothing to show
 	// The location row (tdp panel.10).
 	v.panel.Location = tilde(v.cur.path)
 	v.panel.OnEsc = nil // no hits to clear

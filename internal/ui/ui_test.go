@@ -275,6 +275,9 @@ func TestContentUnreadable(t *testing.T) {
 		d := start(t, filepath.Join(dir, c.file), 80, 24)
 		want(t, d, c.fact, "Press [o] to open another file")
 		wantNot(t, d, "(unreadable)")
+		if !strings.HasSuffix(strings.TrimRight(d.Screen()[2], " ┃"), c.file) {
+			t.Errorf("%s: no location row over the fact (tdp panel.10): %q", c.file, d.Screen()[2])
+		}
 		red := strings.TrimSuffix(terminu.Fg(terminu.Red).Render("Can't read this"), "\x1b[0m")
 		if !strings.Contains(strings.Join(d.Styled(), ""), red) {
 			t.Errorf("%s: the fact is not in Red", c.file)

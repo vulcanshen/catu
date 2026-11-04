@@ -86,10 +86,16 @@ func TestJSONNotValid(t *testing.T) {
 	want(t, d, `  3 }`)
 	d.Press("l")
 	want(t, d, "Not valid JSON: line 3: invalid character '}'", "Press [h] to see the file as it is")
+	if !strings.HasSuffix(strings.TrimRight(d.Screen()[2], " ┃"), "a.json") {
+		t.Errorf("no location row over the reason (tdp panel.10): %q", d.Screen()[2])
+	}
 	red := strings.TrimSuffix(terminu.Fg(terminu.Red).Render("Not valid JSON"), "\x1b[0m")
 	if !strings.Contains(strings.Join(d.Styled(), ""), red) {
 		t.Error("the reason is not in Red")
 	}
+	d.Press("h")
+	want(t, d, `  3 }`)
+	wantNot(t, d, "Not valid JSON")
 }
 
 func TestJSONFormattedSearch(t *testing.T) {

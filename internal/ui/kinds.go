@@ -72,10 +72,11 @@ type view struct {
 	// colour, when set, is the lines in colour, made in the background:
 	// lines are the same in Text until then.
 	colour func() []text.Line
-	// fact and hint, when lines is empty, say why (tdp screen.8); red marks
-	// the fact an error (tdp panel.15).
+	// fact and hint, when lines is empty, say why (tdp screen.8).
 	fact, hint string
-	red        bool
+	// fail, when set, is why the tab could not be made (tdp panel.15), the
+	// panel's Fail while it is shown.
+	fail *terminu.Failure
 }
 
 // grey is a line of the app's own in Overlay0, not numbered.
@@ -123,7 +124,7 @@ func load(p string, cfg config, warn func(error)) (*shown, error) {
 		vw.lines, vw.hint = lines, "Press [o] to open another file"
 		if err != nil {
 			s.problem = "Can't read this " + what + ": " + err.Error()
-			vw.lines, vw.fact, vw.red = nil, s.problem, true
+			vw.lines, vw.fail = nil, &terminu.Failure{Fact: s.problem, Hint: vw.hint}
 		}
 		return []view{vw}
 	}
@@ -180,7 +181,7 @@ func textViews(s *shown, content string, tabW int, warn func(error)) []view {
 		switch err := json.Indent(&b, []byte(content), "", "  "); {
 		case strings.TrimSpace(content) == "":
 		case err != nil:
-			formatted.fact, formatted.red = "Not valid JSON: "+jsonError(content, err), true
+			formatted.fail = &terminu.Failure{Fact: "Not valid JSON: " + jsonError(content, err), Hint: formatted.hint}
 		default:
 			formatted.lines, formatted.colour = textLines(b.String()+"\n", s.path, tabW)
 		}
