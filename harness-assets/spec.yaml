@@ -76,7 +76,8 @@ tasks:
       - "App Log 與 ? 的 key reference 也有 /：tgo 給的（tdp note.3、note.5：每個 viewer 與按鍵說明都有搜尋），catu 不另外做"
       - "這個 panel 沒有 cursor，照 tdp panel.14：/ 開 input popup 問要找的字，命中的字加底線、目前那一筆是 cursor 色塊，n|N 繞著跳，一筆都沒有時 Info toast；Esc 清掉命中的字（tdp K4 的往上一層）"
       - "n|N 只在有命中的時候出現在 Space menu 與 ?（tdp M6：對象不存在就不列）；Esc 也只在有命中的時候列在 ?（tdp note.5：Esc 在這裡有作用時才列）"
-      - "找字不記 App Log：跟 panel filter 一樣只是換看得到的範圍（tdp note.7）；tgo 的 viewer 的搜尋也不記"
+      - note: "找字不記 App Log：跟 panel filter 一樣只是換看得到的範圍（tdp note.7）；tgo 的 viewer 的搜尋也不記。但 note.7 記 tdp P3 的 operation，P3 的表把搜尋列為 panel operation，note.7 沒明寫 viewer 的 / 搜尋記不記（review 2026-11-04 tdp v1.2.0 附記）。暫時照舊不記"
+        issue: "送給 terminu session（本機 SendMessage），2026-11-04；terminu 同一天回覆：是 tdp 的缺漏，會問使用者，答案與寫進哪一版 tdp 再告訴 catu；家族目前沒有 app 記 / 搜尋，catu 先照舊"
   - id: 7
     spec: 9
     request: o 打開別的檔案

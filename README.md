@@ -26,6 +26,9 @@ an archive, a PDF, an image or a binary is shown the way the terminu family prev
 - **vim's keys**: `j|k`, `u|d`, `gg|G` scroll; `v` brings out a cursor that moves with `h|j|k|l`, `w|b|e`, `0|$`, and
   `y` copies what you select. `/` finds text, `n|N` go through it.
 - **Open another file** without leaving: `o` opens a file picker with a preview.
+- **On the command line, as `cat` is**: `git log | catu` shows what comes down a pipe; `catu a.go b.md` lists several
+  files beside the one shown; `catu -p`, or catu printing into another program, prints a file instead of opening the
+  screen, a Markdown file and a diagram drawn.
 
 ## Install
 
@@ -123,6 +126,7 @@ The keys every family app shares:
 | Key | What it does |
 |---|---|
 | `Space` | What you can do here, and for the whole app |
+| `Tab`, `1\|2` | With several files: move between the `FILES` list and the file shown; `Enter` on the list goes to the file |
 | `?` | Every key that works here |
 | `!` | The App Log: what was done, newest last; here, the files opened and the diagrams that could not be drawn |
 | `j\|k`, `u\|d`, `gg\|G` | Scroll a row, half a page, to the top or the bottom |
@@ -135,7 +139,7 @@ catu's own:
 
 | Key | What it does |
 |---|---|
-| `o` | Open another file: a file picker in the directory of the one shown |
+| `o` | Open another file: a file picker in the directory of the one shown; with several files, it joins the list |
 | `/` | Find text: every place it is is underlined |
 | `n`, `N` | The next and the previous place found |
 
@@ -167,7 +171,11 @@ hide_secrets_in_preview: false   # true: a private key shows its first line only
 ```
 
 Both are keys every terminu family app shares. A `config.yaml` catu cannot read is offered to be moved aside to
-`config.yaml.bak`, or catu quits.
+`config.yaml.bak`, or catu quits. When catu prints, with no screen to ask on, it stops instead: nothing is printed, and
+it says which file and why.
+
+What comes down a pipe is put in a file in the system's temp directory (`$TMPDIR`) while catu looks at it, and removed
+when catu quits.
 
 ## Limits
 
