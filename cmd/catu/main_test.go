@@ -177,6 +177,34 @@ func TestPrintSeveral(t *testing.T) {
 	}
 }
 
+// TestPrintSettingsUnreadable: settings that cannot be read, with no screen
+// to ask on, stop catu as Esc does on the screen (tdp E3, user 2026-11-04):
+// nothing printed, the file and why on stderr, exit code 1, no file touched
+// and no .bak made; a pipe's text is not copied either.
+func TestPrintSettingsUnreadable(t *testing.T) {
+	cfg := t.TempDir()
+	t.Setenv("CATU__CONFIG", cfg)
+	os.WriteFile(filepath.Join(cfg, "config.yaml"), []byte(":\n:"), 0o644)
+	a := filepath.Join(t.TempDir(), "a.txt")
+	os.WriteFile(a, []byte("text\n"), 0o644)
+	check := func(what string, code int, out, errs string) {
+		t.Helper()
+		if code == 0 || out != "" || !strings.HasPrefix(errs, "catu: "+filepath.Join(cfg, "config.yaml")+" can't be read: ") {
+			t.Errorf("%s: %d %q %q", what, code, out, errs)
+		}
+	}
+	code, out, errs := capture(t, a)
+	check("into a pipe", code, out, errs)
+	code, out, errs = capture(t, "-p", a)
+	check("-p", code, out, errs)
+	code, out, errs = captureIn(t, "piped\n")
+	check("from a pipe", code, out, errs)
+	entries, _ := os.ReadDir(cfg)
+	if len(entries) != 1 || entries[0].Name() != "config.yaml" {
+		t.Errorf("the settings directory has %v, want config.yaml alone", entries)
+	}
+}
+
 func TestBadArguments(t *testing.T) {
 	if code, _, errs := capture(t, "--watch"); code != 2 || !strings.Contains(errs, `unknown flag "--watch"`) {
 		t.Errorf("a flag: %d %q", code, errs)

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -9,13 +10,25 @@ import (
 	"github.com/vulcanshen/catu/internal/text"
 )
 
+// CheckSettings is why the settings cannot be read, nil when they can or
+// there are none. With no screen to ask on, catu then does as Esc does on
+// the screen's MOVE ASIDE: it touches no file, prints nothing, says this on
+// stderr and quits (tdp E3, user 2026-11-04), in the lib's words.
+func CheckSettings() error {
+	_, path, err := readConfig()
+	if err != nil {
+		return fmt.Errorf("%s can't be read: %v", tilde(path), err)
+	}
+	return nil
+}
+
 // Print writes what catu shows first of each of paths to out, one after
 // another as cat does, without a screen (tasks 13, 14; tdp E1): a text file
 // byte for byte when out is not coloured, else the first tab's lines, a
 // document or a diagram laid out w cells wide, coloured as on the screen when
 // coloured. A path it cannot is told to fail, and the rest are printed.
 func Print(paths []string, out io.Writer, coloured bool, w int, fail func(path string, err error)) {
-	cfg, _, _ := readConfig() // settings it cannot read: the defaults, with no screen to ask on
+	cfg, _, _ := readConfig() // read: catu checked first (CheckSettings)
 	for _, p := range paths {
 		if err := printOne(p, out, cfg, coloured, w); err != nil {
 			fail(p, err)

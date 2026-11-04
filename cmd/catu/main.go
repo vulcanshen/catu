@@ -128,7 +128,12 @@ func run(args []string) int {
 	}()
 	if printing || !toTerminal {
 		// Printed (tasks 13, 14), one after another as cat does (task 16): in
-		// colour only on a terminal.
+		// colour only on a terminal. Settings that cannot be read stop it
+		// before anything is printed, as Esc does on the screen (tdp E3).
+		if err := ui.CheckSettings(); err != nil {
+			fmt.Fprintln(os.Stderr, "catu:", err)
+			return 1
+		}
 		for _, p := range paths {
 			name := p
 			if p == "-" {

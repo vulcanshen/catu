@@ -207,9 +207,9 @@ tasks:
       目錄與壓縮檔的樹、PDF 的文字、圖片的 data URI、二進位的十六進位；每一列是畫面上的字（控制字元是名字），去掉列尾的空白，換行結尾
       讀不了的：stderr 印 catu: <路徑>: <原因>（不存在、沒有權限照 cat 的字；壞掉的壓縮檔、PDF 是 Can't read this …: <原因>；
       畫不出來的 mermaid 檔是 Can't draw this diagram: <pele 錯誤的第一行>），結束碼 1；Markdown 裡寫錯的 mermaid 區塊照畫面一樣印原始碼加錯誤
-      設定檔讀不了時用預設值（沒有畫面可以問 MOVE ASIDE）
+      設定檔讀不了時（沒有畫面可以開 MOVE ASIDE）照畫面上按 Esc 一樣：什麼都不印、不動任何檔、不做 .bak，stderr 印 catu: <設定檔，家目錄寫成 ~> can't be read: <原因>（跟 tgo 在畫面上按 Esc 離開時同一句），結束碼 1；接管線、-p、從管線讀都一樣（tdp E3）
       catu help 寫明輸出不是終端機時會印出來
-    test: [TestPrintWhenNotATerminal]
+    test: [TestPrintWhenNotATerminal, TestPrintSettingsUnreadable]
   - id: 14
     spec: 13
     implementation: |
@@ -226,7 +226,7 @@ tasks:
       -l、--lang <格式>、--lang=<格式>：md、markdown 是 Markdown，mermaid、mmd 是 mermaid 圖，其他是 chroma 認得的語言名字或副檔名（json、go、python、py……）；
       不認得的：stderr 印 catu: unknown format "<格式>"，結束碼 2；-l 後面沒有格式、或路徑不是 - 時用 -l：印原因加用法，結束碼 2
       stdout 不是終端機、格式不是 Markdown 或 mermaid 時：stdin 原樣整個複製到 stdout，一個 byte 不改、不限大小，跟 cat 一樣
-      其他時候（開畫面、-p、要畫的格式）：stdin 的前 16 MB 寫進暫存目錄裡的 stdin.<格式的副檔名>（ui.Spool），照讀一個檔案一樣讀它（種類、顏色、tab 都照檔案），
+      其他時候（開畫面、-p、要畫的格式）：stdin 的前 16 MB 寫進系統暫存目錄（$TMPDIR）底下每次執行建的 catu-* 目錄裡的 stdin.<格式的副檔名>（ui.Spool），照讀一個檔案一樣讀它（種類、顏色、tab 都照檔案），
       結束時刪掉暫存目錄；超過 16 MB 時文字最後一列 Overlay0「(more not shown)」
       畫面上：位置列 standard input，statusbar 只有 Size: <大小>，App Log 記 Info「Opened standard input」，找字的提示 Find in standard input，
       圖畫不出來的 Warning 寫 in standard input；o 的 file-picker 根目錄是啟動 catu 的目錄；鍵盤從終端機讀（Bubble Tea 在 stdin 不是終端機時開 /dev/tty）
