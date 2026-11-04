@@ -57,6 +57,53 @@ func TestPathNotReadable(t *testing.T) {
 	}
 }
 
+// TestPrintWhenNotATerminal: with its output not a terminal, catu prints
+// instead of opening its screen (task 13): a text file byte for byte, as cat
+// does; a Markdown file and a mermaid diagram drawn, $COLUMNS wide; a
+// directory as a tree; no colours, -p or not; what it cannot read is said on
+// stderr, exit code 1.
+func TestPrintWhenNotATerminal(t *testing.T) {
+	t.Setenv("CATU__CONFIG", t.TempDir())
+	t.Setenv("COLUMNS", "60")
+	dir := t.TempDir()
+	write := func(name, content string) string {
+		p := filepath.Join(dir, name)
+		os.WriteFile(p, []byte(content), 0o644)
+		return p
+	}
+	raw := "package a\n\tfunc  x() {}\r\nno newline at the end"
+	for _, args := range [][]string{{write("a.go", raw)}, {"-p", filepath.Join(dir, "a.go")}} {
+		if code, out, errs := capture(t, args...); code != 0 || out != raw || errs != "" {
+			t.Errorf("catu %v: %d %q %q", args, code, out, errs)
+		}
+	}
+	code, out, _ := capture(t, write("a.md", "# Title\n\nSome **bold** words.\n"))
+	if code != 0 || !strings.Contains(out, "Title") || strings.Contains(out, "#") || strings.Contains(out, "**") || strings.Contains(out, "\x1b") {
+		t.Errorf("a document: %d %q", code, out)
+	}
+	code, out, _ = capture(t, write("flow.mmd", "flowchart TD\n  A[Start] --> B[End]\n"))
+	if code != 0 || !strings.Contains(out, "│ Start") || !strings.Contains(out, "▼") || strings.Contains(out, "flowchart") {
+		t.Errorf("a diagram: %d\n%s", code, out)
+	}
+	for _, row := range strings.Split(out, "\n") {
+		if w := len([]rune(row)); w > 60 {
+			t.Errorf("wider than $COLUMNS: %q", row)
+		}
+	}
+	os.Mkdir(filepath.Join(dir, "sub"), 0o755)
+	write("sub/b.txt", "b")
+	if code, out, _ := capture(t, filepath.Join(dir, "sub")); code != 0 || !strings.Contains(out, "b.txt") {
+		t.Errorf("a directory: %d %q", code, out)
+	}
+	bad := write("bad.zip", "PK\x03\x04 not a zip")
+	if code, out, errs := capture(t, bad); code != 1 || out != "" || !strings.HasPrefix(errs, "catu: "+bad+": Can't read this archive: ") {
+		t.Errorf("a broken archive: %d %q %q", code, out, errs)
+	}
+	if code, _, errs := capture(t, write("bad.mmd", "flowchart LR\n  B[[[\n")); code != 1 || !strings.Contains(errs, "Can't draw this diagram: Parse error") {
+		t.Errorf("a diagram that cannot be drawn: %d %q", code, errs)
+	}
+}
+
 func TestBadArguments(t *testing.T) {
 	if code, _, errs := capture(t, "a", "b"); code != 2 || !strings.Contains(errs, "one path at a time") {
 		t.Errorf("two paths: %d %q", code, errs)

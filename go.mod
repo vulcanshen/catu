@@ -4,6 +4,7 @@ go 1.26.0
 
 require (
 	github.com/charmbracelet/bubbletea v1.3.10
+	github.com/charmbracelet/x/term v0.2.1
 	github.com/dop251/goja v0.0.0-20261102223426-a177d211bf60
 	github.com/dslipak/pdf v0.0.2
 	github.com/rivo/uniseg v0.4.7
@@ -19,7 +20,6 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0 // indirect
 	github.com/charmbracelet/x/ansi v0.10.1 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd // indirect
-	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/creack/pty v1.1.24 // indirect
 	github.com/dlclark/regexp2/v2 v2.11.0 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect

@@ -101,12 +101,17 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/uninstall.sh |
 
 ```
 catu [path]       look at a file or a directory (the current directory when left out)
+catu -p [path]    print it instead, in colour, and quit (--print)
 catu version      print the version (-v, --version)
 catu help         print the command-line usage (-h, --help)
 ```
 
 A path that is not there, or that you may not read, is said on the command line, as `cat` says it. A file named `version`
 or `help`: `catu ./version`.
+
+When its output is not a terminal, catu prints instead of opening its screen, with no colours: a text file byte for byte,
+as `cat` does, and a Markdown file or a mermaid diagram drawn, `$COLUMNS` wide (80 when it is not set). So
+`catu flow.mmd > flow.txt` turns a diagram into text, and `catu README.md | less` pages a document.
 
 The keys every family app shares:
 

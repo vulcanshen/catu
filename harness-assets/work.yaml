@@ -197,3 +197,25 @@ tasks:
       空的檔：FORMATTED 也是 Empty file / Press [h] to see the file as it is
       找字、Visual 照 task 5、6，在 FORMATTED 裡找的是排過版的字
     test: [TestJSONAsItIsThenFormatted, TestJSONNotValid, TestJSONFormattedSearch, TestJSONNumbersOnlyWiden, TestJSONEmpty, TestJSONBigColouredLater]
+  - id: 13
+    spec: 13
+    implementation: |
+      cmd/catu/main.go：stdout 不是終端機（charmbracelet/x/term IsTerminal）時不開畫面，改叫 ui.Print，不帶顏色；有 -p 也一樣
+      ui.Print：每個路徑照開畫面時一樣讀（load），印第一個 tab：
+      文字檔（含 JSON、私鑰）打開原檔整個複製到 stdout，一個 byte 不改、不限大小，跟 cat 一樣；
+      其他照第一個 tab 的列印：Markdown 的 DOCUMENT、mermaid 檔的 DIAGRAM 照寬度排好（寬度是 $COLUMNS，沒有或不是正整數就 80），
+      目錄與壓縮檔的樹、PDF 的文字、圖片的 data URI、二進位的十六進位；每一列是畫面上的字（控制字元是名字），去掉列尾的空白，換行結尾
+      讀不了的：stderr 印 catu: <路徑>: <原因>（不存在、沒有權限照 cat 的字；壞掉的壓縮檔、PDF 是 Can't read this …: <原因>；
+      畫不出來的 mermaid 檔是 Can't draw this diagram: <pele 錯誤的第一行>），結束碼 1；Markdown 裡寫錯的 mermaid 區塊照畫面一樣印原始碼加錯誤
+      設定檔讀不了時用預設值（沒有畫面可以問 MOVE ASIDE）
+      catu help 寫明輸出不是終端機時會印出來
+    test: [TestPrintWhenNotATerminal]
+  - id: 14
+    spec: 13
+    implementation: |
+      -p、--print（放在路徑前後都可以）：不開畫面，ui.Print 印完就結束，結束碼同 task 13
+      stdout 是終端機時帶顏色：文字檔照 task 3 的語法顏色（大檔先上完色再印），Markdown、mermaid 與其他照畫面裡第一個 tab 的顏色；
+      不印行號、不折行；每一列用 SGR 畫，列尾沒有底色的空白不印；寬度是終端機的寬（charmbracelet/x/term GetSize），拿不到時照 task 13
+      stdout 不是終端機時照 task 13，不帶顏色
+      catu help 有 catu -p [path] 一列
+    test: [TestPrintInColour, TestPrintWhenNotATerminal]

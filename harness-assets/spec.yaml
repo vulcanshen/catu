@@ -1,4 +1,4 @@
-id: 12
+id: 13
 from: v1.2.0-beta.2
 to: v1.2.0-beta.3
 tasks:
@@ -143,3 +143,41 @@ tasks:
       - "排版是 tdp P5 的功能邏輯：縮排 2 格，key 的順序、數字的寫法照原檔（Go 的 json.Indent），只動空白；照 task 3 上 JSON 的顏色、畫行號（它自己的行）"
       - "只認副檔名 .json；不是合法的 JSON 時，FORMATTED 照 tdp panel.15 置中寫一句 Red 的原因（帶行號）、一句 Overlay0 的提示 Press [h] to see the file as it is"
       - "行號欄照這個檔看過的 tab 裡最寬的，只變寬、不變窄（tdp note.2 有 tab 的 viewer）"
+  - id: 13
+    spec: 13
+    request: 輸出接到管線或檔案時不開畫面，像 cat 一樣印出來；Markdown、mermaid 印成畫好的文字
+    tdp: [tdp E1, tdp P5, tdp components.5]
+    remark:
+      - "命令列的其他用法 app 可以自行決定（tdp E1）；印什麼、怎麼印是功能邏輯（tdp P5）"
+      - "stdout 不是終端機（catu a.md | less、catu flow.mmd > flow.txt）時不開畫面：TUI 要一個終端機，輸出給別的程式時照 cat 的習慣把內容印出來"
+      - "印打開時的第一個 tab：文字檔（含 JSON、私鑰）一個 byte 不改照原樣印，跟 cat 一樣，行數、grep 得到的行都對得上；Markdown 印畫好的文件、mermaid 檔印畫好的圖；目錄與壓縮檔印樹、PDF 印文字、圖片印 data URI、二進位印十六進位"
+      - "不印顏色碼（給別的程式讀）、不印行號；排版的寬度是 COLUMNS，沒有就 80"
+      - "讀不了的（不存在、沒有權限、壞掉的壓縮檔、畫不出來的 mermaid 檔）跟 cat 一樣在 stderr 說 catu: <路徑>: <原因>，結束碼 1"
+  - id: 14
+    spec: 13
+    request: 加參數直接在終端機印出來、不開畫面：catu -p a.md，像 bat -p
+    tdp: [tdp E1, tdp P5, tdp note.2]
+    remark:
+      - "-p、--print：不開畫面，印完就結束，結果留在終端機的捲動紀錄裡（tdp E1：其他指令 app 可以自行決定）"
+      - "印的跟 task 13 一樣是第一個 tab，但 stdout 是終端機時帶顏色：文字檔照 task 3 的語法顏色（跟畫面裡、o 的預覽同一套，tdp note.2），Markdown 與 mermaid 照畫面裡的顏色；不印行號、不折行（終端機自己折）；寬度是終端機的寬"
+      - "stdout 不是終端機時（catu -p a.md | less）跟 task 13 一樣：不帶顏色"
+  - id: 15
+    spec: 13
+    request: 從管線讀進來看：git log | catu、curl -s 網址 | catu --lang md，像 less
+    tdp: [tdp E1, tdp P5, tdp panel.10, tdp note.7, tdp screen.4]
+    remark:
+      - "沒給路徑、stdin 不是終端機時讀 stdin；路徑寫 - 也是 stdin（cat 的習慣）。stdin 是終端機又沒給路徑時照舊看目前的目錄"
+      - "讀到結束為止，最多 16 MB（跟檔案一樣），然後照檔案一樣：stdout 是終端機就開畫面看（鍵盤從終端機讀），不是就照 task 13 印，-p 照 task 14"
+      - "格式：-l、--lang <格式> 指定（md、mermaid、json 或語言的名字，跟副檔名一樣認），沒指定就是不上色的文字；不從內容猜，猜錯比不上色更糟"
+      - "畫面上：位置列寫 standard input（tdp panel.10：你在看什麼），statusbar 只有 Size（不是檔案，沒有修改時間與權限，tdp screen.4），App Log 記 Opened standard input（tdp note.7）"
+  - id: 16
+    spec: 13
+    request: 一次看好幾個檔：catu a.go b.go
+    tdp: [tdp terms.2, tdp panel.13, tdp screen.5, tdp L1, tdp K1, tdp K2, tdp K3, tdp screen.2, tdp E1]
+    remark:
+      - "給兩個以上的路徑時，單畫面兩個 panel：左邊 [1] FILES 清單（照給的順序），右邊 [2] 照現在的 panel 看清單 cursor 那一個（tdp panel.13 明細：cursor 一動就換，focus 不動；Enter 把 focus 送到 [2]）；只給一個時照舊一個 panel"
+      - "Tab 與 1、2 換 panel（tdp K1、K2），footer 照多 panel 的寫（tdp screen.2）；窄的時候只畫有 focus 的 panel（tdp screen.5，門檻不高於 60）"
+      - "清單的寬是最長的名字加框，最多畫面的三分之一；名字寫給的路徑，家目錄寫成 ~"
+      - "開畫面前每個路徑都先讀：有讀不到的，跟一個路徑時一樣在 stderr 說、結束碼 1，不開畫面"
+      - "印的時候（task 13、14）一個接一個印，跟 cat a b 一樣不加標頭；讀不到的在 stderr 說、其他照印，結束碼 1"
+      - "o 選的檔加進清單最後（已經在清單裡就移過去），cursor 移到它"

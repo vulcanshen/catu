@@ -98,11 +98,16 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/uninstall.sh |
 
 ```
 catu [路徑]       看一個檔案或目錄（沒給就是目前的目錄）
+catu -p [路徑]    不開畫面，帶顏色印出來就結束（--print）
 catu version      印出版本（-v、--version）
 catu help         印出命令列的用法（-h、--help）
 ```
 
 路徑不存在、或沒有權限讀的時候，像 `cat` 一樣在命令列說出來。檔名剛好叫 `version` 或 `help`：`catu ./version`。
+
+輸出不是終端機時，catu 不開畫面，改成印出來、不帶顏色：文字檔一個 byte 不改照原樣印，跟 `cat` 一樣；Markdown 與 mermaid
+印成畫好的文字，寬度是 `$COLUMNS`（沒設就是 80）。所以 `catu flow.mmd > flow.txt` 把圖轉成文字，`catu README.md | less`
+一頁一頁看文件。
 
 家族每個 app 都一樣的鍵：
 
