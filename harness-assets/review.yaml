@@ -9,8 +9,7 @@ tasks:
   - id: 4
     accepted: true
   - id: 5
-    accepted: false
-    reason: tdp 不清楚：PgUp、PgDn 在 tgo 每一個 surface 都是 u|d 的別名，tdp K12 沒寫收不收、收了 ? 要不要列；terminu session 2026-11-04 回覆是真的缺漏，交給使用者決定，在等；暫時跟 tgo 一樣收（合 tdp K7）。Cop[y] 已照 terminu session 的回覆確定（tdp M5）
+    accepted: true
   - id: 6
     accepted: true
   - id: 7

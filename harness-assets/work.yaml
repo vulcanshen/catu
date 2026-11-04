@@ -68,7 +68,7 @@ tasks:
     spec: 7
     implementation: |
       panel 上沒有游標：j|↓、k|↑ 捲一列（折行的一行一列一列捲），d|PgDn、u|PgUp 捲半頁，gg、G 到頭尾；Ctrl-U、Ctrl-D 不作用
-      （PgUp、PgDn 當 u|d 的別名，跟 tgo 每一個 surface 一樣：viewer、清單、menu、表單、finder、textarea 都收，tdp K7）
+      （PgUp、PgDn 是 u|d，跟 tgo 每一個 surface 一樣：viewer、清單、menu、表單、finder、textarea 都收，tdp K12）
       下框右邊：放不下時寫 N-M of T（最上面那一列所屬的行到最下面那一列所屬的行，總行數）
       ? 的 MOVE 區列 j|k、u|d、gg|G（tgo Body.MoveKeys），內容全放得下時不列
       v（Space menu 的 panel operation [v]isual：select text to copy；hint v:visual；沒有內容時不出現）：進 tgo 的 panel 模式 Visual（tgo Panel.EnterMode），

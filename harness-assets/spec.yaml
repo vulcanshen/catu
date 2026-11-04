@@ -59,8 +59,7 @@ tasks:
     request: 用 vim 的方式移動：j|k、u|d、gg|G 捲動；v 進 Visual，h|j|k|l、w|b|e、0|$ 移游標，再按 v 開始選，y 複製
     tdp: [tdp K11, tdp K12, tdp terms.8, tdp note.2, tdp note.3, tdp note.4, tdp panel.3, tdp M2, tdp M3, tdp M5, tdp note.7, tdp toast.2, tdp screen.2, tdp menu.4, tdp note.5, tdp panel.5, tdp color.2, tdp K6, tdp K7]
     remark:
-      - note: "PgUp、PgDn：tgo 在每一個 surface 都當 u|d 的別名，tdp K12 沒寫收不收，收了 ? 的 MOVE 要不要列也沒寫（review 2026-11-04）。暫時跟 tgo 一樣收，MOVE 只列 u|d；terminu session 2026-11-04 回覆：tdp 真的沒寫，交給使用者決定，決定之前照 lib"
-        issue: "送給 terminu session（本機 SendMessage），2026-11-04"
+      - "PgUp、PgDn 也是 u|d：捲半頁、到頭尾停住；? 的 MOVE 只列 u|d，不列 PgUp、PgDn（方向鍵也不列）。tdp K12、checklist K12-18（review 2026-11-04 問，使用者同一天決定，terminu session 回覆；tdp b07d671 還沒發版）。tgo 本來就這樣做，viewu 不用改"
       - "select 的複製畫成 Cop[y]：tdp M5，字母在 label 裡就原地包第一次出現的那個（tgo 這樣畫）；tdp K11 與 menu.4 的 [y] Copy 是寫錯的例子（review 2026-11-04 問，terminu session 同一天回覆，下一版改成 Cop[y]）；[v] Select 是對的，Select 裡沒有 v"
       - "選取的範圍 Yellow 底、Base 字，語法顏色與粗體、斜體、底線在範圍裡都不顯示（tdp note.2）"
       - "照 tdp：看的時候沒有游標，j|k 捲動（tdp K12、note.4）；edit mode 先不做（使用者 2026-11-03：先不要有 edit mode，單純看檔案就好）"
