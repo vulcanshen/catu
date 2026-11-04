@@ -127,7 +127,9 @@ func Draw(src string, w int) ([][]text.Char, error) {
 		// with its diamonds when only the hexagons failed.
 		svg, err = SVG(src, float64(w)*cellW)
 	}
-	if err == nil {
+	if p, ok := pieOf(src); ok && err == nil {
+		r.rows = p.draw(w) // pele read it; it is drawn as bars (pie.go)
+	} else if err == nil {
 		r.rows, r.err = drawSVG(svg)
 	} else {
 		r.err = err

@@ -167,7 +167,8 @@ Both are keys every terminu family app shares. A `config.yaml` catu cannot read 
   fit its rows of cells.
 - A diagram wider than the panel is cut at its right edge, with a `…`; one pele cannot read is shown as its source with
   the reason under it.
-- Diagrams are drawn with lines and dots: shapes are outlined, not filled.
+- Diagrams are drawn with box-drawing lines, never dots: shapes are outlined, not filled; a curve turns at right angles,
+  a circle is a box with `(` and `)` on its sides, and a pie chart is drawn as bars.
 - macOS and Linux only (WSL too); there is no Windows build.
 
 ## Links

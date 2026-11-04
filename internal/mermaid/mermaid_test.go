@@ -150,10 +150,90 @@ func TestDecisionErrorAsWritten(t *testing.T) {
 	}
 }
 
-func TestCirclesAsDots(t *testing.T) {
-	rs := drawRows(t, "flowchart LR\n  A((Round)) --> B\n", 80)
-	if !braille(rs) || !has(rs, "Round") {
-		t.Errorf("the circle is not drawn in dots:\n%s", strings.Join(rs, "\n"))
+// TestNoDots: nothing is drawn in dots (user 2026-11-04): a circle is a box
+// with a ( and a ) on its sides, a state diagram's start ● and its end ◉,
+// a curve an elbow of box-drawing lines (a box's lines to the boxes below
+// it share a row, as a tree's do), a loop to its own box a corner out and
+// back, the arrow at its border.
+func TestNoDots(t *testing.T) {
+	for _, c := range []struct {
+		src  string
+		want []string
+	}{
+		{"flowchart LR\n  A((Round)) --> B\n", []string{"(Round )────▶│"}},
+		{"stateDiagram-v2\n  [*] --> Idle\n  Idle --> [*]\n", []string{"●", "◉"}},
+		{"flowchart TD\n  K[kind] --> A[one]\n  K --> B[two]\n  K --> C[three]\n  K --> D[four]\n", []string{"╰┬─┬─┬─┬╯", "╭────╯ ╰─────╮"}},
+		{"flowchart TD\n  A[Loop] --> A\n", []string{"├──╮", "│◀─╯"}},
+	} {
+		rs := drawRows(t, c.src, 80)
+		if braille(rs) {
+			t.Errorf("dots:\n%s", strings.Join(rs, "\n"))
+		}
+		for _, s := range c.want {
+			if !has(rs, s) {
+				t.Errorf("no %q:\n%s", s, strings.Join(rs, "\n"))
+			}
+		}
+	}
+}
+
+// TestPieAsBars: a pie chart is a bar a slice, the biggest first, as long as
+// it is next to the biggest, in the colour pele gives that slice, its share
+// after it; with showData, its value too.
+func TestPieAsBars(t *testing.T) {
+	src := "pie showData title Files\n  \"text\" : 12\n  \"Markdown\" : 3\n  \"binary\" : 4\n"
+	rs, err := Draw(src, 60)
+	if err != nil {
+		t.Fatal(err)
+	}
+	drawn := make([]string, len(rs))
+	for i, r := range rs {
+		drawn[i] = strings.TrimRight(text.Line{Chars: r}.Drawn(), " ")
+	}
+	if braille(drawn) || strings.TrimSpace(drawn[0]) != "Files" || drawn[1] != "" {
+		t.Fatalf("not a title over bars:\n%s", strings.Join(drawn, "\n"))
+	}
+	for i, want := range []struct {
+		name, share, value string
+		colour             terminu.Color
+	}{
+		{"text", "63%", "[12]", pieColours[0]},
+		{"binary", "21%", "[4]", pieColours[2]},
+		{"Markdown", "16%", "[3]", pieColours[1]},
+	} {
+		row := drawn[2+i]
+		if !strings.HasPrefix(row, "  "+want.name) || !strings.Contains(row, want.share+"  "+want.value) {
+			t.Errorf("row %d: %q", i, row)
+		}
+		for _, c := range rs[2+i] {
+			if c.Draw == "█" && c.St.Fg != want.colour {
+				t.Errorf("%s: its bar in %v, want %v", want.name, c.St.Fg, want.colour)
+				break
+			}
+		}
+	}
+	if a, b := strings.Count(drawn[2], "█"), strings.Count(drawn[3], "█"); a <= b || b == 0 {
+		t.Errorf("bars %d, %d: the biggest first, as long as it is next to the biggest", a, b)
+	}
+	if _, err := Draw("pie\n  \"a\" 1\n", 60); err == nil {
+		t.Error("pele reads a pie first: no error for a bad one")
+	}
+	// A name is the file's: a control character in it by its name, in Red;
+	// one too long for a third of the width cut with a ….
+	rs, err = Draw("pie\n  \"tab\there\" : 2\n  \""+strings.Repeat("long ", 10)+"\" : 1\n", 60)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if row := (text.Line{Chars: rs[0]}).Drawn(); !strings.Contains(row, `tab\there`) {
+		t.Errorf("the tab is not by its name: %q", row)
+	}
+	for _, c := range rs[0] {
+		if c.Src == "\t" && c.St.Fg != terminu.Red {
+			t.Errorf("the tab's name in %v, want Red", c.St.Fg)
+		}
+	}
+	if row := (text.Line{Chars: rs[1]}).Drawn(); !strings.Contains(row, "long…") || strings.Count(row, "long") > 4 {
+		t.Errorf("a long name not cut: %q", row)
 	}
 }
 

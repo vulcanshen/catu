@@ -144,7 +144,7 @@ tasks:
       內容是空的時候照 task 1 的空狀態
     test: [TestMarkdownDocumentAndSource, TestMarkdownLaidOutAgainOnResize, TestMarkdownSearchAndCopy, TestEmptyMarkdown, TestEveryRowIsTheWidth, TestNoMarkdownSymbols, TestHeadingIsAChipOfItsLevel, TestLists, TestListItemFolds, TestCodeBlock, TestCodeBlockColoursAsThePreview, TestCodeBlockItalicComment, TestCodeLineFolds, TestQuote, TestTable, TestTableTooWide, TestLinkAndImage, TestInlineStyles, TestRule, TestControlCharacters]
   - id: 10
-    spec: 10
+    spec: 11
     implementation: |
       internal/mermaid：Pele 1.13.0 的 dist/pele.global.js（MIT，LICENSE 一起放在 internal/mermaid/pele/）用 go:embed 放進執行檔，goja 跑；
       pele.render 給的 measurer 把每個字量成一格（8.4px，寬字兩格），fontSize 14，maxWidth 是可以用的格數 × 8.4，autoDirection 開著、
@@ -157,11 +157,16 @@ tasks:
       pele 照方框排、線接在框邊；畫的時候那個框照一般的框畫，左右兩邊正中間的那一格換成 ◆（框的顏色），在箭頭之後放，箭頭照樣停在框線前一格；
       改寫後 pele 丟錯時用原文再排一次：錯誤訊息是使用者寫的字，只有改寫壞掉時照原文畫菱形；其他圖（class、state……）不改
       斜的直線（菱形、多邊形的邊）畫成階梯：在經過的每一列畫一段橫線，在它跨到下一列的那一欄（兩列中間的那條線上）往上或往下接一格，轉角圓角；
-      曲線、圓、弧一律用點字（braille）；
-      兩端都是水平（或垂直）的三次曲線畫成直角的轉折
+      不用點字（braille）：曲線（三次、二次、弧）一律畫成框線的直角轉折：照起點的方向（橫或直）出去、照終點的方向進來，
+      出去與進來同一個方向時在一半的地方轉（一個框往下分好幾條線時共用同一列，像一棵樹），出去又折回來的（連回自己的線）在曲線最遠的地方轉，
+      至少離開兩格或一列，箭頭放得下；
+      圓與橢圓：小於兩格寬、一列高的畫 ○（填滿的 ●，○ 與 ● 疊在一起是 ◉：state 圖的開始與結束），其他畫成外接的框，是節點時左右兩邊正中間換成 ( 與 )；
+      pie 圖（pele 讀得懂時）不畫 pele 的圓，自己從原文畫成橫條：標題置中、空一列，一塊一列，大的在前（一樣大照原文順序）：
+      名字（原文的字，控制字元畫成 Red 的名字，tdp components.5；最寬 panel 的三分之一，太長截斷加 …；名字、橫條、百分比、[值] 之間各空兩格）、橫條（最大的那塊最長，最多 48 格，其他照比例，用 █ 與 ▏▎▍▌▋▊▉ 畫到八分之一格，不是 0 的至少八分之一格，
+      顏色是 pele 給那一塊的顏色：照原文順序輪流用 pele 的 8 個顏色）、佔全部的百分比（四捨五入到整數）；showData 時後面加 Subtext0 的 [值]
       箭頭（填滿的三角形 pele-marker）在所有線與字畫完後放：指向的框線前一格、框線上不留朝箭頭的接頭，沒有框線時蓋在線的最後一格，▶ ◀ ▲ ▼；
       線組成的 marker（ER 圖的鴨掌、短槓）照線畫
-      字照原本的位置放（text-anchor、tspan 的每一行），邊上的字左右各清掉一格線；描邊用的字（fill none）不畫；比一格小的方塊畫 ■、小圓畫 ● ○
+      字照原本的位置放（text-anchor、tspan 的每一行），邊上的字左右各清掉一格線；描邊用的字（fill none）不畫；比一格小的方塊畫 ■、小圓照上面畫 ○ ● ◉
       顏色：節點的框 Blue、群組的框與生命線 Overlay0、線與箭頭 Overlay2（或 SVG 寫的顏色）、字 Text、邊上的字 Subtext0、群組的名字 Overlay1、標題粗體
       上下空白的列、左邊空白的欄拿掉；同一張圖同一個寬度畫過就記住
       Markdown 的 ```mermaid 區塊（task 9）畫成圖；.mmd、.mermaid 檔有 DIAGRAM（打開時在這裡）、SOURCE 兩個 tab，DIAGRAM 當成一個 mermaid 區塊畫
@@ -171,7 +176,7 @@ tasks:
       Overlay0 的「Press [l] to see the source, [!] for the whole error」（照 panel 寬折行；寬度變了重畫一次）；切到 SOURCE 時拿掉 Panel.Fail，切回來再排一次；
       兩種都在 App Log 記 Warning「Can't draw a mermaid diagram in <檔名>: <pele 的整段錯誤>」，同一個檔同一個錯只記一次
       打開含有 mermaid 區塊的 Markdown、或 mermaid 檔時，在背景先載入 pele
-    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDecisionAsABox, TestAsDecisions, TestDecisionErrorAsWritten, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidFileCannotBeDrawn, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
+    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDecisionAsABox, TestAsDecisions, TestDecisionErrorAsWritten, TestNoDots, TestPieAsBars, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidFileCannotBeDrawn, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
   - id: 11
     spec: 8
     implementation: |
