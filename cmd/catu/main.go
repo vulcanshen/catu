@@ -8,8 +8,11 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
+	"syscall"
 
 	"github.com/charmbracelet/x/term"
 
@@ -56,7 +59,6 @@ func run(args []string) int {
 		}
 	}
 	var paths []string
-	var cleanups []func() // the pipe's file, removed when catu ends
 	printing, lang := false, ""
 	for i := 0; i < len(args); i++ {
 		switch a := args[i]; {
@@ -105,27 +107,58 @@ func run(args []string) int {
 		}
 	}
 	toTerminal := term.IsTerminal(os.Stdout.Fd())
+	// The pipe's file is only for this run: it goes when catu does (tdp E3),
+	// on its own or otherwise: the terminal closed (SIGHUP), Ctrl-C or kill
+	// while the pipe is read or printed, the pipe it prints into closed
+	// (catu | head). kill -9 cannot be caught; SIGQUIT and a crash are left
+	// to Go, to dump what it was doing. On the screen, Bubble Tea takes SIGINT and SIGTERM and
+	// returns, so they are left to it there.
+	var mu sync.Mutex
+	var cleanups []func()
+	cleanup := func() {
+		mu.Lock()
+		defer mu.Unlock()
+		for _, done := range cleanups {
+			done()
+		}
+		cleanups = nil
+	}
+	defer cleanup()
+	quit := make(chan os.Signal, 1)
+	if pipes > 0 {
+		signal.Notify(quit, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGPIPE)
+		defer signal.Stop(quit)
+		go func() {
+			s := <-quit
+			cleanup()
+			os.Exit(128 + int(s.(syscall.Signal)))
+		}()
+	}
 	failed := false
 	fail := func(name string, err error) {
+		if errors.Is(err, syscall.EPIPE) {
+			// What catu prints into is closed (catu | head): it ends there,
+			// saying nothing, as cat does.
+			cleanup()
+			os.Exit(128 + int(syscall.SIGPIPE))
+		}
 		fmt.Fprintf(os.Stderr, "catu: %s: %s\n", name, reason(err))
 		failed = true
 	}
 	// spool puts what comes down the pipe in a file catu reads as any other;
 	// "" when it could not.
 	spool := func() string {
-		spooled, done, err := ui.Spool(os.Stdin, lang)
+		spooled, err := ui.Spool(os.Stdin, lang, func(done func()) {
+			mu.Lock()
+			cleanups = append(cleanups, done)
+			mu.Unlock()
+		})
 		if err != nil {
 			fail("standard input", err)
 			return ""
 		}
-		cleanups = append(cleanups, done)
 		return spooled
 	}
-	defer func() {
-		for _, done := range cleanups {
-			done()
-		}
-	}()
 	if printing || !toTerminal {
 		// Printed (tasks 13, 14), one after another as cat does (task 16): in
 		// colour only on a terminal. Settings that cannot be read stop it
@@ -164,6 +197,10 @@ func run(args []string) int {
 			}
 			paths[i] = spooled
 		}
+	}
+	if pipes > 0 {
+		signal.Stop(quit)
+		signal.Notify(quit, syscall.SIGHUP)
 	}
 	app, err := ui.OpenAll(paths)
 	if err != nil {

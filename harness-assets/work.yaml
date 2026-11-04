@@ -198,7 +198,7 @@ tasks:
       找字、Visual 照 task 5、6，在 FORMATTED 裡找的是排過版的字
     test: [TestJSONAsItIsThenFormatted, TestJSONNotValid, TestJSONFormattedSearch, TestJSONNumbersOnlyWiden, TestJSONEmpty, TestJSONBigColouredLater]
   - id: 13
-    spec: 13
+    spec: 15
     implementation: |
       cmd/catu/main.go：stdout 不是終端機（charmbracelet/x/term IsTerminal）時不開畫面，改叫 ui.Print，不帶顏色；有 -p 也一樣
       ui.Print：每個路徑照開畫面時一樣讀（load），印第一個 tab：
@@ -220,7 +220,7 @@ tasks:
       catu help 有 catu -p [path] 一列
     test: [TestPrintInColour, TestPrintWhenNotATerminal]
   - id: 15
-    spec: 14
+    spec: 15
     implementation: |
       沒給路徑、stdin 不是終端機時路徑當成 -；- 是 stdin（stdin 是終端機時照樣讀到 Ctrl-D，跟 cat - 一樣）
       -l、--lang <格式>、--lang=<格式>：md、markdown 是 Markdown，mermaid、mmd 是 mermaid 圖，其他是 chroma 認得的語言名字或副檔名（json、go、python、py……）；
@@ -228,11 +228,13 @@ tasks:
       stdout 不是終端機、格式不是 Markdown 或 mermaid 時：stdin 原樣整個複製到 stdout，一個 byte 不改、不限大小，跟 cat 一樣
       其他時候（開畫面、-p、要畫的格式）：stdin 的前 16 MB 寫進系統暫存目錄（$TMPDIR）底下每次執行建的 catu-* 目錄裡的 stdin.<格式的副檔名>（ui.Spool），照讀一個檔案一樣讀它（種類、顏色、tab 都照檔案），
       結束時刪掉暫存目錄；超過 16 MB 時文字最後一列 Overlay0「(more not shown)」
+      暫存目錄一建好、開始讀 stdin 之前就交給 main 記著（ui.Spool 的 made），自己結束以外這幾種結束也刪：有 - 時 main 接 SIGHUP、SIGINT、SIGTERM、SIGPIPE（os/signal），
+      收到就刪掉、以 128+訊號編號結束；開畫面前改成只接 SIGHUP（SIGINT、SIGTERM 由 Bubble Tea 接、照常結束後刪）；印的時候寫 stdout 得到 EPIPE（catu | head）也是刪掉、什麼都不說、結束碼 141
       畫面上：位置列 standard input，statusbar 只有 Size: <大小>，App Log 記 Info「Opened standard input」，找字的提示 Find in standard input，
       圖畫不出來的 Warning 寫 in standard input；o 的 file-picker 根目錄是啟動 catu 的目錄；鍵盤從終端機讀（Bubble Tea 在 stdin 不是終端機時開 /dev/tty）
       印的時候照 task 13、14；讀不了時 stderr 寫 catu: standard input: <原因>
       catu help 有 cmd | catu [-l fmt] 一列與 -l 的說明
-    test: [TestReadFromAPipe, TestStandardInput]
+    test: [TestReadFromAPipe, TestStandardInput, TestPipeFileGoes]
   - id: 16
     spec: 13
     implementation: |

@@ -1,6 +1,6 @@
-id: 14
-from: v1.2.0-beta.3
-to: v1.2.0-beta.4
+id: 15
+from: v1.2.0-beta.4
+to: v1.2.0-beta.5
 tasks:
   - id: 1
     spec: 14
@@ -143,11 +143,11 @@ tasks:
       - "只認副檔名 .json；不是合法的 JSON 時，FORMATTED 照 tdp panel.15 置中寫一句 Red 的原因（帶行號）、一句 Overlay0 的提示 Press [h] to see the file as it is"
       - "行號欄照這個檔看過的 tab 裡最寬的，只變寬、不變窄（tdp note.2 有 tab 的 viewer）"
   - id: 13
-    spec: 13
+    spec: 15
     request: 輸出接到管線或檔案時不開畫面，像 cat 一樣印出來；Markdown、mermaid 印成畫好的文字
     tdp: [tdp E1, tdp P5, tdp components.5, tdp E3]
     remark:
-      - "不開畫面印的時候（輸出接管線、-p、從管線讀）設定檔讀不了：照畫面上 MOVE ASIDE 按 Esc 一樣，不動任何檔、不做 .bak、什麼都不印，stderr 寫路徑與原因，結束碼不是 0（review 2026-11-04 問 tdp E3 的 confirm 要有畫面；使用者同一天在 tdp 那邊選 A，terminu session 轉來，寫進 E3 與 checklist E3-27，下一版 tdp 發出）"
+      - "不開畫面印的時候（輸出接管線、-p、從管線讀）設定檔讀不了：照畫面上 MOVE ASIDE 按 Esc 一樣，不動任何檔、不做 .bak、什麼都不印，stderr 寫路徑與原因，結束碼不是 0（review 2026-11-04 問 tdp E3 的 confirm 要有畫面；使用者同一天在 tdp 那邊選 A，terminu session 轉來，寫進 E3 與 checklist E3-27，tdp v1.2.0-beta.5 發出）"
       - "命令列的其他用法 app 可以自行決定（tdp E1）；印什麼、怎麼印是功能邏輯（tdp P5）"
       - "stdout 不是終端機（catu a.md | less、catu flow.mmd > flow.txt）時不開畫面：TUI 要一個終端機，輸出給別的程式時照 cat 的習慣把內容印出來"
       - "印打開時的第一個 tab：文字檔（含 JSON、私鑰）一個 byte 不改照原樣印，跟 cat 一樣，行數、grep 得到的行都對得上；Markdown 印畫好的文件、mermaid 檔印畫好的圖；目錄與壓縮檔印樹、PDF 印文字、圖片印 data URI、二進位印十六進位"
@@ -162,13 +162,12 @@ tasks:
       - "印的跟 task 13 一樣是第一個 tab，但 stdout 是終端機時帶顏色：文字檔照 task 3 的語法顏色（跟畫面裡、o 的預覽同一套，tdp note.2），Markdown 與 mermaid 照畫面裡的顏色；不印行號、不折行（終端機自己折）；寬度是終端機的寬"
       - "stdout 不是終端機時（catu -p a.md | less）跟 task 13 一樣：不帶顏色"
   - id: 15
-    spec: 14
+    spec: 15
     request: 從管線讀進來看：git log | catu、curl -s 網址 | catu --lang md，像 less
-    tdp: [tdp E1, tdp P5, tdp panel.10, tdp note.7, tdp screen.4, tdp E3, tdp file-picker.2, tdp E5, tdp E8]
+    tdp: [tdp E1, tdp P5, tdp panel.10, tdp note.7, tdp screen.4, tdp E3, tdp file-picker.2, tdp E5, tdp E8, tdp input.2]
     remark:
-      - "stdin 寫進的暫存檔：只在這次執行裡用、結束就刪，不是 tdp E3 的設定、狀態、資料、快取任何一類，放系統的暫存目錄（$TMPDIR）、離開時刪掉（review 2026-11-04 問，terminu session 同一天照 tdp 回覆，寫進 E3 與 checklist E3-26，下一版 tdp 發出）"
-      - note: "stdin 是管線時 tgo 啟動的探測（askTerminal 只看 os.Stdin）整個略過，icon 與 powerline 符號的寬度用預設的一格，tdp E5 沒有這個例外。暫時照這樣，使用者可以設 CATU__ICON_WIDTH、CATU__POWERLINE_WIDTH"
-        issue: "送給 terminu-go session（本機 SendMessage），2026-11-04；terminu-go 同一天回覆：lib 沒照 tdp E5 做，照 A 修好（stdin 不是終端機時探測改用 /dev/tty），還沒發版，程式標 TODO(tgo pipe probe)，升到那一版後拿掉"
+      - "stdin 寫進的暫存檔：只在這次執行裡用、結束就刪，不是 tdp E3 的設定、狀態、資料、快取任何一類，放系統的暫存目錄（$TMPDIR）、離開時刪掉（review 2026-11-04 問，terminu session 同一天照 tdp 回覆，寫進 E3 與 checklist E3-26，tdp v1.2.0-beta.5 發出）。這幾種結束都刪：自己結束、關掉終端機（SIGHUP）、還在讀管線或在印時按 Ctrl-C 或被 kill（SIGTERM）、印進去的管線被關掉（catu | head）；kill -9 攔不到，Ctrl-\\（SIGQUIT）與當掉照 Go 預設傾印後結束、不攔，會留下來（review 2026-11-04 附記）；tdp v1.2.0-beta.5 升版時手動試到後三種會留下來，照 E3-26 補上"
+      - "stdin 是管線、stdout 是終端機時，tgo 照樣在啟動時探測 icon 與 powerline 符號的寬度、終端機的 16 色（tdp E5）：從 /dev/tty 問，管線裡的資料不會被讀走。原本 tgo 在 stdin 不是終端機時整個略過探測，2026-11-04 送給 terminu-go session（本機 SendMessage），terminu-go v1.2.0-beta.5 修好，catu 不用改程式"
       - "沒給路徑、stdin 不是終端機時讀 stdin；路徑寫 - 也是 stdin（cat 的習慣）。stdin 是終端機又沒給路徑時照舊看目前的目錄"
       - "讀到結束為止，最多 16 MB（跟檔案一樣），然後照檔案一樣：stdout 是終端機就開畫面看（鍵盤從終端機讀），不是就照 task 13 印，-p 照 task 14"
       - "格式：-l、--lang <格式> 指定（md、mermaid、json 或語言的名字，跟副檔名一樣認），沒指定就是不上色的文字；不從內容猜，猜錯比不上色更糟"

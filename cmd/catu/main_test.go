@@ -3,10 +3,23 @@ package main
 import (
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 )
+
+// TestMain runs catu itself, as a process of its own, when a test starts
+// this binary with CATU_TEST_ARGS set: a signal is sent to a process.
+func TestMain(m *testing.M) {
+	if args, ok := os.LookupEnv("CATU_TEST_ARGS"); ok {
+		os.Exit(run(strings.Fields(args)))
+	}
+	os.Exit(m.Run())
+}
 
 // capture runs catu with args, returning its exit code, stdout and stderr.
 func capture(t *testing.T, args ...string) (int, string, string) {
@@ -151,6 +164,79 @@ func TestReadFromAPipe(t *testing.T) {
 	if code, _, errs := captureIn(t, "x", "-l"); code != 2 || !strings.Contains(errs, "-l needs a format") {
 		t.Errorf("-l with no format: %d %q", code, errs)
 	}
+}
+
+// TestPipeFileGoes: the file what comes down a pipe is put in is in $TMPDIR
+// and goes when catu does (tdp E3-26): on its own, the terminal closed, Ctrl-C or kill while the pipe is still read, the pipe it
+// prints into closed (catu | head); ended by a signal, the exit code a shell
+// gives a process ended by it.
+func TestPipeFileGoes(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("no signals but kill on Windows")
+	}
+	start := func(stdin *os.File, stdout, stderr io.Writer) (*exec.Cmd, string) {
+		t.Helper()
+		tmp := t.TempDir()
+		c := exec.Command(os.Args[0])
+		c.Env = append(os.Environ(), "CATU_TEST_ARGS=-l md", "TMPDIR="+tmp, "CATU__CONFIG="+t.TempDir())
+		c.Stdin, c.Stdout, c.Stderr = stdin, stdout, stderr
+		if err := c.Start(); err != nil {
+			t.Fatal(err)
+		}
+		return c, tmp
+	}
+	gone := func(what, tmp string) {
+		t.Helper()
+		if left, _ := filepath.Glob(filepath.Join(tmp, "catu-*")); len(left) > 0 {
+			t.Errorf("%s: %v left", what, left)
+		}
+	}
+	doc := filepath.Join(t.TempDir(), "in.md")
+	os.WriteFile(doc, []byte(strings.Repeat("* item\n", 10000)), 0o644)
+
+	in, _ := os.Open(doc)
+	c, tmp := start(in, nil, nil)
+	if err := c.Wait(); err != nil {
+		t.Errorf("on its own: %v", err)
+	}
+	in.Close()
+	gone("on its own", tmp)
+
+	for _, sig := range []syscall.Signal{syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM} {
+		r, w, _ := os.Pipe()
+		w.WriteString("# Title\n") // and the pipe left open: catu still reads it
+		c, tmp := start(r, nil, nil)
+		r.Close()
+		for i := 0; i < 500; i++ {
+			if f, _ := filepath.Glob(filepath.Join(tmp, "catu-*", "stdin.md")); len(f) == 1 {
+				break
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+		if f, _ := filepath.Glob(filepath.Join(tmp, "catu-*", "stdin.md")); len(f) != 1 {
+			t.Fatalf("%v: no stdin.md in $TMPDIR while the pipe is read", sig)
+		}
+		c.Process.Signal(sig)
+		c.Wait()
+		w.Close()
+		if code := c.ProcessState.ExitCode(); code != 128+int(sig) {
+			t.Errorf("%v: exit code %d, want %d", sig, code, 128+int(sig))
+		}
+		gone(sig.String(), tmp)
+	}
+
+	in, _ = os.Open(doc)
+	r, w, _ := os.Pipe()
+	r.Close() // catu | head, head gone
+	errs := new(strings.Builder)
+	c, tmp = start(in, w, errs)
+	c.Wait()
+	in.Close()
+	w.Close()
+	if code := c.ProcessState.ExitCode(); code != 128+int(syscall.SIGPIPE) || errs.Len() > 0 {
+		t.Errorf("printing into a closed pipe: exit code %d, %q", code, errs)
+	}
+	gone("printing into a closed pipe", tmp)
 }
 
 // TestPrintSeveral: two or more paths printed one after another, as cat a b

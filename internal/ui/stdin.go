@@ -21,30 +21,28 @@ var (
 	stdinMore bool   // there was more of it than textBytes
 )
 
-// TODO(tgo pipe probe): with standard input a pipe, tgo up to v1.2.0-beta.4
-// skips its startup probe, icons and powerline symbols taken a cell wide
-// (CATU__ICON_WIDTH, CATU__POWERLINE_WIDTH set them); fixed in the lib, not
-// yet released: nothing to change here but this note once catu moves to it.
-
 // Spool puts standard input, its first textBytes, in a file of its own
 // named for lang (md, mermaid, json, a language's name or an extension; ""
-// for a plain text) and returns that file's path; done removes it. An error
-// is lang not being a format catu knows, or the file not being made.
-func Spool(r io.Reader, lang string) (path string, done func(), err error) {
+// for a plain text) in the system temp dir and returns that file's path.
+// made is given what removes it as soon as it is there, before standard
+// input is read: catu may end while it is. An error is lang not being a
+// format catu knows, or the file not being made.
+func Spool(r io.Reader, lang string, made func(done func())) (path string, err error) {
 	ext, err := extOf(lang)
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
 	dir, err := os.MkdirTemp("", "catu-")
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
-	done = func() { os.RemoveAll(dir) }
+	done := func() { os.RemoveAll(dir) }
+	made(done)
 	path = filepath.Join(dir, "stdin"+ext)
 	f, err := os.Create(path)
 	if err != nil {
 		done()
-		return "", nil, err
+		return "", err
 	}
 	n, err := io.Copy(f, io.LimitReader(r, int64(textBytes)+1))
 	if err == nil && n > int64(textBytes) {
@@ -55,10 +53,10 @@ func Spool(r io.Reader, lang string) (path string, done func(), err error) {
 	}
 	if err != nil {
 		done()
-		return "", nil, err
+		return "", err
 	}
 	stdinPath = path
-	return path, done, nil
+	return path, nil
 }
 
 // CheckFormat is an error when lang is not a format catu knows.

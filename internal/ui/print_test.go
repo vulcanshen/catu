@@ -39,7 +39,8 @@ func TestPrintInColour(t *testing.T) {
 // (task 15).
 func TestStandardInput(t *testing.T) {
 	t.Setenv("CATU__CONFIG", t.TempDir())
-	p, done, err := Spool(strings.NewReader("# Title\n\nwords\n"), "markdown")
+	var done func()
+	p, err := Spool(strings.NewReader("# Title\n\nwords\n"), "markdown", func(d func()) { done = d })
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +53,7 @@ func TestStandardInput(t *testing.T) {
 	d.Press("Esc", "o")
 	wd, _ := os.Getwd()
 	want(t, d, filepath.Base(wd))
-	if _, _, err := Spool(strings.NewReader("x"), "nosuch"); err == nil {
+	if _, err := Spool(strings.NewReader("x"), "nosuch", func(func()) {}); err == nil {
 		t.Error("an unknown format")
 	}
 }
