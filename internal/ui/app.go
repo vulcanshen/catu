@@ -138,6 +138,8 @@ func (v *viewer) showView(i int) {
 	// is nothing to show (tdp panel.15).
 	v.panel.Fail = vw.fail
 	if vw.layout != nil {
+		// TODO(tgo #2): set while the body draws, which shows it that same
+		// frame only because the panel reads Fail after its body's Draw.
 		v.body.setLayout(vw.layout, func(err error) {
 			v.panel.Fail = nil
 			if err != nil {
