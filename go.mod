@@ -9,7 +9,7 @@ require (
 	github.com/dop251/goja v0.0.0-20261102223426-a177d211bf60
 	github.com/dslipak/pdf v0.0.2
 	github.com/rivo/uniseg v0.4.7
-	github.com/vulcanshen/terminu-go v1.2.0-beta.5
+	github.com/vulcanshen/terminu-go v1.2.0
 	github.com/yuin/goldmark v1.8.7
 	gopkg.in/yaml.v3 v3.0.1
 )

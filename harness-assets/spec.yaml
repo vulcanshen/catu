@@ -1,6 +1,6 @@
-id: 15
-from: v1.2.0-beta.4
-to: v1.2.0-beta.5
+id: 16
+from: v1.2.0-beta.5
+to: v1.2.0
 tasks:
   - id: 1
     spec: 14
@@ -70,7 +70,7 @@ tasks:
   - id: 6
     spec: 7
     request: / 找字，所有找到的地方標出來，n|N 跳到下一個、上一個
-    tdp: [tdp panel.14, tdp note.2, tdp note.3, tdp note.5, tdp text, tdp toast.2, tdp K4, tdp M6, tdp T1, tdp F2, tdp F4, tdp menu.3, tdp M3, tdp M5, tdp input.2, tdp color.2]
+    tdp: [tdp panel.14, tdp note.2, tdp note.3, tdp note.5, tdp text, tdp toast.2, tdp K4, tdp M6, tdp T1, tdp F2, tdp F4, tdp menu.3, tdp M3, tdp M5, tdp input.2, tdp color.2, tdp note.7]
     remark:
       - "從 Space menu 執行時，真的搜了（Enter）就連 Space menu 一起收起，有沒有找到都一樣，input popup 與 menu 一起收（tdp T1 的表：搜尋底下的畫面清掉 source，搜尋的 input popup 是門；tdp F2、menu.3）；在 input popup 上按 Esc 回到 Space menu（tdp F4）。使用者 2026-11-03 在 catu 發現 menu 蓋住命中的字，tdp v1.2.0-beta.2 把它寫進 T1"
       - "App Log 與 ? 的 key reference 也有 /：tgo 給的（tdp note.3、note.5：每個 viewer 與按鍵說明都有搜尋），catu 不另外做"
@@ -175,7 +175,7 @@ tasks:
   - id: 16
     spec: 13
     request: 一次看好幾個檔：catu a.go b.go
-    tdp: [tdp terms.2, tdp panel.13, tdp screen.5, tdp L1, tdp K1, tdp K2, tdp K3, tdp screen.2, tdp E1, tdp panel.5, tdp panel.1, tdp note.7, tdp P5, tdp L4, tdp E5, tdp E8]
+    tdp: [tdp terms.2, tdp panel.13, tdp screen.5, tdp L1, tdp K1, tdp K2, tdp K3, tdp screen.2, tdp E1, tdp panel.5, tdp panel.1, tdp note.7, tdp P5, tdp L4, tdp E5, tdp E8, tdp E3]
     remark:
       - "給兩個以上的路徑時，單畫面兩個 panel：左邊 [1] FILES 清單（照給的順序），右邊 [2] 照現在的 panel 看清單 cursor 那一個（tdp panel.13 明細：cursor 一動就換，focus 不動；Enter 把 focus 送到 [2]）；只給一個時照舊一個 panel"
       - "Tab 與 1、2 換 panel（tdp K1、K2），footer 照多 panel 的寫（tdp screen.2）；窄的時候只畫有 focus 的 panel（tdp screen.5，門檻不高於 60）"
