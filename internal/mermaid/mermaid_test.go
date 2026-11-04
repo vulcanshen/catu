@@ -177,10 +177,11 @@ func TestNoDots(t *testing.T) {
 	}
 }
 
-// TestPieAsBars: a pie chart is a bar a slice, the biggest first, as long as
-// it is next to the biggest, in the colour pele gives that slice, its share
-// after it; with showData, its value too.
-func TestPieAsBars(t *testing.T) {
+// TestPieAsOneBar: a pie chart is one bar, each slice a stretch of it in the
+// colour pele gives that slice, the biggest first (user 2026-11-04); under
+// it each colour with its share, then each colour with what it stands for,
+// with showData its value too.
+func TestPieAsOneBar(t *testing.T) {
 	src := "pie showData title Files\n  \"text\" : 12\n  \"Markdown\" : 3\n  \"binary\" : 4\n"
 	rs, err := Draw(src, 60)
 	if err != nil {
@@ -190,50 +191,72 @@ func TestPieAsBars(t *testing.T) {
 	for i, r := range rs {
 		drawn[i] = strings.TrimRight(text.Line{Chars: r}.Drawn(), " ")
 	}
-	if braille(drawn) || strings.TrimSpace(drawn[0]) != "Files" || drawn[1] != "" {
-		t.Fatalf("not a title over bars:\n%s", strings.Join(drawn, "\n"))
+	want := []string{"Files", "", "  " + strings.Repeat("█", 56), "  ■ 63%  ■ 21%  ■ 16%", "  ■ text  [12]", "  ■ binary  [4]", "  ■ Markdown  [3]"}
+	if braille(drawn) || len(drawn) != len(want) || strings.TrimSpace(drawn[0]) != want[0] {
+		t.Fatalf("got\n%s", strings.Join(drawn, "\n"))
 	}
-	for i, want := range []struct {
-		name, share, value string
-		colour             terminu.Color
-	}{
-		{"text", "63%", "[12]", pieColours[0]},
-		{"binary", "21%", "[4]", pieColours[2]},
-		{"Markdown", "16%", "[3]", pieColours[1]},
-	} {
-		row := drawn[2+i]
-		if !strings.HasPrefix(row, "  "+want.name) || !strings.Contains(row, want.share+"  "+want.value) {
-			t.Errorf("row %d: %q", i, row)
+	for i := 1; i < len(want); i++ {
+		if drawn[i] != want[i] {
+			t.Errorf("row %d: %q, want %q", i, drawn[i], want[i])
 		}
-		for _, c := range rs[2+i] {
-			if c.Draw == "█" && c.St.Fg != want.colour {
-				t.Errorf("%s: its bar in %v, want %v", want.name, c.St.Fg, want.colour)
-				break
+	}
+	// The bar: text 12 of 19 (35 cells), binary 4 (12), Markdown 3 (9).
+	colours := []terminu.Color{pieColours[0], pieColours[2], pieColours[1]}
+	count := map[terminu.Color]int{}
+	for _, c := range rs[2] {
+		if c.Draw == "█" {
+			count[c.St.Fg]++
+		}
+	}
+	if count[colours[0]] != 35 || count[colours[1]] != 12 || count[colours[2]] != 9 {
+		t.Errorf("stretches %d, %d, %d; want 35, 12, 9", count[colours[0]], count[colours[1]], count[colours[2]])
+	}
+	// Each ■ in its slice's colour, in the shares and in the names.
+	k := 0
+	for _, c := range rs[3] {
+		if c.Draw == "■" {
+			if c.St.Fg != colours[k] {
+				t.Errorf("share %d in %v, want %v", k, c.St.Fg, colours[k])
+			}
+			k++
+		}
+	}
+	for i, c := range colours {
+		for _, ch := range rs[4+i] {
+			if ch.Draw == "■" && ch.St.Fg != c {
+				t.Errorf("row %d: ■ in %v, want %v", 4+i, ch.St.Fg, c)
 			}
 		}
-	}
-	if a, b := strings.Count(drawn[2], "█"), strings.Count(drawn[3], "█"); a <= b || b == 0 {
-		t.Errorf("bars %d, %d: the biggest first, as long as it is next to the biggest", a, b)
 	}
 	if _, err := Draw("pie\n  \"a\" 1\n", 60); err == nil {
 		t.Error("pele reads a pie first: no error for a bad one")
 	}
-	// A name is the file's: a control character in it by its name, in Red;
-	// one too long for a third of the width cut with a ….
-	rs, err = Draw("pie\n  \"tab\there\" : 2\n  \""+strings.Repeat("long ", 10)+"\" : 1\n", 60)
+	// What a colour stands for is the file's: a control character in it by
+	// its name, in Red; one too long for the row cut with a …. A slice that
+	// is not nothing has a cell of the bar however small.
+	rs, err = Draw("pie\n  \"tab\there\" : 2000\n  \""+strings.Repeat("long ", 20)+"\" : 1\n", 40)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if row := (text.Line{Chars: rs[0]}).Drawn(); !strings.Contains(row, `tab\there`) {
+	if row := (text.Line{Chars: rs[2]}).Drawn(); !strings.Contains(row, `tab\there`) {
 		t.Errorf("the tab is not by its name: %q", row)
 	}
-	for _, c := range rs[0] {
+	for _, c := range rs[2] {
 		if c.Src == "\t" && c.St.Fg != terminu.Red {
 			t.Errorf("the tab's name in %v, want Red", c.St.Fg)
 		}
 	}
-	if row := (text.Line{Chars: rs[1]}).Drawn(); !strings.Contains(row, "long…") || strings.Count(row, "long") > 4 {
+	if row := (text.Line{Chars: rs[3]}).Drawn(); !strings.HasSuffix(strings.TrimRight(row, " "), "…") || (text.Line{Chars: rs[3]}).Width() > 40 {
 		t.Errorf("a long name not cut: %q", row)
+	}
+	small := 0
+	for _, c := range rs[0] {
+		if c.Draw == "█" && c.St.Fg == pieColours[1] {
+			small++
+		}
+	}
+	if small != 1 {
+		t.Errorf("the small slice has %d cells, want 1", small)
 	}
 }
 

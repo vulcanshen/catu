@@ -13,10 +13,11 @@ import (
 	"github.com/vulcanshen/catu/internal/text"
 )
 
-// A pie chart is drawn as bars, not as a circle (user 2026-11-04): a grid
-// of cells draws a circle only in dots. A slice a row, the biggest first:
-// its name, a bar as long as it is next to the biggest, in the colour pele
-// gives it, and its share of the whole.
+// A pie chart is drawn as one bar, not as a circle (user 2026-11-04): a
+// grid of cells draws a circle only in dots. The bar is the whole, each
+// slice a stretch of it in the colour pele gives that slice, the biggest
+// first; under it each colour with its share, then each colour with what it
+// stands for.
 
 // pieColours are pele's colours for the slices, in turn.
 var pieColours = []terminu.Color{
@@ -26,9 +27,6 @@ var pieColours = []terminu.Color{
 
 var sliceRe = regexp.MustCompile(`^"([^"]*)"\s*:\s*([0-9]*\.?[0-9]+)$`)
 
-// eighths are a cell's left eighths, one to seven.
-var eighths = []string{"▏", "▎", "▍", "▌", "▋", "▊", "▉"}
-
 type slice struct {
 	name   string
 	value  float64
@@ -37,7 +35,7 @@ type slice struct {
 
 type pie struct {
 	title  string
-	data   bool // showData: each slice's value after its share
+	data   bool // showData: each slice's value after what it stands for
 	slices []slice
 }
 
@@ -81,71 +79,95 @@ func pieOf(src string) (p pie, ok bool) {
 	return p, len(p.slices) > 0
 }
 
-// draw is the chart in at most w cells: the title in the middle, a blank
-// row, then a row a slice.
+// draw is the chart in at most w cells: the title in the middle and a blank
+// row, the bar, the shares, then a row a slice with what it stands for.
 func (p pie) draw(w int) [][]text.Char {
-	// The names and the title are the file's: a control character in them
-	// is drawn by its name, in Red (tdp components.5).
-	plain := text.Style{Fg: terminu.Text}
-	names := make([][]text.Char, len(p.slices))
-	total, most := 0.0, 0.0
-	nameW, dataW := 0, 0
-	for i, s := range p.slices {
+	total := 0.0
+	for _, s := range p.slices {
 		total += s.value
-		most = math.Max(most, s.value)
-		names[i] = text.Escape(s.name, plain)
-		nameW = max(nameW, width(names[i]))
-		dataW = max(dataW, len(value(s.value))+2)
 	}
-	if !p.data {
-		dataW = 0
-	}
-	nameW = min(nameW, max(w/3, 4))
-	const pctW = 4 // "100%"
-	gaps := 2 + 2 + 2
-	if p.data {
-		gaps += 2
-	}
-	barW := min(max(w-nameW-pctW-dataW-gaps, 4), 48)
+	const indent = 2
+	pad := func() []text.Char { return text.Spaces(indent, text.Style{}) }
+	barW := min(max(w-2*indent, 4), 60)
 	var rows [][]text.Char
 	if p.title != "" {
 		title := text.Escape(p.title, text.Style{Fg: terminu.Text, Bold: true})
-		across := 2 + nameW + 2 + barW + 2 + pctW
+		across := indent + barW
 		title = fit(title, min(width(title), across))
 		rows = append(rows, append(text.Spaces((across-width(title))/2, text.Style{}), title...), nil)
 	}
+	bar := pad()
+	for i, n := range stretches(p.slices, total, barW) {
+		bar = append(bar, text.Chars(strings.Repeat("█", n), text.Style{Fg: p.slices[i].colour})...)
+	}
+	rows = append(rows, bar)
+	// Each colour with its share, two cells apart (tdp components.2), on as
+	// many rows as they take.
+	shares := pad()
 	for i, s := range p.slices {
-		row := append(text.Spaces(2, text.Style{}), fit(names[i], nameW)...)
-		row = append(row, text.Spaces(2, text.Style{})...)
-		row = append(row, text.Chars(bar(s.value, most, barW), text.Style{Fg: s.colour})...)
 		share := 0.0
 		if total > 0 {
 			share = s.value / total * 100
 		}
-		row = append(row, text.Chars("  "+terminu.PadLeft(strconv.Itoa(int(math.Round(share)))+"%", pctW), text.Style{Fg: terminu.Text})...)
-		if p.data {
-			row = append(row, text.Chars("  ["+value(s.value)+"]", text.Style{Fg: subtext0})...)
+		item := append(text.Chars("■", text.Style{Fg: s.colour}),
+			text.Chars(" "+strconv.Itoa(int(math.Round(share)))+"%", text.Style{Fg: terminu.Text})...)
+		switch {
+		case i > 0 && width(shares)+2+width(item) > w:
+			rows, shares = append(rows, shares), pad()
+		case i > 0:
+			shares = append(shares, text.Spaces(2, text.Style{})...)
 		}
-		rows = append(rows, row)
+		shares = append(shares, item...)
+	}
+	rows = append(rows, shares)
+	// Each colour with what it stands for: the file's own words, a control
+	// character in them by its name in Red (tdp components.5).
+	for _, s := range p.slices {
+		row := append(pad(), text.Chars("■ ", text.Style{Fg: s.colour})...)
+		var data []text.Char
+		if p.data {
+			data = text.Chars("  ["+value(s.value)+"]", text.Style{Fg: subtext0})
+		}
+		name := text.Escape(s.name, text.Style{Fg: terminu.Text})
+		name = fit(name, min(width(name), max(w-width(row)-width(data), 1)))
+		rows = append(rows, append(append(row, name...), data...))
 	}
 	return rows
 }
 
-// bar is v next to most as eighths of w cells, a slice that is not nothing
-// an eighth at least, padded to w.
-func bar(v, most float64, w int) string {
-	n := 0
-	if most > 0 {
-		n = int(math.Round(v / most * float64(w*8)))
+// stretches are the cells of w each slice takes as its share of total: a
+// slice that is not nothing a cell at least, the cells rounding left over to
+// the ones it shortened most; cells given to the smallest come off the
+// biggest.
+func stretches(sl []slice, total float64, w int) []int {
+	n := make([]int, len(sl))
+	if total <= 0 {
+		return n
 	}
-	if v > 0 {
-		n = max(n, 1)
+	left := make([]float64, len(sl))
+	used := 0
+	for i, s := range sl {
+		exact := s.value / total * float64(w)
+		n[i], left[i] = int(exact), exact-math.Floor(exact)
+		if s.value > 0 && n[i] == 0 {
+			n[i], left[i] = 1, -1
+		}
+		used += n[i]
 	}
-	s := strings.Repeat("█", n/8)
-	if n%8 > 0 {
-		s += eighths[n%8-1]
+	for ; used < w; used++ {
+		most := 0
+		for i := range left {
+			if left[i] > left[most] {
+				most = i
+			}
+		}
+		n[most]++
+		left[most] = -1
 	}
-	return terminu.Pad(s, w)
+	for ; used > w && n[0] > 1; used-- {
+		n[0]--
+	}
+	return n
 }
 
 func width(chars []text.Char) int {
