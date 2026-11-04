@@ -168,7 +168,7 @@ tasks:
     remark:
       - "stdin 寫進的暫存檔：只在這次執行裡用、結束就刪，不是 tdp E3 的設定、狀態、資料、快取任何一類，放系統的暫存目錄（$TMPDIR）、離開時刪掉（review 2026-11-04 問，terminu session 同一天照 tdp 回覆，寫進 E3 與 checklist E3-26，下一版 tdp 發出）"
       - note: "stdin 是管線時 tgo 啟動的探測（askTerminal 只看 os.Stdin）整個略過，icon 與 powerline 符號的寬度用預設的一格，tdp E5 沒有這個例外。暫時照這樣，使用者可以設 CATU__ICON_WIDTH、CATU__POWERLINE_WIDTH"
-        issue: "送給 terminu-go session（本機 SendMessage），2026-11-04"
+        issue: "送給 terminu-go session（本機 SendMessage），2026-11-04；terminu-go 同一天回覆：lib 沒照 tdp E5 做，照 A 修好（stdin 不是終端機時探測改用 /dev/tty），還沒發版，程式標 TODO(tgo pipe probe)，升到那一版後拿掉"
       - "沒給路徑、stdin 不是終端機時讀 stdin；路徑寫 - 也是 stdin（cat 的習慣）。stdin 是終端機又沒給路徑時照舊看目前的目錄"
       - "讀到結束為止，最多 16 MB（跟檔案一樣），然後照檔案一樣：stdout 是終端機就開畫面看（鍵盤從終端機讀），不是就照 task 13 印，-p 照 task 14"
       - "格式：-l、--lang <格式> 指定（md、mermaid、json 或語言的名字，跟副檔名一樣認），沒指定就是不上色的文字；不從內容猜，猜錯比不上色更糟"

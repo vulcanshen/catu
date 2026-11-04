@@ -21,6 +21,11 @@ var (
 	stdinMore bool   // there was more of it than textBytes
 )
 
+// TODO(tgo pipe probe): with standard input a pipe, tgo up to v1.2.0-beta.4
+// skips its startup probe, icons and powerline symbols taken a cell wide
+// (CATU__ICON_WIDTH, CATU__POWERLINE_WIDTH set them); fixed in the lib, not
+// yet released: nothing to change here but this note once catu moves to it.
+
 // Spool puts standard input, its first textBytes, in a file of its own
 // named for lang (md, mermaid, json, a language's name or an extension; ""
 // for a plain text) and returns that file's path; done removes it. An error
