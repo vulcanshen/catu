@@ -1,13 +1,13 @@
 #!/bin/sh
-# viewu uninstaller for macOS / Linux.
-# Usage: curl -fsSL https://raw.githubusercontent.com/vulcanshen/viewu/main/uninstall.sh | sh
+# catu uninstaller for macOS / Linux.
+# Usage: curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/uninstall.sh | sh
 #
-# terminu family template (harness project/uninstall.sh). Replace viewu; the
+# terminu family template (harness project/uninstall.sh). Replace catu; the
 # blocks marked "app's own" are the app's, the rest stays as it is.
 
 set -e
 
-APP="viewu"
+APP="catu"
 # The prefix of the app's environment variables (tdp E2): <APP>__CONFIG, …
 APP_UPPER=$(echo "$APP" | tr '[:lower:]' '[:upper:]')
 

@@ -30,7 +30,7 @@ func colourOf(t *testing.T, lines []Line, i int, word string) terminu.Color {
 // lexer's section and key are, Mauve and Blue, as the lib fills chroma's
 // gap (tdp file-picker.3; task 3).
 func TestTOMLKeysAndTables(t *testing.T) {
-	src := "title = \"x\"\n[project]\nname = \"viewu\"\n  [[tool.mypy]]\n  strict = true\ninline = { key = 1 }\n"
+	src := "title = \"x\"\n[project]\nname = \"catu\"\n  [[tool.mypy]]\n  strict = true\ninline = { key = 1 }\n"
 	lines := File(src, "pyproject.toml", 4)
 	keyword, attribute := terminu.Hex("#cba6f7"), terminu.Hex("#89b4fa")
 	for _, c := range []struct {
@@ -51,7 +51,7 @@ func TestTOMLKeysAndTables(t *testing.T) {
 			t.Errorf("%s on line %d is %v, want %v", c.word, c.line+1, got, c.want)
 		}
 	}
-	if got := colourOf(t, lines, 2, `"viewu"`); got == terminu.Text {
+	if got := colourOf(t, lines, 2, `"catu"`); got == terminu.Text {
 		t.Error("the string lost its colour")
 	}
 }

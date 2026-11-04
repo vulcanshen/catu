@@ -2,7 +2,7 @@ tasks:
   - id: 1
     spec: 1
     implementation: |
-      單畫面（tgo Screen，名字 View）、一個 panel [1]；panel 的 body 是 viewu 自己的 reader（tgo Body）
+      單畫面（tgo Screen，名字 View）、一個 panel [1]；panel 的 body 是 catu 自己的 reader（tgo Body）
       最上面一列 statusbar（tgo App.Status）：Size: <值補到 11 格>  Modified: <YYYY-MM-DD HH:MM>  Mode: <ls -l 的寫法>，全部 Overlay0；
       目錄的 Size 是 N items（1 item，不算 . 開頭的），讀不到寫 —
       panel 的 label 是內容的種類：TEXT、DIRECTORY、ARCHIVE、PDF、IMAGE、BINARY、PRIVATE KEY
@@ -14,19 +14,19 @@ tasks:
       q 與 Ctrl-C：tgo App.Quit 不設，直接離開；有 popup 開著時 tgo 先問
       L4 的畫面測試（tdptest 每一格畫面都量；icon 與 powerline 符號各跑 1/1、2/1、2/2 格，tdptest.EachIconWidth）：
       版面在 40×12、80×24、120×40 量；tdptest.Check 走第一次啟動，在最低尺寸、60×32、80×24、120×40、300×50、比最低尺寸少一欄或一列、
-      80×5、80×2、80×1、1×1 開 Space menu、global operation popup、App Log、key reference；viewu 自己開的 popup（搜尋的 input popup、
+      80×5、80×2、80×1、1×1 開 Space menu、global operation popup、App Log、key reference；catu 自己開的 popup（搜尋的 input popup、
       Info toast、file-picker、OPEN FAILED 的 error popup、splash、MOVE ASIDE 的 confirm）各在 80×24 打開，開著把終端機改成比它窄（50×24：
       在 80 欄打開的搜尋 input popup 寬 78）、比它矮（80×12：在 24 列打開的 file-picker 高 22）、兩邊都小（50×12），都在最低尺寸以上、popup 疊在畫面上；
       再改成最低尺寸 40×12、比它小（39×12、80×5、1×1，只畫三列，tdp screen.7），最後改回 80×24：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
     test: [TestScreenShowsAFile, TestStatusbarModeAndDirectorySize, TestQuitAtOnce, TestEmptyFile, TestEmptyDirectory, TestEmptyArchive, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
-    spec: 1
+    spec: 8
     implementation: |
-      cmd/viewu/main.go：
-      viewu <路徑>：打開那個檔案或目錄；沒給路徑是 .（目前的目錄）
-      viewu version、-v、--version：印版本（internal/version.Display）；viewu help、-h、--help：印用法，寫明檔名叫 version、help 時打 ./version
-      兩個以上的參數：stderr 印 viewu: one path at a time 加用法，結束碼 2；- 開頭的不認得的旗標：stderr 印 viewu: unknown flag "<旗標>" 加用法，結束碼 2
-      路徑 stat、讀不到（ui.Open 回錯誤）：不開畫面，stderr 印 viewu: <路徑>: <原因>（no such file or directory、permission denied，其他照系統的字），結束碼 1
+      cmd/catu/main.go：
+      catu <路徑>：打開那個檔案或目錄；沒給路徑是 .（目前的目錄）
+      catu version、-v、--version：印版本（internal/version.Display）；catu help、-h、--help：印用法，寫明檔名叫 version、help 時打 ./version
+      兩個以上的參數：stderr 印 catu: one path at a time 加用法，結束碼 2；- 開頭的不認得的旗標：stderr 印 catu: unknown flag "<旗標>" 加用法，結束碼 2
+      路徑 stat、讀不到（ui.Open 回錯誤）：不開畫面，stderr 印 catu: <路徑>: <原因>（no such file or directory、permission denied，其他照系統的字），結束碼 1
       啟動時（tgo App.Start）App Log 記 Info「Opened <路徑，家目錄寫成 ~>」
     test: [TestVersionAndHelp, TestPathNotThere, TestPathNotReadable, TestBadArguments, TestOpenLogsWhatItOpened, TestOpenErrors]
   - id: 3
@@ -39,7 +39,7 @@ tasks:
       粗體、*斜體* 斜體，行首的也是；註解斜體；= && 這類運算子粗體），不上背景色；chroma 漏掉的照 tdp file-picker.3 的表補（TOML 的表名 Mauve、
       key Blue，YAML 沒引號的值 Green，Makefile define 區塊裡的行……）；格式由 lib 看檔名、同名的再看資料夾（.ssh/config 是 SSH config、
       .git/config 是 Git config、/etc/hosts 是 hosts 檔，別處的 hosts 是 Text）；認不出的是 Text
-      檔案的行原樣交給 Syntax，拿回同樣多行，Tab 與一行裡的 \r 留在原位，由 viewu 照下面畫
+      檔案的行原樣交給 Syntax，拿回同樣多行，Tab 與一行裡的 \r 留在原位，由 catu 照下面畫
       Tab 畫成 input_tab_width 格空白（複製時是 \t）；CRLF 的 \r 不畫；一行裡的 \r 回到行首、後面的字蓋過去（只留最後的狀態）；
       其他控制字元畫成 Red 的名字（\x07、\x1b……）
       檔案裡有 \x1b[ 時：照檔案自己的 SGR 上色（粗體、斜體、底線、刪除線、16 色換成 catppuccin 的、256 色、24 位元），不再上語法顏色；
@@ -95,7 +95,7 @@ tasks:
       看不到時才捲到剛好看得到
       有命中時 panel 上的 Esc（tgo Panel.OnEsc）清掉命中；沒有命中時不設 OnEsc，? 不列 Esc；換檔案、換 tab 時命中跟著清掉
       找字不記 App Log
-      App Log（!）與 key reference（?）的 / 是 tgo 的（key reference 的 hint /:search ?|Esc:close），viewu 不另外做
+      App Log（!）與 key reference（?）的 / 是 tgo 的（key reference 的 hint /:search ?|Esc:close），catu 不另外做
     test: [TestSearchFindsAndSteps, TestSearchNoHit, TestSearchHitsDrawn, TestSearchFromTheSpaceMenu]
   - id: 7
     spec: 1
@@ -110,12 +110,12 @@ tasks:
       從 Space menu 打開時，在 file-picker 上按 Esc 回到 Space menu（tgo 預設保留 source）
     test: [TestOpenAnotherFile, TestOpenFromTheSpaceMenu, TestOpenUnreadable, TestOpenTheSameFile, TestOpenFromADirectory]
   - id: 8
-    spec: 1
+    spec: 8
     implementation: |
-      讀 <設定目錄>/config.yaml：設定目錄是 VIEWU__CONFIG，沒有就 $XDG_CONFIG_HOME/viewu，再沒有就 ~/.config/viewu；檔案不在就用預設值，viewu 不寫它
+      讀 <設定目錄>/config.yaml：設定目錄是 CATU__CONFIG，沒有就 $XDG_CONFIG_HOME/catu，再沒有就 ~/.config/catu；檔案不在就用預設值，catu 不寫它
       input_tab_width（預設 4，小於 1 時用 4）：交給 tgo App.InputTabWidth，文字裡的 Tab 畫成這麼多格
       hide_secrets_in_preview（預設 false）：只交給 tgo App.HideSecretsInPreview（file-picker 的預覽），panel 不管（task 4）
-      讀不了（格式錯、沒有權限）：先用預設值打開，啟動時 tgo MoveAside 開 MOVE ASIDE 的 confirm；Enter 改名成 config.yaml.bak、用預設值重讀看的檔；Esc 離開 viewu，
+      讀不了（格式錯、沒有權限）：先用預設值打開，啟動時 tgo MoveAside 開 MOVE ASIDE 的 confirm；Enter 改名成 config.yaml.bak、用預設值重讀看的檔；Esc 離開 catu，
       路徑與原因印到 stderr
       不存狀態、資料、快取
     test: [TestSettingsTabWidth, TestSettingsDirOrder, TestSettingsUnreadable, TestSettingsUnreadableQuit, TestHideSecrets]
@@ -169,10 +169,10 @@ tasks:
       打開含有 mermaid 區塊的 Markdown、或 mermaid 檔時，在背景先載入 pele
     test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDiamondAsSteps, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidFileCannotBeDrawn, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
   - id: 11
-    spec: 1
+    spec: 8
     implementation: |
-      tgo NewSplash：mark 是 internal/ui/icon.svg（docs/icon.svg 的副本，go:embed），名稱 viewu、版本 internal/version.Display、介紹 A file viewer for the terminal
-      docs/icon.svg：家族的 U 框，框裡金色的 V、I（上排）、E、W（下排），註解的順序 U、V、I、E、W
+      tgo NewSplash：mark 是 internal/ui/icon.svg（docs/icon.svg 的副本，go:embed），名稱 catu、版本 internal/version.Display、介紹 A file viewer for the terminal
+      docs/icon.svg：使用者用 kamonu 畫、匯出的（~/.kamonu/data/svg/catu.svg）：家族的 U 框，框裡金色的 C 包著 A、A 包著 T，註解的順序 U、C、A、T
       panel 上按 V 打開；任意鍵只關掉它（tgo 做）
     test: [TestSplashIsTheIcon, TestSplash]
   - id: 12

@@ -1,6 +1,6 @@
 // Package mermaid draws mermaid diagrams as characters: pele lays the
 // diagram out and gives it as SVG, run in goja, a JavaScript engine in Go,
-// so viewu stays one static binary; the SVG is then drawn on a grid of
+// so catu stays one static binary; the SVG is then drawn on a grid of
 // terminal cells (svg.go).
 package mermaid
 
@@ -15,7 +15,7 @@ import (
 	"github.com/dop251/goja"
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/viewu/internal/text"
+	"github.com/vulcanshen/catu/internal/text"
 )
 
 // pele is Pele 1.13.0's browser bundle (https://github.com/obsidianmd/pele,

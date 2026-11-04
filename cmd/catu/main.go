@@ -1,4 +1,4 @@
-// viewu is a file viewer for the terminal: a text in colour, Markdown drawn
+// catu is a file viewer for the terminal: a text in colour, Markdown drawn
 // as a document, mermaid as diagrams, any other file as a preview.
 package main
 
@@ -9,30 +9,30 @@ import (
 	"os"
 	"strings"
 
-	"github.com/vulcanshen/viewu/internal/ui"
-	"github.com/vulcanshen/viewu/internal/version"
+	"github.com/vulcanshen/catu/internal/ui"
+	"github.com/vulcanshen/catu/internal/version"
 )
 
-const usage = `viewu: a file viewer for the terminal
+const usage = `catu: a file viewer for the terminal
 
 Usage:
-  viewu [path]       look at a file or a directory (the current directory when left out)
-  viewu version      print the version (-v, --version)
-  viewu help         print this help (-h, --help)
+  catu [path]       look at a file or a directory (the current directory when left out)
+  catu version      print the version (-v, --version)
+  catu help         print this help (-h, --help)
 
-A file named version or help: viewu ./version
+A file named version or help: catu ./version
 `
 
 func main() {
 	os.Exit(run(os.Args[1:]))
 }
 
-// run is viewu with args; it returns the exit code.
+// run is catu with args; it returns the exit code.
 func run(args []string) int {
 	path := "."
 	switch {
 	case len(args) > 1:
-		fmt.Fprint(os.Stderr, "viewu: one path at a time\n\n"+usage)
+		fmt.Fprint(os.Stderr, "catu: one path at a time\n\n"+usage)
 		return 2
 	case len(args) == 1:
 		switch a := args[0]; {
@@ -43,7 +43,7 @@ func run(args []string) int {
 			fmt.Print(usage)
 			return 0
 		case strings.HasPrefix(a, "-") && a != "-":
-			fmt.Fprintf(os.Stderr, "viewu: unknown flag %q\n\n%s", a, usage)
+			fmt.Fprintf(os.Stderr, "catu: unknown flag %q\n\n%s", a, usage)
 			return 2
 		default:
 			path = a
@@ -51,11 +51,11 @@ func run(args []string) int {
 	}
 	app, err := ui.Open(path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "viewu: %s: %s\n", path, reason(err))
+		fmt.Fprintf(os.Stderr, "catu: %s: %s\n", path, reason(err))
 		return 1
 	}
 	if err := app.Run(); err != nil {
-		fmt.Fprintln(os.Stderr, "viewu:", err)
+		fmt.Fprintln(os.Stderr, "catu:", err)
 		return 1
 	}
 	return 0

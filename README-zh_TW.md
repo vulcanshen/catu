@@ -1,17 +1,17 @@
-# viewu
+# catu
 
-[![Release](https://img.shields.io/github/v/release/vulcanshen/viewu)](https://github.com/vulcanshen/viewu/releases)
-[![License](https://img.shields.io/github/license/vulcanshen/viewu)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/vulcanshen/catu)](https://github.com/vulcanshen/catu/releases)
+[![License](https://img.shields.io/github/license/vulcanshen/catu)](LICENSE)
 
 **Language**: [English](README.md) · 繁體中文
 
 **終端機裡看檔案的工具：Markdown 畫成文件、mermaid 畫成圖，其他檔案照它的顏色。**
 
-`viewu <檔案>` 把一個檔案放在一個 panel 裡，用 vim 的鍵捲動、找字、複製。Markdown 畫成文件 —— 標題、清單、程式碼、
+`catu <檔案>` 把一個檔案放在一個 panel 裡，用 vim 的鍵捲動、找字、複製。Markdown 畫成文件 —— 標題、清單、程式碼、
 引用、表格，畫面上沒有 `#`、`*` —— 裡面的 mermaid 區塊畫成圖；按 `l` 看原始碼。程式碼照語言上色、附行號。目錄、
 壓縮檔、PDF、圖片、二進位檔，照 terminu 家族預覽檔案的方式顯示。
 
-![viewu：一份 Markdown 畫成文件與 mermaid 圖、它的原始碼、找字、複製，再打開另一個檔案](docs/demo.gif)
+![catu：一份 Markdown 畫成文件與 mermaid 圖、它的原始碼、找字、複製，再打開另一個檔案](docs/demo.gif)
 
 ## 特色
 
@@ -33,32 +33,32 @@
 - macOS 或 Linux（WSL 也可以）。
 - 終端機的設定檔用 [Nerd Font](https://www.nerdfonts.com)：icon 與框線都是 Nerd Font 的字。
 - 支援 truecolor（24 位元色）的終端機：淡化的顏色與 popup 的層色，在 256 色下分不出來。
-- 終端機至少 40 欄寬、12 列高；更小的時候 viewu 只畫它的名字、需要多大、怎麼離開，終端機拉大就回到原本的樣子。
+- 終端機至少 40 欄寬、12 列高；更小的時候 catu 只畫它的名字、需要多大、怎麼離開，終端機拉大就回到原本的樣子。
 
-viewu 啟動時會量 icon 與 powerline 符號佔幾格。量錯的時候自己設：
+catu 啟動時會量 icon 與 powerline 符號佔幾格。量錯的時候自己設：
 
 | 變數 | 設的是 |
 |---|---|
-| `VIEWU__ICON_WIDTH` | icon 佔幾格，只給 viewu |
-| `VIEWU__POWERLINE_WIDTH` | powerline 符號佔幾格，只給 viewu |
+| `CATU__ICON_WIDTH` | icon 佔幾格，只給 catu |
+| `CATU__POWERLINE_WIDTH` | powerline 符號佔幾格，只給 catu |
 | `TERMINU__ICON_WIDTH` | icon 佔幾格，給 terminu 家族每一個 app：設一次，全部都讀得到 |
 | `TERMINU__POWERLINE_WIDTH` | powerline 符號佔幾格，給 terminu 家族每一個 app |
 | `LC_TERMINU_ICON_WIDTH` | icon 佔幾格，由有 ssh 的家族 app 帶過 ssh |
 | `LC_TERMINU_POWERLINE_WIDTH` | powerline 符號佔幾格，由有 ssh 的家族 app 帶過 ssh |
 
-icon 與 powerline 符號各自照表上的順序，取第一個有設的；都沒設才量。在家族 app 的終端機裡跑時，外層的 app 會替 viewu
+icon 與 powerline 符號各自照表上的順序，取第一個有設的；都沒設才量。在家族 app 的終端機裡跑時，外層的 app 會替 catu
 設好 `TERMINU__` 的兩個；從家族 app 經 ssh 連過來時，是 `LC_TERMINU_` 的兩個。
 
 ### Homebrew
 
 ```sh
-brew install vulcanshen/tap/viewu
+brew install vulcanshen/tap/catu
 ```
 
 ### 安裝腳本
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vulcanshen/viewu/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/install.sh | sh
 ```
 
 不用 sudo：裝在 `~/.local/bin`。
@@ -66,29 +66,29 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/viewu/main/install.sh | 
 ### Go
 
 ```sh
-go install github.com/vulcanshen/viewu/cmd/viewu@latest
+go install github.com/vulcanshen/catu/cmd/catu@latest
 ```
 
 ### 第一次啟動
 
-`viewu README.md` 打開那個檔案；只打 `viewu` 是看目前的目錄。viewu 不寫任何東西：它只讀你給它的檔案，以及你寫了的
+`catu README.md` 打開那個檔案；只打 `catu` 是看目前的目錄。catu 不寫任何東西：它只讀你給它的檔案，以及你寫了的
 設定。
 
 ### 移除
 
 ```sh
-brew uninstall viewu
+brew uninstall catu
 ```
 
 用安裝腳本裝的：
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vulcanshen/viewu/main/uninstall.sh | sh
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/uninstall.sh | sh
 ```
 
 ## 快速開始
 
-1. 執行 `viewu README.md`。
+1. 執行 `catu README.md`。
 2. 按 `j`、`k` 捲動，`d`、`u` 捲半頁，`gg`、`G` 到最上面、最下面。
 3. 按 `l` 看 Markdown 的原始碼，按 `h` 回到文件。
 4. 按 `/`，打一個字再按 `Enter`；`n`、`N` 到下一個、上一個找到的地方。
@@ -97,12 +97,12 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/viewu/main/uninstall.sh 
 ## 使用方式
 
 ```
-viewu [路徑]       看一個檔案或目錄（沒給就是目前的目錄）
-viewu version      印出版本（-v、--version）
-viewu help         印出命令列的用法（-h、--help）
+catu [路徑]       看一個檔案或目錄（沒給就是目前的目錄）
+catu version      印出版本（-v、--version）
+catu help         印出命令列的用法（-h、--help）
 ```
 
-路徑不存在、或沒有權限讀的時候，像 `cat` 一樣在命令列說出來。檔名剛好叫 `version` 或 `help`：`viewu ./version`。
+路徑不存在、或沒有權限讀的時候，像 `cat` 一樣在命令列說出來。檔名剛好叫 `version` 或 `help`：`catu ./version`。
 
 家族每個 app 都一樣的鍵：
 
@@ -114,10 +114,10 @@ viewu help         印出命令列的用法（-h、--help）
 | `j\|k`、`u\|d`、`gg\|G` | 捲一列、半頁、到最上面或最下面 |
 | `h\|l` | 切 tab：Markdown 的 `DOCUMENT` 與 `SOURCE`、mermaid 檔的 `DIAGRAM` 與 `SOURCE`、JSON 的 `TEXT` 與 `FORMATTED` |
 | `v`、`y` | `v` 再移到要開始的地方，再按 `v` 移動選取；`y` 複製 |
-| `Esc` | 一次關掉最上面的一個 popup，或清掉找到的字；永遠不會離開 viewu |
+| `Esc` | 一次關掉最上面的一個 popup，或清掉找到的字；永遠不會離開 catu |
 | `q` | 離開 |
 
-viewu 自己的：
+catu 自己的：
 
 | 鍵 | 做什麼 |
 |---|---|
@@ -143,19 +143,19 @@ viewu 自己的：
 
 ## 設定與資料
 
-viewu 不存資料、狀態、快取。設定是 `$XDG_CONFIG_HOME/viewu`（或 `~/.config/viewu`；`VIEWU__CONFIG` 可以指到別的目錄）
-裡的 `config.yaml`。viewu 不寫它；沒有這個檔就用預設值。
+catu 不存資料、狀態、快取。設定是 `$XDG_CONFIG_HOME/catu`（或 `~/.config/catu`；`CATU__CONFIG` 可以指到別的目錄）
+裡的 `config.yaml`。catu 不寫它；沒有這個檔就用預設值。
 
 ```yaml
 input_tab_width: 4               # 文字裡的 Tab 畫成幾格空白
 hide_secrets_in_preview: false   # true：私鑰只露第一行，只有你能讀的檔一行都不露
 ```
 
-兩個都是 terminu 家族每個 app 共用的 key。讀不了的 `config.yaml`，viewu 會問要不要把它移到 `config.yaml.bak`，不要就離開。
+兩個都是 terminu 家族每個 app 共用的 key。讀不了的 `config.yaml`，catu 會問要不要把它移到 `config.yaml.bak`，不要就離開。
 
 ## 限制
 
-- viewu 只看檔案，不改檔案。
+- catu 只看檔案，不改檔案。
 - 文字檔只畫前 16 MB，二進位檔只畫前 1 MB。
 - 圖片畫成它的 data URI，不是圖：終端機的圖片協定不是每個終端機都有，也放不進一格一格的排版。
 - 比 panel 寬的圖從右邊切掉，結尾畫 `…`；pele 讀不懂的圖畫成原始碼，下面寫原因。
@@ -169,10 +169,10 @@ hide_secrets_in_preview: false   # true：私鑰只露第一行，只有你能�
 
 ## terminu family
 
-viewu 遵循 terminu design：
+catu 遵循 terminu design：
 
 - [terminu design](https://github.com/vulcanshen/terminu)：家族的設計規範
-- [terminu-go](https://github.com/vulcanshen/terminu-go)：viewu 用來做成的 Go 函式庫
+- [terminu-go](https://github.com/vulcanshen/terminu-go)：catu 用來做成的 Go 函式庫
 - [terminu-harness](https://github.com/vulcanshen/terminu-harness)：照 terminu design 做 app 的 Claude Code plugin
 
 ## License

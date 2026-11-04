@@ -11,7 +11,7 @@ import (
 	terminu "github.com/vulcanshen/terminu-go"
 )
 
-// Glyphs of viewu's own popups (tdp popup: the app's choice).
+// Glyphs of catu's own popups (tdp popup: the app's choice).
 const (
 	glyphSearch = ""          // nf-fa-search
 	glyphOpen   = "\U000F0DCF" // nf-md-file_find

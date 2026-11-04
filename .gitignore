@@ -1,6 +1,6 @@
 # terminu family template (harness project/gitignore), copied to an app's
-# .gitignore; replace viewu. The app's own lines go below the last one.
-/viewu
+# .gitignore; replace catu. The app's own lines go below the last one.
+/catu
 /dist/
 .local/
 .idea/

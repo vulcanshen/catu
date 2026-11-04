@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/viewu/internal/text"
+	"github.com/vulcanshen/catu/internal/text"
 )
 
 // reader is the panel's body: what is shown, a line at a time, folded at the

@@ -1,8 +1,8 @@
-# viewu — build / run / test / package（家族共用的 target 在 family.mk）
+# catu — build / run / test / package（家族共用的 target 在 family.mk）
 #
 # 跑 `make`（或 `make help`）列出所有指令。
 
-BINARY := viewu
+BINARY := catu
 include family.mk
 
-##@ viewu 自己的
+##@ catu 自己的

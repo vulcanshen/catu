@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// capture runs viewu with args, returning its exit code, stdout and stderr.
+// capture runs catu with args, returning its exit code, stdout and stderr.
 func capture(t *testing.T, args ...string) (int, string, string) {
 	t.Helper()
 	outR, outW, _ := os.Pipe()
@@ -27,12 +27,12 @@ func capture(t *testing.T, args ...string) (int, string, string) {
 func TestVersionAndHelp(t *testing.T) {
 	for _, a := range []string{"version", "-v", "--version"} {
 		if code, out, _ := capture(t, a); code != 0 || out != "dev\n" {
-			t.Errorf("viewu %s: %d %q", a, code, out)
+			t.Errorf("catu %s: %d %q", a, code, out)
 		}
 	}
 	for _, a := range []string{"help", "-h", "--help"} {
-		if code, out, _ := capture(t, a); code != 0 || !strings.Contains(out, "viewu [path]") {
-			t.Errorf("viewu %s: %d %q", a, code, out)
+		if code, out, _ := capture(t, a); code != 0 || !strings.Contains(out, "catu [path]") {
+			t.Errorf("catu %s: %d %q", a, code, out)
 		}
 	}
 }
@@ -40,7 +40,7 @@ func TestVersionAndHelp(t *testing.T) {
 func TestPathNotThere(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "nope.txt")
 	code, _, errs := capture(t, p)
-	if code != 1 || errs != "viewu: "+p+": no such file or directory\n" {
+	if code != 1 || errs != "catu: "+p+": no such file or directory\n" {
 		t.Errorf("%d %q", code, errs)
 	}
 }
@@ -52,7 +52,7 @@ func TestPathNotReadable(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "secret.txt")
 	os.WriteFile(p, []byte("x"), 0)
 	code, _, errs := capture(t, p)
-	if code != 1 || errs != "viewu: "+p+": permission denied\n" {
+	if code != 1 || errs != "catu: "+p+": permission denied\n" {
 		t.Errorf("%d %q", code, errs)
 	}
 }

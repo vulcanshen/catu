@@ -7,7 +7,7 @@ import (
 
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/viewu/internal/text"
+	"github.com/vulcanshen/catu/internal/text"
 )
 
 func drawRows(t *testing.T, src string, w int) []string {

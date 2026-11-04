@@ -24,9 +24,9 @@ import (
 	"github.com/dslipak/pdf"
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/viewu/internal/doc"
-	"github.com/vulcanshen/viewu/internal/mermaid"
-	"github.com/vulcanshen/viewu/internal/text"
+	"github.com/vulcanshen/catu/internal/doc"
+	"github.com/vulcanshen/catu/internal/mermaid"
+	"github.com/vulcanshen/catu/internal/text"
 )
 
 // Limits of what is read (tdp P5): a text's first 16 MB, a binary's first

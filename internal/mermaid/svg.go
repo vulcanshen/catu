@@ -13,7 +13,7 @@ import (
 	"github.com/rivo/uniseg"
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/viewu/internal/text"
+	"github.com/vulcanshen/catu/internal/text"
 )
 
 // The diagram's colours: what each part of it is (the content's own, tdp

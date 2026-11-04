@@ -20,7 +20,7 @@ func files(t *testing.T, fs map[string]string) string {
 	t.Helper()
 	dir := t.TempDir()
 	t.Setenv("HOME", t.TempDir())
-	t.Setenv("VIEWU__CONFIG", t.TempDir())
+	t.Setenv("CATU__CONFIG", t.TempDir())
 	for name, content := range fs {
 		p := filepath.Join(dir, name)
 		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
@@ -33,7 +33,7 @@ func files(t *testing.T, fs map[string]string) string {
 	return dir
 }
 
-// start opens p in viewu on a w × h terminal.
+// start opens p in catu on a w × h terminal.
 func start(t *testing.T, p string, w, h int) *tdptest.Driver {
 	t.Helper()
 	a, err := Open(p)
@@ -347,7 +347,7 @@ func TestHideSecrets(t *testing.T) {
 		"token":      "secret\n",
 	})
 	os.Chmod(filepath.Join(dir, "token"), 0o600)
-	os.WriteFile(filepath.Join(os.Getenv("VIEWU__CONFIG"), "config.yaml"), []byte("hide_secrets_in_preview: true\n"), 0o644)
+	os.WriteFile(filepath.Join(os.Getenv("CATU__CONFIG"), "config.yaml"), []byte("hide_secrets_in_preview: true\n"), 0o644)
 	d := start(t, filepath.Join(dir, "id_ed25519"), 100, 30)
 	want(t, d, "[1] PRIVATE KEY", "  2 secret")
 	wantNot(t, d, "(sensitive content not shown)")
@@ -605,14 +605,14 @@ func TestOpenFromADirectory(t *testing.T) {
 
 func TestSettingsTabWidth(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "a\tb\n"})
-	os.WriteFile(filepath.Join(os.Getenv("VIEWU__CONFIG"), "config.yaml"), []byte("input_tab_width: 2\n"), 0o644)
+	os.WriteFile(filepath.Join(os.Getenv("CATU__CONFIG"), "config.yaml"), []byte("input_tab_width: 2\n"), 0o644)
 	d := start(t, filepath.Join(dir, "a.txt"), 60, 20)
 	want(t, d, "  1 a  b")
 }
 
 func TestSettingsUnreadable(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "a\tb\n"})
-	cfg := filepath.Join(os.Getenv("VIEWU__CONFIG"), "config.yaml")
+	cfg := filepath.Join(os.Getenv("CATU__CONFIG"), "config.yaml")
 	os.WriteFile(cfg, []byte("input_tab_width: [\n"), 0o644)
 	d := start(t, filepath.Join(dir, "a.txt"), 80, 24)
 	want(t, d, "MOVE ASIDE", "config.yaml.bak")
@@ -625,7 +625,7 @@ func TestSettingsUnreadable(t *testing.T) {
 
 func TestSettingsUnreadableQuit(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "a\n"})
-	os.WriteFile(filepath.Join(os.Getenv("VIEWU__CONFIG"), "config.yaml"), []byte(":\n:"), 0o644)
+	os.WriteFile(filepath.Join(os.Getenv("CATU__CONFIG"), "config.yaml"), []byte(":\n:"), 0o644)
 	d := start(t, filepath.Join(dir, "a.txt"), 80, 24)
 	d.Press("Esc")
 	if !d.Quit() {
@@ -633,22 +633,22 @@ func TestSettingsUnreadableQuit(t *testing.T) {
 	}
 }
 
-// TestSettingsDirOrder: the settings directory is VIEWU__CONFIG, else
-// $XDG_CONFIG_HOME/viewu, else ~/.config/viewu (tdp E2, E3).
+// TestSettingsDirOrder: the settings directory is CATU__CONFIG, else
+// $XDG_CONFIG_HOME/catu, else ~/.config/catu (tdp E2, E3).
 func TestSettingsDirOrder(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-	t.Setenv("VIEWU__CONFIG", "/tmp/own")
+	t.Setenv("CATU__CONFIG", "/tmp/own")
 	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg")
 	if got := configDir(); got != "/tmp/own" {
-		t.Errorf("with VIEWU__CONFIG: %s", got)
+		t.Errorf("with CATU__CONFIG: %s", got)
 	}
-	t.Setenv("VIEWU__CONFIG", "")
-	if got := configDir(); got != filepath.Join("/tmp/xdg", "viewu") {
+	t.Setenv("CATU__CONFIG", "")
+	if got := configDir(); got != filepath.Join("/tmp/xdg", "catu") {
 		t.Errorf("with XDG_CONFIG_HOME: %s", got)
 	}
 	t.Setenv("XDG_CONFIG_HOME", "")
-	if got := configDir(); got != filepath.Join(home, ".config", "viewu") {
+	if got := configDir(); got != filepath.Join(home, ".config", "catu") {
 		t.Errorf("with neither: %s", got)
 	}
 }

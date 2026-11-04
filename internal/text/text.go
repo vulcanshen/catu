@@ -1,4 +1,4 @@
-// Package text is what viewu shows, a character at a time: how each is drawn,
+// Package text is what catu shows, a character at a time: how each is drawn,
 // how many cells it takes, its style, and what a copy of it gives.
 package text
 

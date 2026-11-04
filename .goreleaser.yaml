@@ -1,14 +1,14 @@
 # terminu family template (harness project/goreleaser.yaml), copied to an app's
-# .goreleaser.yaml. Replace viewu with the app's name and fill the lines
+# .goreleaser.yaml. Replace catu with the app's name and fill the lines
 # marked "app:". An app with a Windows build uncomments the lines marked
 # "Windows"; nothing else changes.
 version: 2
 
-project_name: viewu
+project_name: catu
 
 builds:
-  - main: ./cmd/viewu
-    binary: viewu
+  - main: ./cmd/catu
+    binary: catu
     env:
       - CGO_ENABLED=0
     flags:
@@ -65,20 +65,20 @@ brews:
       token: "{{ .Env.GITHUB_TOKEN }}"
     # A pre-release never reaches the tap: brew keeps the stable release.
     skip_upload: auto
-    homepage: "https://github.com/vulcanshen/viewu"
+    homepage: "https://github.com/vulcanshen/catu"
     # app: one line, what the app is, ending in (terminu family).
-    description: "viewu: a file viewer for the terminal, Markdown and mermaid diagrams drawn (terminu family)"
+    description: "catu: a file viewer for the terminal, Markdown and mermaid diagrams drawn (terminu family)"
     # app: what to run first, where the settings and data live, the Nerd
     # Font and truecolor requirements, the platforms.
     caveats: |
-      Run `viewu <file>` to look at a file, `viewu` for the current directory.
-      Settings: ~/.config/viewu/config.yaml (optional).
+      Run `catu <file>` to look at a file, `catu` for the current directory.
+      Settings: ~/.config/catu/config.yaml (optional).
 
       A Nerd Font terminal profile and a truecolor (24-bit) terminal are
       required. macOS and Linux (WSL too).
     # app: dependencies, when the app calls other programs.
     test: |
-      system "#{bin}/viewu", "version"
+      system "#{bin}/catu", "version"
 
 # scoops:   # Windows
 #   - repository:
@@ -86,6 +86,6 @@ brews:
 #       name: scoop-bucket
 #       token: "{{ .Env.GITHUB_TOKEN }}"
 #     skip_upload: auto
-#     homepage: "https://github.com/vulcanshen/viewu"
+#     homepage: "https://github.com/vulcanshen/catu"
 #     # app: the same line as the brews description above.
-#     description: "viewu: what it is (terminu family)"
+#     description: "catu: what it is (terminu family)"

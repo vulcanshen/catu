@@ -1,18 +1,18 @@
-# viewu
+# catu
 
-[![Release](https://img.shields.io/github/v/release/vulcanshen/viewu)](https://github.com/vulcanshen/viewu/releases)
-[![License](https://img.shields.io/github/license/vulcanshen/viewu)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/vulcanshen/catu)](https://github.com/vulcanshen/catu/releases)
+[![License](https://img.shields.io/github/license/vulcanshen/catu)](LICENSE)
 
 **Language**: English · [繁體中文](README-zh_TW.md)
 
 **A file viewer for the terminal: Markdown drawn as a document, mermaid as diagrams, any other file in colour.**
 
-`viewu <file>` shows a file in a panel you can scroll, search and copy from with vim's keys. A Markdown file is drawn as a
+`catu <file>` shows a file in a panel you can scroll, search and copy from with vim's keys. A Markdown file is drawn as a
 document — headings, lists, code, quotes and tables, with no `#` or `*` on the screen — and its mermaid blocks as
 diagrams; switch to its source with `l`. A source file is in the colours of its language, with line numbers. A directory,
 an archive, a PDF, an image or a binary is shown the way the terminu family previews files.
 
-![viewu: a Markdown file drawn as a document with a mermaid diagram, its source, a search, a copy, then another file](docs/demo.gif)
+![catu: a Markdown file drawn as a document with a mermaid diagram, its source, a search, a copy, then another file](docs/demo.gif)
 
 ## Features
 
@@ -34,34 +34,34 @@ an archive, a PDF, an image or a binary is shown the way the terminu family prev
 - macOS or Linux (WSL too).
 - A [Nerd Font](https://www.nerdfonts.com) terminal profile: the icons and the frames are Nerd Font glyphs.
 - A truecolor (24-bit) terminal: the faded colours and the layer colours cannot be told apart in 256 colours.
-- A terminal at least 40 columns wide and 12 rows high; in a smaller one viewu shows only its name, the size it needs and
+- A terminal at least 40 columns wide and 12 rows high; in a smaller one catu shows only its name, the size it needs and
   how to quit, and comes back as it was once the terminal grows.
 
-viewu measures how many cells an icon and a powerline symbol take when it starts. When it gets them wrong, set them:
+catu measures how many cells an icon and a powerline symbol take when it starts. When it gets them wrong, set them:
 
 | Variable | What it sets |
 |---|---|
-| `VIEWU__ICON_WIDTH` | The cells an icon takes, for viewu |
-| `VIEWU__POWERLINE_WIDTH` | The cells a powerline symbol takes, for viewu |
+| `CATU__ICON_WIDTH` | The cells an icon takes, for catu |
+| `CATU__POWERLINE_WIDTH` | The cells a powerline symbol takes, for catu |
 | `TERMINU__ICON_WIDTH` | The cells an icon takes, for every terminu family app: set it once and they all read it |
 | `TERMINU__POWERLINE_WIDTH` | The cells a powerline symbol takes, for every terminu family app |
 | `LC_TERMINU_ICON_WIDTH` | The cells an icon takes, brought over ssh by a family app with ssh |
 | `LC_TERMINU_POWERLINE_WIDTH` | The cells a powerline symbol takes, brought over ssh by a family app with ssh |
 
-For an icon and for a powerline symbol each, viewu takes the first one set in the order of the table, and measures only
-when none is. Run inside a family app's terminal, viewu gets the `TERMINU__` ones from the app around it; reached over
+For an icon and for a powerline symbol each, catu takes the first one set in the order of the table, and measures only
+when none is. Run inside a family app's terminal, catu gets the `TERMINU__` ones from the app around it; reached over
 ssh from one, the `LC_TERMINU_` ones.
 
 ### Homebrew
 
 ```sh
-brew install vulcanshen/tap/viewu
+brew install vulcanshen/tap/catu
 ```
 
 ### Script
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vulcanshen/viewu/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/install.sh | sh
 ```
 
 No sudo: it installs to `~/.local/bin`.
@@ -69,29 +69,29 @@ No sudo: it installs to `~/.local/bin`.
 ### Go
 
 ```sh
-go install github.com/vulcanshen/viewu/cmd/viewu@latest
+go install github.com/vulcanshen/catu/cmd/catu@latest
 ```
 
 ### The first start
 
-`viewu README.md` opens the file; `viewu` alone shows the current directory. viewu writes nothing anywhere: it only reads
+`catu README.md` opens the file; `catu` alone shows the current directory. catu writes nothing anywhere: it only reads
 the file you give it and its settings, when you have made some.
 
 ### Uninstall
 
 ```sh
-brew uninstall viewu
+brew uninstall catu
 ```
 
 Installed with the script:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vulcanshen/viewu/main/uninstall.sh | sh
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/uninstall.sh | sh
 ```
 
 ## Quick start
 
-1. Run `viewu README.md`.
+1. Run `catu README.md`.
 2. Press `j` and `k` to scroll, `d` and `u` for half a page, `gg` and `G` for the top and the bottom.
 3. Press `l` for the Markdown's source, `h` to come back to the document.
 4. Press `/`, type a word and `Enter`; `n` and `N` go to the next and the previous place it is.
@@ -100,13 +100,13 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/viewu/main/uninstall.sh 
 ## Usage
 
 ```
-viewu [path]       look at a file or a directory (the current directory when left out)
-viewu version      print the version (-v, --version)
-viewu help         print the command-line usage (-h, --help)
+catu [path]       look at a file or a directory (the current directory when left out)
+catu version      print the version (-v, --version)
+catu help         print the command-line usage (-h, --help)
 ```
 
 A path that is not there, or that you may not read, is said on the command line, as `cat` says it. A file named `version`
-or `help`: `viewu ./version`.
+or `help`: `catu ./version`.
 
 The keys every family app shares:
 
@@ -118,10 +118,10 @@ The keys every family app shares:
 | `j\|k`, `u\|d`, `gg\|G` | Scroll a row, half a page, to the top or the bottom |
 | `h\|l` | Switch tabs: a Markdown file's `DOCUMENT` and `SOURCE`, a mermaid file's `DIAGRAM` and `SOURCE`, a JSON file's `TEXT` and `FORMATTED` |
 | `v`, `y` | `v` and move to where to start, `v` again and move to select; `y` copies it |
-| `Esc` | Close the popup on top, one at a time, or clear what a search found; it never leaves viewu |
+| `Esc` | Close the popup on top, one at a time, or clear what a search found; it never leaves catu |
 | `q` | Quit |
 
-viewu's own:
+catu's own:
 
 | Key | What it does |
 |---|---|
@@ -148,20 +148,20 @@ and `gg|G` as when scrolling.
 
 ## Settings and data
 
-viewu keeps no data, no state and no cache. Its settings are `config.yaml` in `$XDG_CONFIG_HOME/viewu` (or
-`~/.config/viewu`; `VIEWU__CONFIG` names another directory). viewu never writes it; with no file, it uses the defaults.
+catu keeps no data, no state and no cache. Its settings are `config.yaml` in `$XDG_CONFIG_HOME/catu` (or
+`~/.config/catu`; `CATU__CONFIG` names another directory). catu never writes it; with no file, it uses the defaults.
 
 ```yaml
 input_tab_width: 4               # the spaces a tab in a text is drawn as
 hide_secrets_in_preview: false   # true: a private key shows its first line only, a file only you may read shows nothing
 ```
 
-Both are keys every terminu family app shares. A `config.yaml` viewu cannot read is offered to be moved aside to
-`config.yaml.bak`, or viewu quits.
+Both are keys every terminu family app shares. A `config.yaml` catu cannot read is offered to be moved aside to
+`config.yaml.bak`, or catu quits.
 
 ## Limits
 
-- viewu only shows files; it does not edit them.
+- catu only shows files; it does not edit them.
 - A text's first 16 MB is shown, a binary's first 1 MB.
 - Images are shown as their data URI, not as pictures: a terminal's picture protocols are not in every terminal and do not
   fit its rows of cells.
@@ -177,10 +177,10 @@ Both are keys every terminu family app shares. A `config.yaml` viewu cannot read
 
 ## The terminu family
 
-viewu follows terminu design:
+catu follows terminu design:
 
 - [terminu design](https://github.com/vulcanshen/terminu): the family's design rules
-- [terminu-go](https://github.com/vulcanshen/terminu-go): the Go library viewu is built with
+- [terminu-go](https://github.com/vulcanshen/terminu-go): the Go library catu is built with
 - [terminu-harness](https://github.com/vulcanshen/terminu-harness): the Claude Code plugin for building apps to terminu
   design
 

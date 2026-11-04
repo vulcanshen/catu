@@ -11,16 +11,16 @@ import (
 )
 
 // launchHome is the sandbox the last launch's Seed made: New opens a file
-// in it, as viewu <file> does.
+// in it, as catu <file> does.
 var launchHome string
 
-// TestFirstLaunch launches viewu as for the first time on many terminal
+// TestFirstLaunch launches catu as for the first time on many terminal
 // sizes and icon widths, and walks what every family app has: the Space
 // menu, the global operation popup, the App Log and the key reference; then
 // a terminal under the least size and back (tdptest.Check).
 func TestFirstLaunch(t *testing.T) {
 	tdptest.Check(t, tdptest.App{
-		Name: "viewu",
+		Name: "catu",
 		Seed: func(home string) {
 			launchHome = home
 			os.WriteFile(filepath.Join(home, "notes.md"), []byte("# Notes\n\nSome *text*.\n\n```go\nfunc main() {}\n```\n"), 0o644)
@@ -35,7 +35,7 @@ func TestFirstLaunch(t *testing.T) {
 	})
 }
 
-// TestOwnPopupsEverySize opens each popup viewu opens itself on each icon
+// TestOwnPopupsEverySize opens each popup catu opens itself on each icon
 // width, then makes the terminal narrower than it, lower, both (at the least
 // size or over, so the popup is drawn over the screen), under the least size
 // and down to 1×1, and back: every frame is as wide as the
@@ -49,7 +49,7 @@ func TestOwnPopupsEverySize(t *testing.T) {
 	}
 	dir := files(t, map[string]string{"a.txt": "first line\n", "b.txt": "second\n"})
 	os.Chmod(filepath.Join(dir, "b.txt"), 0)
-	cfg := filepath.Join(os.Getenv("VIEWU__CONFIG"), "config.yaml")
+	cfg := filepath.Join(os.Getenv("CATU__CONFIG"), "config.yaml")
 	popups := []struct {
 		name       string
 		badConfig  bool
@@ -111,7 +111,7 @@ func TestSplash(t *testing.T) {
 	d := start(t, filepath.Join(dir, "a.txt"), 80, 40)
 	d.Press("V")
 	d.Settle()
-	want(t, d, "viewu", intro, "Press any key to close")
+	want(t, d, "catu", intro, "Press any key to close")
 	d.Press("q")
 	if d.Quit() {
 		t.Error("q on the splash left")

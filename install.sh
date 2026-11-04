@@ -1,13 +1,13 @@
 #!/bin/sh
-# viewu installer for macOS / Linux.
-# Usage: curl -fsSL https://raw.githubusercontent.com/vulcanshen/viewu/main/install.sh | sh
+# catu installer for macOS / Linux.
+# Usage: curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/install.sh | sh
 #
-# terminu family template (harness project/install.sh). Replace viewu; set
+# terminu family template (harness project/install.sh). Replace catu; set
 # WINDOWS; the blocks marked "app's own" are the app's, the rest stays as it is.
 
 set -e
 
-APP="viewu"
+APP="catu"
 REPO="vulcanshen/$APP"
 # yes when the app ships a Windows build and an install.ps1.
 WINDOWS="no"

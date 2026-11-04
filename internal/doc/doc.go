@@ -18,7 +18,7 @@ import (
 	east "github.com/yuin/goldmark/extension/ast"
 	gtext "github.com/yuin/goldmark/text"
 
-	"github.com/vulcanshen/viewu/internal/text"
+	"github.com/vulcanshen/catu/internal/text"
 )
 
 // Glyphs and colours of the elements (webu docs/reader.md; the content's

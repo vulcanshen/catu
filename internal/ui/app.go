@@ -1,4 +1,4 @@
-// Package ui is viewu's screen: one panel showing a file, the statusbar over
+// Package ui is catu's screen: one panel showing a file, the statusbar over
 // it, the footer under it.
 package ui
 
@@ -11,8 +11,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/viewu/internal/text"
-	"github.com/vulcanshen/viewu/internal/version"
+	"github.com/vulcanshen/catu/internal/text"
+	"github.com/vulcanshen/catu/internal/version"
 )
 
 //go:embed icon.svg
@@ -21,7 +21,7 @@ var icon []byte // the app's mark, a copy of docs/icon.svg, drawn by its splash 
 // intro is the splash's line under the version (tdp S5).
 const intro = "A file viewer for the terminal"
 
-// viewer is viewu: what it shows and the panel it shows it in.
+// viewer is catu: what it shows and the panel it shows it in.
 type viewer struct {
 	app   *terminu.App
 	panel *terminu.Panel
@@ -33,11 +33,11 @@ type viewer struct {
 	warned map[string]bool
 }
 
-// Open makes viewu showing p, a file or a directory; the error is reading p
+// Open makes catu showing p, a file or a directory; the error is reading p
 // (it is not there, it may not be read), before anything is drawn.
 func Open(p string) (*terminu.App, error) {
 	cfg, cfgPath, cfgErr := readConfig()
-	v := &viewer{app: terminu.New("viewu"), body: &reader{}, cfg: cfg}
+	v := &viewer{app: terminu.New("catu"), body: &reader{}, cfg: cfg}
 	s, err := load(p, cfg, v.diagramError)
 	if err != nil {
 		return nil, err
@@ -51,13 +51,13 @@ func Open(p string) (*terminu.App, error) {
 	v.panel = &terminu.Panel{Body: v.body, Actions: v.actions(), OnTab: v.onTab}
 	a.AddScreen(&terminu.Screen{Name: "View", Panels: []*terminu.Panel{v.panel}})
 	colour := v.show(s)
-	if a.Splash, err = terminu.NewSplash(icon, "viewu", version.Display(), intro); err != nil {
+	if a.Splash, err = terminu.NewSplash(icon, "catu", version.Display(), intro); err != nil {
 		return nil, err
 	}
 	a.Start = func() tea.Cmd {
 		v.opened(s)
 		if cfgErr != nil {
-			// Settings that cannot be read: moved aside, or viewu leaves (tdp E3).
+			// Settings that cannot be read: moved aside, or catu leaves (tdp E3).
 			return tea.Batch(colour, a.MoveAside(cfgPath, cfgErr, func() tea.Cmd {
 				v.cfg = defaults()
 				a.InputTabWidth, a.HideSecretsInPreview = v.cfg.TabWidth, v.cfg.HideSecrets

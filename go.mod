@@ -1,4 +1,4 @@
-module github.com/vulcanshen/viewu
+module github.com/vulcanshen/catu
 
 go 1.26.0
 

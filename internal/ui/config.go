@@ -10,7 +10,7 @@ import (
 )
 
 // config is the user's settings (tdp E3): the two keys the family shares that
-// viewu uses.
+// catu uses.
 type config struct {
 	// TabWidth is input_tab_width: the spaces a tab in a text is drawn as
 	// (tdp note.2).
@@ -24,21 +24,21 @@ type config struct {
 
 func defaults() config { return config{TabWidth: 4} }
 
-// configDir is the settings directory (tdp E2, E3): VIEWU__CONFIG, else
-// $XDG_CONFIG_HOME/viewu, else ~/.config/viewu.
+// configDir is the settings directory (tdp E2, E3): CATU__CONFIG, else
+// $XDG_CONFIG_HOME/catu, else ~/.config/catu.
 func configDir() string {
-	if d := os.Getenv("VIEWU__CONFIG"); d != "" {
+	if d := os.Getenv("CATU__CONFIG"); d != "" {
 		return d
 	}
 	if x := os.Getenv("XDG_CONFIG_HOME"); x != "" {
-		return filepath.Join(x, "viewu")
+		return filepath.Join(x, "catu")
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "viewu")
+	return filepath.Join(home, ".config", "catu")
 }
 
 // readConfig reads config.yaml in the settings directory; with no file it is
-// the defaults. viewu never writes it. err is the file's that could not be
+// the defaults. catu never writes it. err is the file's that could not be
 // read, path where it is.
 func readConfig() (cfg config, path string, err error) {
 	cfg, path = defaults(), filepath.Join(configDir(), "config.yaml")
