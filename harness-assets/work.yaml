@@ -95,7 +95,7 @@ tasks:
       n、N（Space menu 的 [n]ext：the next place found、[N] Previous：the place found before；只在有命中時出現）：跳到下一筆、上一筆，到頭尾繞回，
       看不到時才捲到剛好看得到
       有命中時 panel 上的 Esc（tgo Panel.OnEsc）清掉命中；沒有命中時不設 OnEsc，? 不列 Esc；換檔案、換 tab 時命中跟著清掉
-      找字不記 App Log
+      找字不記 App Log；一筆都沒有時的 Info toast 由 tgo 記進 App Log，同一句話（tgo App.Toast 記每一個 toast）
       App Log（!）與 key reference（?）的 / 是 tgo 的（key reference 的 hint /:search ?|Esc:close），catu 不另外做
     test: [TestSearchFindsAndSteps, TestSearchNoHit, TestSearchHitsDrawn, TestSearchFromTheSpaceMenu]
   - id: 7

@@ -69,12 +69,6 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/install.sh | s
 
 No sudo: it installs to `~/.local/bin`.
 
-### Go
-
-```sh
-go install github.com/vulcanshen/catu/cmd/catu@latest
-```
-
 ### The first start
 
 `catu README.md` opens the file; `catu` alone shows the current directory. catu writes nothing anywhere: it only reads

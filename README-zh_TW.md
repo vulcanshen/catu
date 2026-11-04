@@ -65,12 +65,6 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/install.sh | s
 
 不用 sudo：裝在 `~/.local/bin`。
 
-### Go
-
-```sh
-go install github.com/vulcanshen/catu/cmd/catu@latest
-```
-
 ### 第一次啟動
 
 `catu README.md` 打開那個檔案；只打 `catu` 是看目前的目錄。catu 不寫任何東西：它只讀你給它的檔案，以及你寫了的

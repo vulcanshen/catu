@@ -11,7 +11,8 @@ tasks:
   - id: 5
     accepted: true
   - id: 6
-    accepted: true
+    accepted: false
+    reason: tdp 不清楚：v1.2.0 的 note.7 記 P3 的 operation、P3 把搜尋列為 panel operation，又不記 panel filter，沒寫沒有 cursor 的 panel 的 / 搜尋記不記；已回報，使用者選了不記，寫進下一版 tdp 的 note.7，升到那一版再判
   - id: 7
     accepted: true
   - id: 8
