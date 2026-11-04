@@ -1,9 +1,9 @@
-id: 13
-from: v1.2.0-beta.2
-to: v1.2.0-beta.3
+id: 14
+from: v1.2.0-beta.3
+to: v1.2.0-beta.4
 tasks:
   - id: 1
-    spec: 9
+    spec: 14
     request: 看一個檔案的畫面：一個 panel 放檔案的內容，上面看得到檔案的路徑、大小、修改時間、權限；q 直接離開
     tdp: [tdp terms.2, tdp screen.1, tdp screen.2, tdp screen.4, tdp screen.8, tdp panel.1, tdp panel.4, tdp panel.10, tdp panel.15, tdp file-picker.4, tdp components.2, tdp components.4, tdp K9, tdp L1, tdp L2, tdp L3, tdp L4, tdp E5, tdp components.5, tdp E8, tdp E6, tdp screen.7, tdp M5]
     remark:
@@ -19,7 +19,7 @@ tasks:
       - "label 寫內容的種類，照 tdp file-picker.4 的 TYPE 大寫：TEXT、DIRECTORY、ARCHIVE、PDF、IMAGE、BINARY、PRIVATE KEY；Markdown 是 DOCUMENT、SOURCE 兩個 tab（task 9），mermaid 檔是 DIAGRAM、SOURCE（task 10）"
       - "位置列是看的東西的完整路徑，家目錄寫成 ~，Lavender、太長從前面截（tdp panel.10；webu 的網址列也是內容 panel 的位置列）"
       - "statusbar 三組 Size、Modified、Mode，寫成 label: 值（tdp screen.4；statusbar 是 app 的內容，不改大小寫，tdp components.4），值照 tdp file-picker.4 的寫法（目錄的 Size 是 N items）；種類已經寫在 label，不重複寫 TYPE。Size 的值補到 11 格，最後一組不補空白（tdp L2）"
-      - "最低尺寸調到 40×12（tdp L1：app 可以調低）：版面只有一個 panel，80×24 的終端機、tmux 對半的小窗格都要能看檔案"
+      - "最低尺寸調到 40×12（tdp L1：app 可以調低）：看一個檔時版面只有一個 panel，80×24 的終端機、tmux 對半的小窗格都要能看檔案；兩個以上的檔有 FILES panel（task 16），60 欄以下照 tdp screen.5 只畫有 focus 的那個"
       - "q 與 Ctrl-C 直接離開，不先問（tdp K9：離開流程 app 可以自行決定；像 less 一樣看完就走）；有 popup 開著時照 tdp K9 先問（tgo 做）"
       - "空的檔案、目錄、壓縮檔照 tdp screen.8 的空狀態：Empty file／Empty directory／Empty archive，接一句點名 [o] 的提示"
       - "檔案打不開時 panel 不會有讀不到的狀態：啟動時讀不到在命令列就結束（task 2），o 選到讀不到的檔留在 file-picker（task 7）；檔案打得開、內容讀不出來（壞掉的壓縮檔、PDF）照 tdp panel.15 在 panel 中間寫（task 4）"
@@ -114,10 +114,9 @@ tasks:
   - id: 10
     spec: 12
     request: mermaid 圖用 pele 畫：Markdown 裡的 mermaid 區塊，與 .mmd、.mermaid 檔；流程圖的判斷不畫成菱形，畫成好看的樣子；其他斜的直線用階梯狀的框線畫；不要用點點畫：曲線畫成直角的轉折、圓畫成框、圓餅圖畫成一條分色的橫條加圖例
-    tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp K12, tdp note.7, tdp components.5, tdp components.2, tdp panel.15, tdp screen.8, tdp M5, tdp E8]
+    tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp K12, tdp note.7, tdp components.5, tdp components.2, tdp panel.15, tdp screen.8, tdp M5, tdp E8, tdp panel.10]
     remark:
-      - note: "畫不出來的 DIAGRAM 要照 panel 的寬度排版才知道，OnTab 時不知道；tgo 沒有在 Body.Draw 裡設 Panel.Fail 的正式做法。暫時在排版時用 callback 設 Panel.Fail，靠 Panel.Draw 先畫 body 再讀 Fail 的順序（程式標 TODO(tgo #2)）"
-        issue: tgo #2
+      - "畫不出來的 DIAGRAM 要照 panel 的寬度排版才知道，OnTab 時還不知道：reader 實作 tgo 的 Failure()，tgo 在每次 Draw 之後問、同一格畫成 panel.15 的兩句（2026-11-04 回報 tgo #2，terminu-go v1.2.0-beta.4 加的）"
       - ".mmd、.mermaid 的 DIAGRAM 整張畫不出來（pele 丟錯）時，整個 tab 生不出東西，照 tdp panel.15：中間 Red 的事實「Can't draw this diagram: <pele 的錯誤第一行>」、Overlay0 的提示「Press [l] to see the source, [!] for the whole error」，跟 JSON 不合法的 FORMATTED、讀不出來的壓縮檔一樣（review 2026-11-04 問，terminu session 同一天回覆；tdp v1.2.0-beta.3 的 panel.15 寫明「做不出內容的 tab」）；Markdown 文件裡一個區塊寫錯照舊是內容：原始碼加 Red 的錯誤"
       - "pele（MIT）的 dist/pele.global.js 用 go:embed 放進執行檔，用 goja（純 Go 的 JavaScript 引擎）跑：照樣是單一靜態 binary，不必裝 Node（tdp E6）"
       - "給 pele 一個等寬的 measurer（一個字一格寬），排出來的字剛好落在格子上；pele 的 SVG 畫成字元：方框與直線用框線字（斜的直線畫成一階一階，使用者 2026-11-03 選：跟其他框同一種線、進出的線接得起來；判斷例外，見下一條）、曲線畫成直角的轉折、圓畫成框（節點兩邊加 ( )；state 圖的開始 ●、結束 ◉）、圓餅圖畫成一條分色的橫條、箭頭用三角形、字放在它的位置；不用點字（braille），使用者 2026-11-04：不要有點點的那種表現方式。圓餅圖用框線畫不出圓，使用者選畫成橫條，看了一塊一列的版本後指定（同一天）：只有一條 bar，每塊不同顏色，下面一列是每個顏色的百分比，再一個顏色一列寫它代表什麼；大的在前，顏色照 pele 給那一塊的。不用終端機的圖片協定（task 4 的理由，tdp F8）"
@@ -137,7 +136,7 @@ tasks:
   - id: 12
     spec: 9
     request: JSON 多一個排過版（pretty print）的 tab，預設還是看原檔
-    tdp: [tdp P5, tdp terms.4, tdp panel.4, tdp K12, tdp note.2, tdp screen.8, tdp panel.15, tdp panel.1, tdp M5, tdp E8, tdp components.5]
+    tdp: [tdp P5, tdp terms.4, tdp panel.4, tdp K12, tdp note.2, tdp screen.8, tdp panel.15, tdp panel.1, tdp M5, tdp E8, tdp components.5, tdp panel.10]
     remark:
       - "兩個 tab：TEXT（原檔，打開時在這裡）、FORMATTED（排過版）；h|l 切（tdp K12、terms.4、panel.4）。原檔在前：行號對得上別的工具報的行、找字與複製是檔案裡真的內容（使用者 2026-11-03 選）"
       - "排版是 tdp P5 的功能邏輯：縮排 2 格，key 的順序、數字的寫法照原檔（Go 的 json.Indent），只動空白；照 task 3 上 JSON 的顏色、畫行號（它自己的行）"
@@ -146,7 +145,7 @@ tasks:
   - id: 13
     spec: 13
     request: 輸出接到管線或檔案時不開畫面，像 cat 一樣印出來；Markdown、mermaid 印成畫好的文字
-    tdp: [tdp E1, tdp P5, tdp components.5]
+    tdp: [tdp E1, tdp P5, tdp components.5, tdp E3]
     remark:
       - "命令列的其他用法 app 可以自行決定（tdp E1）；印什麼、怎麼印是功能邏輯（tdp P5）"
       - "stdout 不是終端機（catu a.md | less、catu flow.mmd > flow.txt）時不開畫面：TUI 要一個終端機，輸出給別的程式時照 cat 的習慣把內容印出來"
@@ -162,9 +161,9 @@ tasks:
       - "印的跟 task 13 一樣是第一個 tab，但 stdout 是終端機時帶顏色：文字檔照 task 3 的語法顏色（跟畫面裡、o 的預覽同一套，tdp note.2），Markdown 與 mermaid 照畫面裡的顏色；不印行號、不折行（終端機自己折）；寬度是終端機的寬"
       - "stdout 不是終端機時（catu -p a.md | less）跟 task 13 一樣：不帶顏色"
   - id: 15
-    spec: 13
+    spec: 14
     request: 從管線讀進來看：git log | catu、curl -s 網址 | catu --lang md，像 less
-    tdp: [tdp E1, tdp P5, tdp panel.10, tdp note.7, tdp screen.4]
+    tdp: [tdp E1, tdp P5, tdp panel.10, tdp note.7, tdp screen.4, tdp E3, tdp file-picker.2]
     remark:
       - "沒給路徑、stdin 不是終端機時讀 stdin；路徑寫 - 也是 stdin（cat 的習慣）。stdin 是終端機又沒給路徑時照舊看目前的目錄"
       - "讀到結束為止，最多 16 MB（跟檔案一樣），然後照檔案一樣：stdout 是終端機就開畫面看（鍵盤從終端機讀），不是就照 task 13 印，-p 照 task 14"
@@ -173,7 +172,7 @@ tasks:
   - id: 16
     spec: 13
     request: 一次看好幾個檔：catu a.go b.go
-    tdp: [tdp terms.2, tdp panel.13, tdp screen.5, tdp L1, tdp K1, tdp K2, tdp K3, tdp screen.2, tdp E1]
+    tdp: [tdp terms.2, tdp panel.13, tdp screen.5, tdp L1, tdp K1, tdp K2, tdp K3, tdp screen.2, tdp E1, tdp panel.5, tdp panel.1, tdp note.7, tdp P5, tdp L4, tdp E5, tdp E8]
     remark:
       - "給兩個以上的路徑時，單畫面兩個 panel：左邊 [1] FILES 清單（照給的順序），右邊 [2] 照現在的 panel 看清單 cursor 那一個（tdp panel.13 明細：cursor 一動就換，focus 不動；Enter 把 focus 送到 [2]）；只給一個時照舊一個 panel"
       - "Tab 與 1、2 換 panel（tdp K1、K2），footer 照多 panel 的寫（tdp screen.2）；窄的時候只畫有 focus 的 panel（tdp screen.5，門檻不高於 60）"

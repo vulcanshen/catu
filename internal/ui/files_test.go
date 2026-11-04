@@ -49,6 +49,18 @@ func TestSeveralFiles(t *testing.T) {
 	})
 }
 
+// TestSeveralFilesWidth: the list is as wide as its longest name, the room
+// the cursor's arrow keeps after it as wide as a powerline symbol is (tdp
+// panel.5, E5): the name is not cut on any terminal.
+func TestSeveralFilesWidth(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": "first\n", "a-longer-name.md": "# Second\n"})
+	t.Chdir(dir)
+	tdptest.EachIconWidth(t, func(t *testing.T) {
+		d := startAll(t, []string{"a.txt", "a-longer-name.md"}, 100, 16)
+		want(t, d, "┃ a-longer-name.md ") // cut from the front, it would start …
+	})
+}
+
 // TestSeveralFilesNarrow: under 60 columns only the panel with the focus is
 // drawn, the whole width (tdp screen.5); Tab goes to the other.
 func TestSeveralFilesNarrow(t *testing.T) {

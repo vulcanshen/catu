@@ -20,12 +20,13 @@ type reader struct {
 	// numbered draws the lines' numbers in a column of their own.
 	numbered bool
 	// layout, when set, lays the lines out at a width (a document, a
-	// diagram): it is asked again whenever the width changes, and failed
-	// is told what it said: an error is why it could make nothing of the
-	// whole tab (tdp panel.15), nil that it could.
-	layout func(w int) ([]text.Line, error)
-	failed func(error)
-	laidW  int
+	// diagram): it is asked again whenever the width changes. An error is
+	// why it could make nothing of the whole tab: failure, failHint under
+	// it, which the panel draws in its middle (tdp panel.15, Failure).
+	layout   func(w int) ([]text.Line, error)
+	failHint string
+	failure  *terminu.Failure
+	laidW    int
 	// fact and hint say why there is nothing to show, in the middle (tdp
 	// screen.8).
 	fact, hint string
@@ -69,19 +70,20 @@ func (r *reader) recolour(lines []text.Line) {
 	r.lines = lines
 }
 
-// setLayout shows what layout lays out at the panel's width; failed is told
-// each time whether it could.
-func (r *reader) setLayout(layout func(w int) ([]text.Line, error), failed func(error)) {
+// setLayout shows what layout lays out at the panel's width; failHint is the
+// hint under its error, when it has one.
+func (r *reader) setLayout(layout func(w int) ([]text.Line, error), failHint string) {
 	r.lines, r.numbered, r.layout, r.laidW = nil, false, layout, -1
 	r.reset()
-	r.failed = failed
+	r.failHint = failHint
 }
 
 func (r *reader) reset() {
 	r.top, r.sub, r.folds = 0, 0, nil
 	r.hits, r.current = nil, 0
 	r.visual, r.selecting = false, false
-	r.fact, r.hint, r.failed = "", "", nil
+	r.fact, r.hint = "", ""
+	r.failHint, r.failure = "", nil
 	r.numW = 0
 }
 
@@ -89,6 +91,11 @@ func (r *reader) reset() {
 // in the middle, when it has one (tdp panel.15), and the reader's empty state
 // otherwise.
 func (r *reader) Empty() bool { return len(r.lines) == 0 }
+
+// Failure is why the layout could make nothing of the tab at the width it
+// was last drawn at, nil when it could: tgo asks after each Draw, and draws it
+// in the panel's middle in that same frame (tdp panel.15).
+func (r *reader) Failure() *terminu.Failure { return r.failure }
 
 // HasItem is false: a text has no items (tdp K3).
 func (r *reader) HasItem() bool { return false }
@@ -202,8 +209,9 @@ func (r *reader) measure(w int) {
 		if r.laidW != inner {
 			top := r.top
 			lines, err := r.layout(inner)
-			if r.failed != nil {
-				r.failed(err)
+			r.failure = nil
+			if err != nil {
+				r.failure = &terminu.Failure{Fact: err.Error(), Hint: r.failHint}
 			}
 			r.lines, r.laidW, r.folds = lines, inner, nil
 			r.top, r.sub = min(top, max(len(r.lines)-1, 0)), 0

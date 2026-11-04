@@ -195,17 +195,11 @@ func (v *viewer) onMsg(msg tea.Msg) tea.Cmd {
 func (v *viewer) showView(i int) {
 	vw := v.cur.views[i]
 	// Why the tab could not be made, drawn by tgo in the middle when there
-	// is nothing to show (tdp panel.15).
+	// is nothing to show (tdp panel.15); a layout's own is the body's
+	// Failure, known once it is laid out at the panel's width.
 	v.panel.Fail = vw.fail
 	if vw.layout != nil {
-		// TODO(tgo #2): set while the body draws, which shows it that same
-		// frame only because the panel reads Fail after its body's Draw.
-		v.body.setLayout(vw.layout, func(err error) {
-			v.panel.Fail = nil
-			if err != nil {
-				v.panel.Fail = &terminu.Failure{Fact: err.Error(), Hint: vw.failHint}
-			}
-		})
+		v.body.setLayout(vw.layout, vw.failHint)
 	} else {
 		v.body.set(vw.lines, vw.numbered)
 	}

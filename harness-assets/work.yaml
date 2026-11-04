@@ -1,6 +1,6 @@
 tasks:
   - id: 1
-    spec: 9
+    spec: 14
     implementation: |
       單畫面（tgo Screen，名字 View）、一個 panel [1]；panel 的 body 是 catu 自己的 reader（tgo Body）
       最上面一列 statusbar（tgo App.Status）：Size: <值補到 11 格>  Modified: <YYYY-MM-DD HH:MM>  Mode: <ls -l 的寫法>，全部 Overlay0；
@@ -174,8 +174,8 @@ tasks:
       Markdown 的 ```mermaid 區塊（task 9）畫成圖；.mmd、.mermaid 檔有 DIAGRAM（打開時在這裡）、SOURCE 兩個 tab，DIAGRAM 當成一個 mermaid 區塊畫
       比 panel 寬的圖：那一列切掉，最後一格 Overlay0 的 …（task 5 的 reader）
       寫錯（pele 丟出錯誤）：Markdown 裡的區塊照程式碼區塊畫原始碼（右上角 mermaid），下面 Red 一行一列寫 pele 的錯誤；
-      .mmd、.mermaid 檔的 DIAGRAM 整個 tab 沒有東西，位置列下面置中畫（tgo Panel.Fail，排版回錯誤時設）Red 的「Can't draw this diagram: <pele 錯誤的第一行>」、空一列、
-      Overlay0 的「Press [l] to see the source, [!] for the whole error」（照 panel 寬折行；寬度變了重畫一次）；切到 SOURCE 時拿掉 Panel.Fail，切回來再排一次；
+      .mmd、.mermaid 檔的 DIAGRAM 整個 tab 沒有東西，位置列下面置中畫（reader 的 tgo Failure()：照寬度排版回錯誤時有，tgo 在同一格畫）Red 的「Can't draw this diagram: <pele 錯誤的第一行>」、空一列、
+      Overlay0 的「Press [l] to see the source, [!] for the whole error」（照 panel 寬折行；寬度變了重畫一次）；切到 SOURCE 時 body 換了就沒有，切回來再排一次；
       兩種都在 App Log 記 Warning「Can't draw a mermaid diagram in <檔名>: <pele 的整段錯誤>」，同一個檔同一個錯只記一次
       打開含有 mermaid 區塊的 Markdown、或 mermaid 檔時，在背景先載入 pele
     test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDecisionAsABox, TestAsDecisions, TestDecisionErrorAsWritten, TestNoDots, TestPieAsOneBar, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidFileCannotBeDrawn, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
@@ -220,7 +220,7 @@ tasks:
       catu help 有 catu -p [path] 一列
     test: [TestPrintInColour, TestPrintWhenNotATerminal]
   - id: 15
-    spec: 13
+    spec: 14
     implementation: |
       沒給路徑、stdin 不是終端機時路徑當成 -；- 是 stdin（stdin 是終端機時照樣讀到 Ctrl-D，跟 cat - 一樣）
       -l、--lang <格式>、--lang=<格式>：md、markdown 是 Markdown，mermaid、mmd 是 mermaid 圖，其他是 chroma 認得的語言名字或副檔名（json、go、python、py……）；
@@ -238,7 +238,7 @@ tasks:
     implementation: |
       兩個以上的路徑（ui.OpenAll）：開畫面前照順序每個都讀，同一個檔（絕對路徑一樣）只留第一次；讀不到的：不開畫面，stderr 印 catu: <照給的路徑>: <原因>，結束碼 1
       單畫面兩個 panel：[1] FILES（tgo List，一欄、沒有表頭、太長從前面截），[2] 照 task 1 的 viewer；tgo Screen.Layout 左右並排，
-      FILES 寬是最長的名字加四格，最多畫面寬的三分之一；Screen.NarrowBelow 60：窄於 60 欄只畫有 focus 的那個、佔滿寬度（tdp screen.5）
+      FILES 寬是最長的名字、框兩格、名字前一格、名字後面留給 cursor 箭頭的一個 powerline 符號寬（tdp panel.5、E5：佔兩格的終端機上是兩格），最多畫面寬的三分之一；Screen.NarrowBelow 60：窄於 60 欄只畫有 focus 的那個、佔滿寬度（tdp screen.5）
       FILES 的列：照給的路徑寫（絕對路徑的家目錄寫成 ~，stdin 寫 standard input），照給的順序
       List.OnMove：cursor 到哪一列，[2] 就換成那個檔（label、tab、位置列、statusbar 跟著換，回到最上面）；focus 留在 [1]（tdp panel.13）
       [1] 的 Enter（hint Enter:view，tgo Action.ToDetails）把 focus 送到 [2]；Tab、1、2 換 panel（tgo 做），footer 是 Space:menu ?:help !:log Tab|1–2:panels q:quit
@@ -249,4 +249,4 @@ tasks:
       印的時候（task 13、14）：一個接一個照 task 13、14 印，跟 cat a b 一樣不加標頭；讀不到的在 stderr 印 catu: <路徑>: <原因>，其他照印，結束碼 1；
       - 可以在其中（照 task 15），同一次只能出現一次，多了印用法，結束碼 2
       catu help 的第一列是 catu [path...]，寫明兩個以上會列在旁邊；-p 一列是 catu -p [path...]
-    test: [TestSeveralFiles, TestSeveralFilesNarrow, TestSeveralFilesOpen, TestSeveralFilesUnreadable, TestSeveralFilesFirstLaunch, TestPrintSeveral]
+    test: [TestSeveralFiles, TestSeveralFilesWidth, TestSeveralFilesNarrow, TestSeveralFilesOpen, TestSeveralFilesUnreadable, TestSeveralFilesFirstLaunch, TestPrintSeveral]

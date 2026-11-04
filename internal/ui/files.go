@@ -67,14 +67,15 @@ func listRow(s *shown, given string) terminu.Row {
 	return terminu.Row{ID: s.path, Cells: []string{name}}
 }
 
-// width is the list's: its longest name and the frame round it, at most a
-// third of w.
+// width is the list's: its longest name, the frame round it, a cell before
+// the name and the room the cursor's arrow keeps after it, a powerline
+// symbol's (tdp panel.5, E5); at most a third of w.
 func (f *fileList) width(w int) int {
 	longest := 0
 	for _, r := range f.list.Rows() {
 		longest = max(longest, terminu.Width(r.Cells[0]))
 	}
-	return min(longest+4, w/3)
+	return min(longest+3+terminu.PowerlineWidth(), w/3)
 }
 
 // add lists s, the file o chose, last unless it is listed already, and puts
