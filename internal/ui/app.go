@@ -140,7 +140,8 @@ func (v *viewer) showView(i int) {
 		v.body.set(vw.lines, vw.numbered)
 	}
 	v.body.fact, v.body.hint, v.body.red = vw.fact, vw.hint, vw.red // when there is nothing to show
-	v.body.where = tilde(v.cur.path)
+	// The location row (tdp panel.10).
+	v.panel.Location = tilde(v.cur.path)
 	v.panel.OnEsc = nil // no hits to clear
 }
 

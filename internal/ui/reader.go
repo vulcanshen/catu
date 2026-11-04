@@ -14,9 +14,8 @@ import (
 // reader is the panel's body: what is shown, a line at a time, folded at the
 // panel's width and scrolled a row at a time as less does; a search's hits;
 // the Visual mode's cursor and selection (tdp note.2, note.3, note.4,
-// panel.14). The first row is the position row, the path (tdp panel.10).
+// panel.14). The location row above it is the panel's (tgo Panel.Location).
 type reader struct {
-	where string // the position row; "" for none
 	lines []text.Line
 	// numbered draws the lines' numbers in a column of their own.
 	numbered bool
@@ -147,16 +146,11 @@ func (r *reader) Key(key string, _ tea.KeyMsg) (bool, tea.Cmd) {
 	return true, nil
 }
 
-// Draw draws the position row, then the rows in sight: each line's first row
-// with its number when numbered, the rows it folds onto with the column
-// blank (tdp note.2).
+// Draw draws the rows in sight: each line's first row with its number when
+// numbered, the rows it folds onto with the column blank (tdp note.2).
 func (r *reader) Draw(w, h int, focused bool) []string {
 	out := make([]string, 0, h)
-	if r.where != "" && h > 0 {
-		where := terminu.Fg(terminu.Lavender).Render(terminu.TruncateLeft(terminu.Escape(r.where), max(w-2, 0)))
-		out = append(out, " "+terminu.Pad(where, max(w-2, 0))+" ")
-	}
-	r.visible = max(h-len(out), 0)
+	r.visible = max(h, 0)
 	r.measure(w)
 	if len(r.lines) == 0 {
 		r.scroll = ""

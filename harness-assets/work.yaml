@@ -1,12 +1,13 @@
 tasks:
   - id: 1
-    spec: 1
+    spec: 9
     implementation: |
       單畫面（tgo Screen，名字 View）、一個 panel [1]；panel 的 body 是 catu 自己的 reader（tgo Body）
       最上面一列 statusbar（tgo App.Status）：Size: <值補到 11 格>  Modified: <YYYY-MM-DD HH:MM>  Mode: <ls -l 的寫法>，全部 Overlay0；
       目錄的 Size 是 N items（1 item，不算 . 開頭的），讀不到寫 —
       panel 的 label 是內容的種類：TEXT、DIRECTORY、ARCHIVE、PDF、IMAGE、BINARY、PRIVATE KEY
-      panel 裡第一列是位置列：看的東西的完整路徑，家目錄寫成 ~，Lavender，太長從前面截（tgo TruncateLeft），名稱裡的控制字元畫成名字（tgo Escape）；不捲
+      panel 裡第一列是位置列（tgo Panel.Location 畫）：看的東西的完整路徑，家目錄寫成 ~，Lavender，太長從前面截，名稱裡的控制字元畫成名字；
+      不捲，空狀態與 panel.15 的錯誤上面也留著，panel 沒有焦點時跟著變暗（tgo 做）
       下框 hint：o:open /:search v:visual（tgo Action.Hint）；footer 由 tgo 畫：Space:menu ?:help !:log q:quit
       內容一行也沒有時，位置列下面置中畫空狀態（Overlay0，照 panel 寬折行）：空檔案 Empty file / Press [o] to open another file，
       空目錄 Empty directory / Press [o] to open a file，空壓縮檔 Empty archive / Press [o] to open another file
@@ -30,7 +31,7 @@ tasks:
       啟動時（tgo App.Start）App Log 記 Info「Opened <路徑，家目錄寫成 ~>」
     test: [TestVersionAndHelp, TestPathNotThere, TestPathNotReadable, TestBadArguments, TestOpenLogsWhatItOpened, TestOpenErrors]
   - id: 3
-    spec: 7
+    spec: 9
     implementation: |
       文字檔（前 64 KB 沒有 NUL、是合法的 UTF-8）：label TEXT；整個檔讀進來，最多 16 MB，超過時最後一列 Overlay0「(<大小> more not shown)」
       每一行左邊畫行號：靠右，欄寬 max(3, 總行數的位數)，Overlay0，後面空一格；一行比 panel 寬時在空白處折到下一列（照 tgo viewer 的 foldAt：
@@ -48,7 +49,7 @@ tasks:
       回來時（tgo App.OnMsg）只換掉那一個 view 的行的顏色，捲動位置、命中、Visual 的游標都不動，loading icon 拿掉；已經換成別的檔案時丟掉
     test: [TestTextFoldsALongLine, TestTextColours, TestTextTabsAndControlCharacters, TestTextOwnColourCodes, TestTextTooBig, TestTricky, TestBigTextColouredLater, TestTOMLKeysAndTables, TestYAMLValuesAsThePreview, TestCarriageReturnKeepsTheLines, TestBoldAndItalicAsThePreview, TestFormatByDirectory]
   - id: 4
-    spec: 1
+    spec: 9
     implementation: |
       種類照 tdp file-picker.3 判斷：壓縮檔（.zip .tar .tar.gz .tgz .tar.bz2 .tbz2）、圖片（.png .jpg .jpeg .gif .bmp .webp .tiff .tif .ico .avif .heic）、
       PDF（.pdf）、文字、私鑰（第一行是私鑰的標頭）、其他是二進位
@@ -65,7 +66,7 @@ tasks:
       hide_secrets_in_preview 不管 panel：panel 照樣畫使用者打開的檔（私鑰、只有擁有者能讀的檔也一樣）；這個設定只交給 tgo 的 file-picker 預覽（task 8）
     test: [TestDirectoryTree, TestEmptyDirectory, TestArchiveTree, TestEmptyArchive, TestContentUnreadable, TestImageDataURI, TestPDFText, TestBinaryHex, TestBinaryTooBig, TestHideSecrets]
   - id: 5
-    spec: 7
+    spec: 9
     implementation: |
       panel 上沒有游標：j|↓、k|↑ 捲一列（折行的一行一列一列捲），d|PgDn、u|PgUp 捲半頁，gg、G 到頭尾；Ctrl-U、Ctrl-D 不作用
       （PgUp、PgDn 是 u|d，跟 tgo 每一個 surface 一樣：viewer、清單、menu、表單、finder、textarea 都收，tdp K12）
@@ -98,7 +99,7 @@ tasks:
       App Log（!）與 key reference（?）的 / 是 tgo 的（key reference 的 hint /:search ?|Esc:close），catu 不另外做
     test: [TestSearchFindsAndSteps, TestSearchNoHit, TestSearchHitsDrawn, TestSearchFromTheSpaceMenu]
   - id: 7
-    spec: 1
+    spec: 9
     implementation: |
       o（Space menu 的 panel operation [o]pen：another file；hint o:open）：tgo 的 file-picker，標題 Open、glyph nf-md-file_find（U+F0DCF）；
       根目錄是正在看的檔案所在的目錄、cursor 停在它上面（Green）；看的是目錄時根目錄就是那個目錄
@@ -120,7 +121,7 @@ tasks:
       不存狀態、資料、快取
     test: [TestSettingsTabWidth, TestSettingsDirOrder, TestSettingsUnreadable, TestSettingsUnreadableQuit, TestHideSecrets]
   - id: 9
-    spec: 7
+    spec: 9
     implementation: |
       檔名是 .md .markdown .mdown .mkd .mkdn 的文字檔：panel 有兩個 tab（tgo Panel.Label、Tabs），DOCUMENT（打開時在這裡）、SOURCE；h|l 切（tgo 做），
       下框 hint 前面多 h|l:tab；換 tab 時回到最上面、命中與 Visual 清掉
@@ -143,7 +144,7 @@ tasks:
       內容是空的時候照 task 1 的空狀態
     test: [TestMarkdownDocumentAndSource, TestMarkdownLaidOutAgainOnResize, TestMarkdownSearchAndCopy, TestEmptyMarkdown, TestEveryRowIsTheWidth, TestNoMarkdownSymbols, TestHeadingIsAChipOfItsLevel, TestLists, TestListItemFolds, TestCodeBlock, TestCodeBlockColoursAsThePreview, TestCodeBlockItalicComment, TestCodeLineFolds, TestQuote, TestTable, TestTableTooWide, TestLinkAndImage, TestInlineStyles, TestRule, TestControlCharacters]
   - id: 10
-    spec: 3
+    spec: 9
     implementation: |
       internal/mermaid：Pele 1.13.0 的 dist/pele.global.js（MIT，LICENSE 一起放在 internal/mermaid/pele/）用 go:embed 放進執行檔，goja 跑；
       pele.render 給的 measurer 把每個字量成一格（8.4px，寬字兩格），fontSize 14，maxWidth 是可以用的格數 × 8.4，autoDirection 開著、
@@ -176,7 +177,7 @@ tasks:
       panel 上按 V 打開；任意鍵只關掉它（tgo 做）
     test: [TestSplashIsTheIcon, TestSplash]
   - id: 12
-    spec: 3
+    spec: 9
     implementation: |
       副檔名 .json 的文字檔：panel 兩個 tab，TEXT（原檔，打開時在這裡，照 task 3）、FORMATTED；h|l 切（tgo 做），下框 hint 前面多 h|l:tab
       FORMATTED：Go 的 json.Indent 縮排 2 格（key 的順序、數字的寫法照原檔，只動空白），照 task 3 上 JSON 的顏色、畫它自己的行號、折行；
