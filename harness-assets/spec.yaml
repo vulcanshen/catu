@@ -1,4 +1,4 @@
-id: 9
+id: 10
 from: v1.2.0-beta.2
 to: v1.2.0-beta.3
 tasks:
@@ -112,13 +112,14 @@ tasks:
       - "任務清單的記號照 webu 畫勾選框的字 [x]、[ ]，Blue，放在清單記號的位置；不借 tdp checkbox 的 glyph（tdp P4：方框打勾是 checkbox，這裡不能勾）"
       - "找字、Visual 照 task 5、6，複製的是畫面上的字，排滿一列的空白不複製（webu 也是）"
   - id: 10
-    spec: 9
-    request: mermaid 圖用 pele 畫：Markdown 裡的 mermaid 區塊，與 .mmd、.mermaid 檔；菱形與其他斜的直線用階梯狀的框線畫，不要一堆點
-    tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp note.7, tdp components.5, tdp panel.15, tdp screen.8, tdp M5, tdp E8]
+    spec: 10
+    request: mermaid 圖用 pele 畫：Markdown 裡的 mermaid 區塊，與 .mmd、.mermaid 檔；流程圖的判斷不畫成菱形，畫成好看的樣子；其他斜的直線用階梯狀的框線畫，不要一堆點
+    tdp: [tdp P4, tdp P5, tdp F1, tdp F8, tdp E6, tdp terms.4, tdp panel.4, tdp K12, tdp note.7, tdp components.5, tdp panel.15, tdp screen.8, tdp M5, tdp E8]
     remark:
       - ".mmd、.mermaid 的 DIAGRAM 整張畫不出來（pele 丟錯）時，整個 tab 生不出東西，照 tdp panel.15：中間 Red 的事實「Can't draw this diagram: <pele 的錯誤第一行>」、Overlay0 的提示「Press [l] to see the source, [!] for the whole error」，跟 JSON 不合法的 FORMATTED、讀不出來的壓縮檔一樣（review 2026-11-04 問，terminu session 同一天回覆；tdp v1.2.0-beta.3 的 panel.15 寫明「做不出內容的 tab」）；Markdown 文件裡一個區塊寫錯照舊是內容：原始碼加 Red 的錯誤"
       - "pele（MIT）的 dist/pele.global.js 用 go:embed 放進執行檔，用 goja（純 Go 的 JavaScript 引擎）跑：照樣是單一靜態 binary，不必裝 Node（tdp E6）"
-      - "給 pele 一個等寬的 measurer（一個字一格寬），排出來的字剛好落在格子上；pele 的 SVG 畫成字元：方框與直線用框線字（斜的直線畫成一階一階，使用者 2026-11-03 選：跟其他框同一種線、進出的線接得起來）、圓與曲線用點字（braille）、箭頭用三角形、字放在它的位置。不用終端機的圖片協定（task 4 的理由，tdp F8）"
+      - "給 pele 一個等寬的 measurer（一個字一格寬），排出來的字剛好落在格子上；pele 的 SVG 畫成字元：方框與直線用框線字（斜的直線畫成一階一階，使用者 2026-11-03 選：跟其他框同一種線、進出的線接得起來；判斷例外，見下一條）、圓與曲線用點字（braille）、箭頭用三角形、字放在它的位置。不用終端機的圖片協定（task 4 的理由，tdp F8）"
+      - "流程圖的判斷（{…}）畫成跟其他框一樣高的框，左右兩邊正中間各一個 ◆（使用者 2026-11-04 嫌菱形難看）：pele 把判斷排成包住字的菱形，比框高兩三倍，斜邊在格子上只能一階一階，進出的線又從斜邊上出來；所以交給 pele 前把判斷寫成方框（[…]）並標上 class，pele 照方框排，線從框邊進出，畫的時候再加 ◆，一看就知道是判斷（圖的符號是內容的，tdp P4、P5）。只改 flowchart／graph；本來就有 ::: class 的判斷照舊是菱形（一個節點只能一個 :::）；改寫後 pele 丟錯時照原文重排，錯誤訊息是使用者寫的字"
       - "比 panel 寬時先讓 pele 照 panel 的寬度排（maxWidth、autoDirection：LR 轉成 TB，任何寬度都轉）；還是太寬，右邊切掉、最後一格畫 Overlay0 的 …（webu 的表格太寬也是這樣）"
       - "一列比一格高一倍（16.8px），pele 的字與線常常不到一列：列照圖裡的層（框邊、分隔線、字、線的端點）依序分配，近的併一列、遠的分開，字才不會壓在線上"
       - "Markdown 裡的 mermaid 區塊寫錯時畫原始碼（程式碼區塊的樣子），下面 Red 寫 pele 的錯誤，一行一列（tdp components.5：app 自己畫的好幾行字一列一列給）；App Log 記一筆 Warning，同一個檔同一個錯只記一次（終端機大小變了會重畫）"

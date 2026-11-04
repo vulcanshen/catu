@@ -144,7 +144,7 @@ tasks:
       內容是空的時候照 task 1 的空狀態
     test: [TestMarkdownDocumentAndSource, TestMarkdownLaidOutAgainOnResize, TestMarkdownSearchAndCopy, TestEmptyMarkdown, TestEveryRowIsTheWidth, TestNoMarkdownSymbols, TestHeadingIsAChipOfItsLevel, TestLists, TestListItemFolds, TestCodeBlock, TestCodeBlockColoursAsThePreview, TestCodeBlockItalicComment, TestCodeLineFolds, TestQuote, TestTable, TestTableTooWide, TestLinkAndImage, TestInlineStyles, TestRule, TestControlCharacters]
   - id: 10
-    spec: 9
+    spec: 10
     implementation: |
       internal/mermaid：Pele 1.13.0 的 dist/pele.global.js（MIT，LICENSE 一起放在 internal/mermaid/pele/）用 go:embed 放進執行檔，goja 跑；
       pele.render 給的 measurer 把每個字量成一格（8.4px，寬字兩格），fontSize 14，maxWidth 是可以用的格數 × 8.4，autoDirection 開著、
@@ -153,6 +153,9 @@ tasks:
       欄是 x ÷ 8.4 四捨五入；列不是直接除：框的上下邊、分隔線、字、線的端點這些「層」排序後一層一層分配，離上一層 0.4 列以上就是新的一列
       （隔得遠的照距離多空幾列），近的併在同一列，層與層之間照比例 —— 字不會落在線上，框裡一行字時字在正中間
       水平與垂直的線用框線字，交會處依方向選 ─ │ ╭ ╮ ╰ ╯ ├ ┤ ┬ ┴ ┼（轉角一律圓角）；虛線 ╌ ╎；
+      flowchart／graph 的判斷（節點 id 後面接 {字}，不是 {{ }}、不在引號裡、後面沒有 :::）交給 pele 前改寫成 ["字"]:::catuDecision（字裡已經有引號就不加），
+      pele 照方框排、線接在框邊；畫的時候那個框照一般的框畫，左右兩邊正中間的那一格換成 ◆（框的顏色），在箭頭之後放，箭頭照樣停在框線前一格；
+      改寫後 pele 丟錯時用原文再排一次：錯誤訊息是使用者寫的字，只有改寫壞掉時照原文畫菱形；其他圖（class、state……）不改
       斜的直線（菱形、多邊形的邊）畫成階梯：在經過的每一列畫一段橫線，在它跨到下一列的那一欄（兩列中間的那條線上）往上或往下接一格，轉角圓角；
       曲線、圓、弧一律用點字（braille）；
       兩端都是水平（或垂直）的三次曲線畫成直角的轉折
@@ -168,7 +171,7 @@ tasks:
       Overlay0 的「Press [l] to see the source, [!] for the whole error」（照 panel 寬折行；寬度變了重畫一次）；切到 SOURCE 時拿掉 Panel.Fail，切回來再排一次；
       兩種都在 App Log 記 Warning「Can't draw a mermaid diagram in <檔名>: <pele 的整段錯誤>」，同一個檔同一個錯只記一次
       打開含有 mermaid 區塊的 Markdown、或 mermaid 檔時，在背景先載入 pele
-    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDiamondAsSteps, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidFileCannotBeDrawn, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
+    test: [TestFlowchartLeftToRight, TestNarrowTurnsTopDown, TestEdgeLabelOnTheLine, TestSequence, TestDecisionAsABox, TestAsDecisions, TestDecisionErrorAsWritten, TestCirclesAsDots, TestWideWords, TestColours, TestSyntaxError, TestBoxJoins, TestDiagram, TestDiagramError, TestMermaidInMarkdown, TestMermaidFile, TestMermaidFileCannotBeDrawn, TestMermaidTooWide, TestMermaidErrorLoggedOnce, TestWarmLoadsPele]
   - id: 11
     spec: 8
     implementation: |

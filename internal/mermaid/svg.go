@@ -434,7 +434,8 @@ type drawing struct {
 	levels []float64
 	ops    []func(g *grid) // lines and shapes, in the order of the SVG
 	words  []func(g *grid) // over the lines
-	arrows []func(g *grid) // over everything
+	arrows []func(g *grid) // over the words
+	sides  []func(g *grid) // over everything: a decision's ◆
 }
 
 func (d *drawing) level(ys ...float64) { d.levels = append(d.levels, ys...) }
@@ -471,6 +472,18 @@ func (d *drawing) text(p point, s string, st text.Style, pad int) {
 	d.words = append(d.words, func(g *grid) { g.words(col(p.x), g.row(p.y), s, st, pad) })
 }
 
+// decision marks the box from a to b a decision (decision.go): a ◆ in the
+// middle of either side. They go on last, so that an arrow at a side stops
+// before its border as at any box's.
+func (d *drawing) decision(a, b point, st text.Style) {
+	mid := (a.y + b.y) / 2
+	d.level(mid)
+	d.sides = append(d.sides, func(g *grid) {
+		g.glyph(col(a.x), g.row(mid), "◆", st)
+		g.glyph(col(b.x), g.row(mid), "◆", st)
+	})
+}
+
 // arrow is an edge's marker, a triangle, as the arrow it is.
 func (d *drawing) arrow(pts []point) {
 	if len(pts) < 3 {
@@ -501,6 +514,9 @@ func (d *drawing) draw() [][]text.Char {
 		op(g)
 	}
 	for _, op := range d.arrows {
+		op(g)
+	}
+	for _, op := range d.sides {
 		op(g)
 	}
 	return g.lines()
@@ -833,6 +849,9 @@ func shape(d *drawing, t xml.StartElement, f frame) {
 		d.line(point{b.x, a.y}, point{b.x, b.y}, st, f.dashed)
 		d.line(point{b.x, b.y}, point{a.x, b.y}, st, f.dashed)
 		d.line(point{a.x, b.y}, point{a.x, a.y}, st, f.dashed)
+		if f.has("pele-node") && f.has(decisionClass) {
+			d.decision(a, b, st)
+		}
 	case "circle", "ellipse":
 		cx, cy := num(t, "cx"), num(t, "cy")
 		rx, ry := num(t, "r"), num(t, "r")

@@ -94,17 +94,59 @@ func braille(rows []string) bool {
 	return false
 }
 
-// TestDiamondAsSteps: a slanting side is steps of box-drawing lines, the
-// words on the middle row between the two points.
-func TestDiamondAsSteps(t *testing.T) {
-	rs := drawRows(t, "flowchart LR\n  A{Is it?} --> B\n", 80)
+// TestDecisionAsABox: a flowchart's decision is a box as tall as any, a ◆
+// in the middle of either side (user 2026-11-04); an arrow at its side stops
+// before the ◆, and its lines leave from its border.
+func TestDecisionAsABox(t *testing.T) {
+	rs := drawRows(t, "flowchart LR\n  S[Start] --> A{Is it?}\n  A -- yes --> B\n  A -- no --> C\n", 80)
 	if braille(rs) {
-		t.Errorf("the diamond is drawn in dots:\n%s", strings.Join(rs, "\n"))
+		t.Errorf("not a box:\n%s", strings.Join(rs, "\n"))
 	}
-	for _, s := range []string{"╭──╯", "╰───╮", "──┤ Is it?  ├──", "╰──╮", "╭───╯"} {
+	for _, s := range []string{"▶◆ Is it?", "╭─────────╮", "╰─────────╯"} {
 		if !has(rs, s) {
 			t.Errorf("no %q:\n%s", s, strings.Join(rs, "\n"))
 		}
+	}
+	for i, r := range rs {
+		if strings.Contains(r, "Is it?") && strings.Count(r, "◆") != 2 {
+			t.Errorf("row %d: no ◆ either side: %q", i, r)
+		}
+	}
+	rs = drawRows(t, "flowchart TD\n  A[判斷開始] --> B{是否存在？}\n  B -->|是| C[讀檔]\n", 80)
+	if !has(rs, "◆ 是否存在？  ◆") || !has(rs, "╭─────────────╮") {
+		t.Errorf("wide words:\n%s", strings.Join(rs, "\n"))
+	}
+	rs = drawRows(t, "flowchart LR\n  A{{Hexagon}} --> B\n", 80)
+	if has(rs, "◆") {
+		t.Errorf("a hexagon is not a decision:\n%s", strings.Join(rs, "\n"))
+	}
+}
+
+// TestAsDecisions: only a flowchart's decisions are written as boxes, not a
+// hexagon, words in quotes, a decision with a class of its own, nor any
+// other diagram's braces.
+func TestAsDecisions(t *testing.T) {
+	for _, c := range []struct{ src, want string }{
+		{"flowchart TD\n  A --> B{Is it?}", "flowchart TD\n  A --> B[\"Is it?\"]:::" + decisionClass},
+		{"graph LR\n  B{\"a [b]\"} -- x --> 判斷{是否？}", "graph LR\n  B[\"a [b]\"]:::" + decisionClass + " -- x --> 判斷[\"是否？\"]:::" + decisionClass},
+		{"---\ntitle: T\n---\n%% c\nflowchart TD\n  A{x}", "---\ntitle: T\n---\n%% c\nflowchart TD\n  A[\"x\"]:::" + decisionClass},
+		{"flowchart TD\n  A{{hex}} --> B[\"set {k}\"]", "flowchart TD\n  A{{hex}} --> B[\"set {k}\"]"},
+		{"flowchart TD\n  A{x}:::mine\n  classDef mine fill:#f00", "flowchart TD\n  A{x}:::mine\n  classDef mine fill:#f00"},
+		{"classDiagram\n  class A{\n    +int x\n  }", "classDiagram\n  class A{\n    +int x\n  }"},
+		{"stateDiagram-v2\n  state S{\n  }", "stateDiagram-v2\n  state S{\n  }"},
+	} {
+		if got := asDecisions(c.src); got != c.want {
+			t.Errorf("%q:\n got %q\nwant %q", c.src, got, c.want)
+		}
+	}
+}
+
+// TestDecisionErrorAsWritten: a diagram that cannot be drawn says so in the
+// words the user wrote, its diamonds as they are.
+func TestDecisionErrorAsWritten(t *testing.T) {
+	_, err := Draw("flowchart LR\n  A{Is it?} --> B[[[\n", 80)
+	if err == nil || strings.Contains(err.Error(), decisionClass) {
+		t.Errorf("err %v", err)
 	}
 }
 

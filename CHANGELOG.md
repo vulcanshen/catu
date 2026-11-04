@@ -15,8 +15,9 @@ Each release names the version of terminu design (tdp) it follows.
   in their language's colours, quotes, tables as grids, links and images with their icons; its source in the `SOURCE`
   tab
 - Mermaid diagrams drawn in the terminal, laid out by Pele 1.13.0 to fit the panel: a `mermaid` block in Markdown, and a
-  `.mmd` or `.mermaid` file with its `DIAGRAM` and `SOURCE` tabs. One that cannot be drawn shows its source with the
-  reason under it, and a warning in the App Log
+  `.mmd` or `.mermaid` file with its `DIAGRAM` and `SOURCE` tabs. A flowchart's decision is a box as tall as the others
+  with a ◆ on either side, not a diamond. One that cannot be drawn shows its source with the reason under it, and a
+  warning in the App Log
 - A directory or an archive as a tree, a PDF's text, an image as a data URI, a binary in hex
 - `j|k`, `u|d`, `gg|G` scroll; `v` selects with vim's moves and `y` copies; `/` finds text and `n|N` go through it; `o`
   opens another file

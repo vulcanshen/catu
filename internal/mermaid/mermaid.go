@@ -120,7 +120,13 @@ func Draw(src string, w int) ([][]text.Char, error) {
 	if ok {
 		return r.rows, r.err
 	}
-	svg, err := SVG(src, float64(w)*cellW)
+	laid := asDecisions(src)
+	svg, err := SVG(laid, float64(w)*cellW)
+	if err != nil && laid != src {
+		// As written: the error in the user's own words, or the diagram
+		// with its diamonds when only the hexagons failed.
+		svg, err = SVG(src, float64(w)*cellW)
+	}
 	if err == nil {
 		r.rows, r.err = drawSVG(svg)
 	} else {
