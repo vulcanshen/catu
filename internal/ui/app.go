@@ -1,9 +1,11 @@
-// Package ui is catu's screen: one panel showing a file, the statusbar over
-// it, the footer under it.
+// Package ui is catu's screen: one panel showing a file (and a FILES panel
+// beside it with two or more), the statusbar over it, the footer under it;
+// and what catu prints instead when it opens no screen.
 package ui
 
 import (
 	_ "embed"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,17 +33,52 @@ type viewer struct {
 	// warned are the diagrams' errors logged for what is shown: a diagram
 	// is drawn again at every width, its error logged once.
 	warned map[string]bool
+	// files, with two or more paths, lists them in a panel of its own
+	// beside the viewer (files.go); nil with one.
+	files *fileList
 }
 
 // Open makes catu showing p, a file or a directory; the error is reading p
 // (it is not there, it may not be read), before anything is drawn.
 func Open(p string) (*terminu.App, error) {
+	a, err := OpenAll([]string{p})
+	var oe *OpenError
+	if errors.As(err, &oe) {
+		return nil, oe.Err
+	}
+	return a, err
+}
+
+// OpenError is a path OpenAll could not read, as it was given.
+type OpenError struct {
+	Path string
+	Err  error
+}
+
+func (e *OpenError) Error() string { return e.Path + ": " + e.Err.Error() }
+func (e *OpenError) Unwrap() error { return e.Err }
+
+// OpenAll makes catu showing paths: one in its panel; two or more listed in a
+// FILES panel beside it, which shows the one under the list's cursor
+// (task 16). The error is the first path it cannot read, before anything is
+// drawn.
+func OpenAll(paths []string) (*terminu.App, error) {
 	cfg, cfgPath, cfgErr := readConfig()
 	v := &viewer{app: terminu.New("catu"), body: &reader{}, cfg: cfg}
-	s, err := load(p, cfg, v.diagramError)
-	if err != nil {
-		return nil, err
+	var all []*shown
+	var given []string
+	seen := map[string]bool{}
+	for _, p := range paths {
+		s, err := load(p, cfg, v.diagramError)
+		if err != nil {
+			return nil, &OpenError{p, err}
+		}
+		if !seen[s.path] { // named twice: once
+			seen[s.path] = true
+			all, given = append(all, s), append(given, p)
+		}
 	}
+	paths = given
 	a := v.app
 	// One panel: 80×24 terminals and a half of a tmux window are enough (tdp L1).
 	a.MinWidth, a.MinHeight = 40, 12
@@ -49,27 +86,47 @@ func Open(p string) (*terminu.App, error) {
 	a.Status = v.status
 	a.OnMsg = v.onMsg
 	v.panel = &terminu.Panel{Body: v.body, Actions: v.actions(), OnTab: v.onTab}
-	a.AddScreen(&terminu.Screen{Name: "View", Panels: []*terminu.Panel{v.panel}})
-	colour := v.show(s)
+	screen := &terminu.Screen{Name: "View", Panels: []*terminu.Panel{v.panel}}
+	if len(all) > 1 {
+		v.listFiles(screen, paths, all)
+	}
+	a.AddScreen(screen)
+	colour := v.show(all[0])
+	var err error
 	if a.Splash, err = terminu.NewSplash(icon, "catu", version.Display(), intro); err != nil {
 		return nil, err
 	}
 	a.Start = func() tea.Cmd {
-		v.opened(s)
+		for _, s := range all {
+			v.opened(s)
+		}
 		if cfgErr != nil {
 			// Settings that cannot be read: moved aside, or catu leaves (tdp E3).
 			return tea.Batch(colour, a.MoveAside(cfgPath, cfgErr, func() tea.Cmd {
 				v.cfg = defaults()
 				a.InputTabWidth, a.HideSecretsInPreview = v.cfg.TabWidth, v.cfg.HideSecrets
-				if again, err := load(v.cur.path, v.cfg, v.diagramError); err == nil {
-					return v.show(again)
-				}
-				return nil
+				return v.reload()
 			}))
 		}
 		return colour
 	}
 	return a, nil
+}
+
+// reload reads again what is shown, and every file listed, with the settings
+// as they are now.
+func (v *viewer) reload() tea.Cmd {
+	if v.files != nil {
+		v.files.reload()
+	}
+	again, err := load(v.cur.path, v.cfg, v.diagramError)
+	if err != nil {
+		return nil
+	}
+	if v.files != nil {
+		v.files.loaded[again.path] = again
+	}
+	return v.show(again)
 }
 
 // opened logs that s was opened, and why its content could not be made out
@@ -116,11 +173,14 @@ type coloured struct {
 // they are, nothing moving (tdp K3: the background moves nothing).
 func (v *viewer) onMsg(msg tea.Msg) tea.Cmd {
 	c, ok := msg.(coloured)
-	if !ok || c.s != v.cur {
-		return nil // what was shown when it started is not any more
+	if !ok {
+		return nil
 	}
-	vw := &v.cur.views[c.view]
+	vw := &c.s.views[c.view]
 	vw.lines, vw.colour = c.lines, nil
+	if c.s != v.cur {
+		return nil // kept for when it is shown again (a file listed, task 16)
+	}
 	if v.panel.Tab == c.view && vw.layout == nil {
 		v.body.recolour(c.lines)
 	}

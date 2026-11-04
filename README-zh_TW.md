@@ -97,9 +97,9 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/uninstall.sh |
 ## 使用方式
 
 ```
-catu [路徑]           看一個檔案或目錄（沒給就是目前的目錄）
+catu [路徑...]        看一個檔案或目錄（沒給就是目前的目錄）；兩個以上時，旁邊的 FILES panel 列出全部
 指令 | catu [-l 格式]  看從管線來的內容（也可以寫 catu -）
-catu -p [路徑]        不開畫面，帶顏色印出來就結束（--print）
+catu -p [路徑...]     不開畫面，帶顏色印出來就結束（--print）
 catu version          印出版本（-v、--version）
 catu help             印出命令列的用法（-h、--help）
 ```

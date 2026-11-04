@@ -11,6 +11,8 @@ Each release names the version of terminu design (tdp) it follows.
   quits
 - What comes down a pipe, as `git log | catu` or `catu -`: shown, or printed; `-l md`, `-l mermaid`, `-l go` and so on
   name its format
+- `catu a.go b.md …`: the files listed in a FILES panel, the one under its cursor shown beside it; printed, one after
+  another as `cat a b` does
 - A text file in the colours of its language, as the file preview colours it, bold and italic included, with line
   numbers; long lines fold onto the rows under them. What chroma leaves uncoloured is filled as the family fills it: a
   TOML file's tables and keys, a YAML value without quotes, and more. A name several formats share is told by its

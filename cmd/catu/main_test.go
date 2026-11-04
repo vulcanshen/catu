@@ -31,7 +31,7 @@ func TestVersionAndHelp(t *testing.T) {
 		}
 	}
 	for _, a := range []string{"help", "-h", "--help"} {
-		if code, out, _ := capture(t, a); code != 0 || !strings.Contains(out, "catu [path]") {
+		if code, out, _ := capture(t, a); code != 0 || !strings.Contains(out, "catu [path...]") {
 			t.Errorf("catu %s: %d %q", a, code, out)
 		}
 	}
@@ -153,10 +153,31 @@ func TestReadFromAPipe(t *testing.T) {
 	}
 }
 
-func TestBadArguments(t *testing.T) {
-	if code, _, errs := capture(t, "a", "b"); code != 2 || !strings.Contains(errs, "one path at a time") {
-		t.Errorf("two paths: %d %q", code, errs)
+// TestPrintSeveral: two or more paths printed one after another, as cat a b
+// does (task 16): what cannot be read is said on stderr and the rest are
+// printed, exit code 1; - among them is what comes down the pipe.
+func TestPrintSeveral(t *testing.T) {
+	t.Setenv("CATU__CONFIG", t.TempDir())
+	dir := t.TempDir()
+	a, b := filepath.Join(dir, "a.txt"), filepath.Join(dir, "b.txt")
+	os.WriteFile(a, []byte("one\n"), 0o644)
+	os.WriteFile(b, []byte("two\n"), 0o644)
+	if code, out, _ := capture(t, a, b); code != 0 || out != "one\ntwo\n" {
+		t.Errorf("two files: %d %q", code, out)
 	}
+	nope := filepath.Join(dir, "nope")
+	if code, out, errs := capture(t, a, nope, b); code != 1 || out != "one\ntwo\n" || errs != "catu: "+nope+": no such file or directory\n" {
+		t.Errorf("one not there: %d %q %q", code, out, errs)
+	}
+	if code, out, _ := captureIn(t, "piped\n", a, "-", b); code != 0 || out != "one\npiped\ntwo\n" {
+		t.Errorf("- among them: %d %q", code, out)
+	}
+	if code, _, errs := captureIn(t, "x", "-", "-"); code != 2 || !strings.Contains(errs, "once only") {
+		t.Errorf("- twice: %d %q", code, errs)
+	}
+}
+
+func TestBadArguments(t *testing.T) {
 	if code, _, errs := capture(t, "--watch"); code != 2 || !strings.Contains(errs, `unknown flag "--watch"`) {
 		t.Errorf("a flag: %d %q", code, errs)
 	}

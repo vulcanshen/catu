@@ -100,9 +100,10 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/catu/main/uninstall.sh |
 ## Usage
 
 ```
-catu [path]           look at a file or a directory (the current directory when left out)
+catu [path...]        look at a file or a directory (the current directory when left out); two or
+                      more are listed in a FILES panel beside the one shown
 cmd | catu [-l fmt]   look at what comes down a pipe (also catu -)
-catu -p [path]        print it instead, in colour, and quit (--print)
+catu -p [path...]     print them instead, in colour, and quit (--print)
 catu version          print the version (-v, --version)
 catu help             print the command-line usage (-h, --help)
 ```

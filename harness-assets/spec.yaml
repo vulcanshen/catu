@@ -24,12 +24,12 @@ tasks:
       - "空的檔案、目錄、壓縮檔照 tdp screen.8 的空狀態：Empty file／Empty directory／Empty archive，接一句點名 [o] 的提示"
       - "檔案打不開時 panel 不會有讀不到的狀態：啟動時讀不到在命令列就結束（task 2），o 選到讀不到的檔留在 file-picker（task 7）；檔案打得開、內容讀不出來（壞掉的壓縮檔、PDF）照 tdp panel.15 在 panel 中間寫（task 4）"
   - id: 2
-    spec: 8
+    spec: 13
     request: 用 catu <路徑> 打開一個檔案或目錄；沒給路徑就看目前的目錄；有 catu version 與 catu help
     tdp: [tdp E1, tdp P5, tdp note.7]
     remark:
       - "路徑不存在、讀不到時像 cat 一樣在 stderr 印 catu: <路徑>: <原因>，結束碼 1，不開畫面（tdp E1：其他指令 app 可以自行決定；tdp P5 功能邏輯）"
-      - "只收一個路徑；多給、或不認得的旗標，印用法到 stderr，結束碼 2；檔名剛好叫 version、help 時寫 ./version（help 裡寫明）"
+      - "不認得的旗標印用法到 stderr，結束碼 2（兩個以上的路徑見 task 16，-p 見 task 14，-l 見 task 15）；檔名剛好叫 version、help 時寫 ./version（help 裡寫明）"
       - "啟動時打開的那個，App Log 記一筆 Info「Opened <路徑>」（tdp note.7：只看不改的動作也記）"
   - id: 3
     spec: 9

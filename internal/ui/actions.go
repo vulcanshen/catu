@@ -64,7 +64,12 @@ func (v *viewer) open() tea.Cmd {
 			if next == nil {
 				return nil
 			}
-			colour := v.show(next)
+			var colour tea.Cmd
+			if v.files != nil {
+				colour = v.files.add(next) // listed, the cursor on it (task 16)
+			} else {
+				colour = v.show(next)
+			}
 			v.opened(next)
 			return tea.Batch(colour, v.app.CloseAll())
 		},

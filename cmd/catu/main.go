@@ -20,9 +20,10 @@ import (
 const usage = `catu: a file viewer for the terminal
 
 Usage:
-  catu [path]           look at a file or a directory (the current directory when left out)
+  catu [path...]        look at a file or a directory (the current directory when left out);
+                        two or more are listed beside the one shown
   cmd | catu [-l fmt]   look at what comes down a pipe (also catu -)
-  catu -p [path]        print it instead, in colour, and quit (--print)
+  catu -p [path...]     print them instead, in colour, and quit (--print)
   catu version          print the version (-v, --version)
   catu help             print this help (-h, --help)
 
@@ -55,6 +56,7 @@ func run(args []string) int {
 		}
 	}
 	var paths []string
+	var cleanups []func() // the pipe's file, removed when catu ends
 	printing, lang := false, ""
 	for i := 0; i < len(args); i++ {
 		switch a := args[i]; {
@@ -83,55 +85,92 @@ func run(args []string) int {
 			paths = []string{"-"}
 		}
 	}
-	if len(paths) > 1 {
-		fmt.Fprint(os.Stderr, "catu: one path at a time\n\n"+usage)
-		return 2
-	}
-	if lang != "" {
-		if paths[0] != "-" {
-			fmt.Fprintf(os.Stderr, "catu: --lang is for what comes down a pipe\n\n%s", usage)
-			return 2
+	pipes := 0
+	for _, p := range paths {
+		if p == "-" {
+			pipes++
 		}
+	}
+	switch {
+	case pipes > 1:
+		fmt.Fprintf(os.Stderr, "catu: - (what comes down a pipe) once only\n\n%s", usage)
+		return 2
+	case lang != "" && pipes == 0:
+		fmt.Fprintf(os.Stderr, "catu: --lang is for what comes down a pipe\n\n%s", usage)
+		return 2
+	case lang != "":
 		if err := ui.CheckFormat(lang); err != nil {
 			fmt.Fprintf(os.Stderr, "catu: %s\n", err)
 			return 2
 		}
 	}
 	toTerminal := term.IsTerminal(os.Stdout.Fd())
-	path, shown := paths[0], paths[0]
-	if path == "-" {
-		shown = "standard input"
-		if !toTerminal && !ui.IsDocument(lang) {
-			// As cat does: every byte, as it comes, however much.
-			if _, err := io.Copy(os.Stdout, os.Stdin); err != nil {
-				fmt.Fprintf(os.Stderr, "catu: %s: %s\n", shown, reason(err))
-				return 1
-			}
-			return 0
-		}
+	failed := false
+	fail := func(name string, err error) {
+		fmt.Fprintf(os.Stderr, "catu: %s: %s\n", name, reason(err))
+		failed = true
+	}
+	// spool puts what comes down the pipe in a file catu reads as any other;
+	// "" when it could not.
+	spool := func() string {
 		spooled, done, err := ui.Spool(os.Stdin, lang)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "catu: %s: %s\n", shown, reason(err))
-			return 1
+			fail("standard input", err)
+			return ""
 		}
-		defer done()
-		path = spooled
+		cleanups = append(cleanups, done)
+		return spooled
 	}
+	defer func() {
+		for _, done := range cleanups {
+			done()
+		}
+	}()
 	if printing || !toTerminal {
-		// Printed (tasks 13, 14): in colour only on a terminal.
-		failed := false
-		ui.Print([]string{path}, os.Stdout, toTerminal, width(toTerminal), func(_ string, err error) {
-			fmt.Fprintf(os.Stderr, "catu: %s: %s\n", shown, reason(err))
-			failed = true
-		})
+		// Printed (tasks 13, 14), one after another as cat does (task 16): in
+		// colour only on a terminal.
+		for _, p := range paths {
+			name := p
+			if p == "-" {
+				name = "standard input"
+				if !toTerminal && !ui.IsDocument(lang) {
+					// As cat does: every byte, as it comes, however much.
+					if _, err := io.Copy(os.Stdout, os.Stdin); err != nil {
+						fail(name, err)
+					}
+					continue
+				}
+				if p = spool(); p == "" {
+					continue
+				}
+			}
+			ui.Print([]string{p}, os.Stdout, toTerminal, width(toTerminal), func(_ string, err error) { fail(name, err) })
+		}
 		if failed {
 			return 1
 		}
 		return 0
 	}
-	app, err := ui.Open(path)
+	spooled := ""
+	for i, p := range paths {
+		if p == "-" {
+			if spooled = spool(); spooled == "" {
+				return 1
+			}
+			paths[i] = spooled
+		}
+	}
+	app, err := ui.OpenAll(paths)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "catu: %s: %s\n", shown, reason(err))
+		var oe *ui.OpenError
+		name := ""
+		if errors.As(err, &oe) {
+			name = oe.Path
+			if name == spooled {
+				name = "standard input"
+			}
+		}
+		fail(name, err)
 		return 1
 	}
 	if err := app.Run(); err != nil {

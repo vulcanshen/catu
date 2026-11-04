@@ -21,12 +21,12 @@ tasks:
       再改成最低尺寸 40×12、比它小（39×12、80×5、1×1，只畫三列，tdp screen.7），最後改回 80×24：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
     test: [TestScreenShowsAFile, TestStatusbarModeAndDirectorySize, TestQuitAtOnce, TestEmptyFile, TestEmptyDirectory, TestEmptyArchive, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
-    spec: 8
+    spec: 13
     implementation: |
       cmd/catu/main.go：
-      catu <路徑>：打開那個檔案或目錄；沒給路徑是 .（目前的目錄）
+      catu <路徑>：打開那個檔案或目錄；沒給路徑是 .（目前的目錄）；沒給路徑而 stdin 不是終端機時是 -（task 15）；兩個以上照 task 16
       catu version、-v、--version：印版本（internal/version.Display）；catu help、-h、--help：印用法，寫明檔名叫 version、help 時打 ./version
-      兩個以上的參數：stderr 印 catu: one path at a time 加用法，結束碼 2；- 開頭的不認得的旗標：stderr 印 catu: unknown flag "<旗標>" 加用法，結束碼 2
+      - 開頭的不認得的旗標（-p、--print、-l、--lang 以外）：stderr 印 catu: unknown flag "<旗標>" 加用法，結束碼 2
       路徑 stat、讀不到（ui.Open 回錯誤）：不開畫面，stderr 印 catu: <路徑>: <原因>（no such file or directory、permission denied，其他照系統的字），結束碼 1
       啟動時（tgo App.Start）App Log 記 Info「Opened <路徑，家目錄寫成 ~>」
     test: [TestVersionAndHelp, TestPathNotThere, TestPathNotReadable, TestBadArguments, TestOpenLogsWhatItOpened, TestOpenErrors]
@@ -233,3 +233,20 @@ tasks:
       印的時候照 task 13、14；讀不了時 stderr 寫 catu: standard input: <原因>
       catu help 有 cmd | catu [-l fmt] 一列與 -l 的說明
     test: [TestReadFromAPipe, TestStandardInput]
+  - id: 16
+    spec: 13
+    implementation: |
+      兩個以上的路徑（ui.OpenAll）：開畫面前照順序每個都讀，同一個檔（絕對路徑一樣）只留第一次；讀不到的：不開畫面，stderr 印 catu: <照給的路徑>: <原因>，結束碼 1
+      單畫面兩個 panel：[1] FILES（tgo List，一欄、沒有表頭、太長從前面截），[2] 照 task 1 的 viewer；tgo Screen.Layout 左右並排，
+      FILES 寬是最長的名字加四格，最多畫面寬的三分之一；Screen.NarrowBelow 60：窄於 60 欄只畫有 focus 的那個、佔滿寬度（tdp screen.5）
+      FILES 的列：照給的路徑寫（絕對路徑的家目錄寫成 ~，stdin 寫 standard input），照給的順序
+      List.OnMove：cursor 到哪一列，[2] 就換成那個檔（label、tab、位置列、statusbar 跟著換，回到最上面）；focus 留在 [1]（tdp panel.13）
+      [1] 的 Enter（hint Enter:view，tgo Action.ToDetails）把 focus 送到 [2]；Tab、1、2 換 panel（tgo 做），footer 是 Space:menu ?:help !:log Tab|1–2:panels q:quit
+      一開始 focus 在 [1]，[2] 是第一個；在背景上色的大檔：上完色記在那個檔上，換回來不用再上一次
+      App Log：啟動時每個檔各記一筆 Info「Opened <路徑>」；在清單上移動不記（移動，tdp note.7）
+      o（在 [2]）：選的檔不在清單裡就加到最後，在的話不重複，cursor 移到它、[2] 換成它；記 Opened
+      設定檔讀不了、MOVE ASIDE 之後用預設值重讀時，清單上的每個檔都重讀
+      印的時候（task 13、14）：一個接一個照 task 13、14 印，跟 cat a b 一樣不加標頭；讀不到的在 stderr 印 catu: <路徑>: <原因>，其他照印，結束碼 1；
+      - 可以在其中（照 task 15），同一次只能出現一次，多了印用法，結束碼 2
+      catu help 的第一列是 catu [path...]，寫明兩個以上會列在旁邊；-p 一列是 catu -p [path...]
+    test: [TestSeveralFiles, TestSeveralFilesNarrow, TestSeveralFilesOpen, TestSeveralFilesUnreadable, TestSeveralFilesFirstLaunch, TestPrintSeveral]
