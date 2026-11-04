@@ -2,7 +2,7 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
-## Unreleased
+## v1.0.0-beta.1 — tdp v1.2.0
 
 - First version: `catu <path>` shows a file or a directory in one panel, the statusbar over it with its size, when it
   was modified and its mode; `catu version` and `catu help`
