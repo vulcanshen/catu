@@ -63,13 +63,20 @@ func (v *viewer) lost(s *shown, why string) tea.Cmd {
 
 // refresh shows again, read again, what is shown: on the tab it was on,
 // where the view was, the search found again (tdp note.3), in the Visual
-// mode it was in, the cursor and where the selection started kept where
-// the text still reaches; logged as the app's own doing (tdp note.7).
+// mode it was in, the cursor kept where the text still reaches; logged as
+// the app's own doing (tdp note.7). A selection is let go, back to the
+// Visual mode's own layer (the user, 2026-11-16): the text under it may be
+// other text now.
 func (v *viewer) refresh(again *shown) tea.Cmd {
 	b := v.body
 	tab, top, sub, end := v.panel.Tab, b.top, b.sub, b.atEnd()
 	q, cur := b.query, b.current
 	vis := b.visualState()
+	if vis != nil && vis.selecting {
+		vis.selecting = false
+		v.panel.LeaveMode() // its Space menu and ? with it: they were the selection's
+		v.panel.EnterMode(v.inVisual)
+	}
 	warned := v.warned // a diagram's error is logged once for the file
 	cmd := v.display(again)
 	v.warned = warned

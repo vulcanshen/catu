@@ -92,30 +92,34 @@ func TestWatchFindsAgain(t *testing.T) {
 
 // TestWatchInVisual: the Visual mode only selects and copies, so the file
 // is read again in it too (the user, 2026-11-16): still in the mode, the
-// cursor and where the selection started where they were, and what is
-// copied is the text as it is now; where the text no longer reaches, they
-// go to its last character. No toast: the screen says it (the user) (task
-// 17).
+// cursor where it was, or at the text's last character where the text no
+// longer reaches; a selection let go, the text under it changed; no toast
+// (task 17).
 func TestWatchInVisual(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "old text\nsecond line\n"})
 	p := filepath.Join(dir, "a.txt")
 	d := start(t, p, 60, 20)
-	d.Press("v", "v", "e") // select "old"
+	d.Press("v", "e") // the cursor on the d of "old"
 	change(t, p, "new text\nsecond line\n")
 	look(d)
-	want(t, d, "new text", "select", "y:copy")
+	want(t, d, "new text", "Visual", "v:select")
 	wantNot(t, d, "INFO")
-	d.Press("y")
+	d.Press("v", "0", "y") // selected from where the cursor was
 	if got := d.Clipboard(); len(got) != 1 || got[0] != "new" {
 		t.Errorf("copied %q, want the text as it is now", got)
 	}
-	d.Press("v", "j", "$", "v") // the cursor at the end of the second line
+	d.Press("v", "j", "$", "v") // selecting from the end of the second line
 	change(t, p, "a\n")
 	look(d)
-	want(t, d, "select")
-	d.Press("y")
+	want(t, d, "Visual", "v:select")
+	wantNot(t, d, "Visual>select")
+	d.Press("y") // nothing selected: nothing to copy
+	if got := d.Clipboard(); len(got) != 1 {
+		t.Errorf("copied %q, want the selection let go", got)
+	}
+	d.Press("v", "y")
 	if got := d.Clipboard(); len(got) != 2 || got[1] != "a" {
-		t.Errorf("copied %q, want the last character there is", got)
+		t.Errorf("copied %q, want the cursor at the last character there is", got)
 	}
 }
 
