@@ -120,7 +120,7 @@ catu help             印出命令列的用法（-h、--help）
 | `?` | 這裡每一個能按的鍵 |
 | `!` | App Log：做過的事，最新的在最下面；在這裡是打開過的檔案、畫不出來的圖 |
 | `j\|k`、`u\|d`、`gg\|G` | 捲一列、半頁、到最上面或最下面 |
-| `h\|l` | 切 tab：Markdown 的 `DOCUMENT` 與 `SOURCE`、mermaid 檔的 `DIAGRAM` 與 `SOURCE`、JSON 的 `TEXT` 與 `FORMATTED` |
+| `h\|l` | 切 tab：Markdown 的 `DOCUMENT` 與 `SOURCE`、mermaid 檔的 `DIAGRAM` 與 `SOURCE`、JSON 的 `TEXT` 與 `FORMATTED`，以及每個檔案的 `META` |
 | `v`、`y` | `v` 再移到要開始的地方，再按 `v` 移動選取；`y` 複製 |
 | `Esc` | 一次關掉最上面的一個 popup，或清掉找到的字；永遠不會離開 catu |
 | `q` | 離開 |
@@ -148,6 +148,9 @@ catu 自己的：
 | PDF | `PDF` | 頁數，接著前 20 頁的文字 |
 | 圖片 | `IMAGE` | data URI |
 | 其他 | `BINARY` | 十六進位，一列 8 bytes |
+
+每個檔案的最後一個 tab 是 `META`：種類、大小、修改時間、權限（`ls -l` 的 `-rw-r--r--`）；連結寫它指向的檔案。管線送來的
+內容只有大小。
 
 ## 設定與資料
 

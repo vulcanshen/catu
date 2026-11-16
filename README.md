@@ -126,7 +126,7 @@ The keys every family app shares:
 | `?` | Every key that works here |
 | `!` | The App Log: what was done, newest last; here, the files opened and the diagrams that could not be drawn |
 | `j\|k`, `u\|d`, `gg\|G` | Scroll a row, half a page, to the top or the bottom |
-| `h\|l` | Switch tabs: a Markdown file's `DOCUMENT` and `SOURCE`, a mermaid file's `DIAGRAM` and `SOURCE`, a JSON file's `TEXT` and `FORMATTED` |
+| `h\|l` | Switch tabs: a Markdown file's `DOCUMENT` and `SOURCE`, a mermaid file's `DIAGRAM` and `SOURCE`, a JSON file's `TEXT` and `FORMATTED`, and every file's `META` |
 | `v`, `y` | `v` and move to where to start, `v` again and move to select; `y` copies it |
 | `Esc` | Close the popup on top, one at a time, or clear what a search found; it never leaves catu |
 | `q` | Quit |
@@ -155,6 +155,9 @@ and `gg|G` as when scrolling.
 | A PDF | `PDF` | The page count, then the text of the first 20 pages |
 | An image | `IMAGE` | A data URI |
 | Anything else | `BINARY` | Hex, eight bytes a row |
+
+Every file has a last tab, `META`: its type, size, when it was modified and its mode (`ls -l`'s `-rw-r--r--`); for a
+link, the file it points to. What came down a pipe has a size only.
 
 ## Settings and data
 

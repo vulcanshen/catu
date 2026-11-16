@@ -108,8 +108,8 @@ func TestMermaidFileCannotBeDrawn(t *testing.T) {
 	dir := files(t, map[string]string{"bad.mmd": "flowchart LR\n  A --> B[[[\n"})
 	d := start(t, filepath.Join(dir, "bad.mmd"), 80, 24)
 	want(t, d, "Can't draw this diagram: Parse error on line 2:", "Press [l] to see the source, [!] for the whole error", "!:1 warning")
-	if !strings.HasSuffix(strings.TrimRight(d.Screen()[2], " ┃"), "bad.mmd") {
-		t.Errorf("no location row over the reason: %q", d.Screen()[2])
+	if !strings.HasSuffix(strings.TrimRight(d.Screen()[1], " ┃"), "bad.mmd") {
+		t.Errorf("no location row over the reason: %q", d.Screen()[1])
 	}
 	wantNot(t, d, "B[[[")
 	red := strings.TrimSuffix(terminu.Fg(terminu.Red).Render("Can't draw this diagram"), "\x1b[0m")

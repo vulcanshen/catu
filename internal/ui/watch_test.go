@@ -36,15 +36,18 @@ func TestWatchReadsAgain(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "first words\n"})
 	p := filepath.Join(dir, "a.txt")
 	d := start(t, p, 60, 20)
-	want(t, d, "first words", "Size: 12 B")
+	want(t, d, "first words")
 	look(d)
 	d.Press("!")
 	wantNot(t, d, "Reloaded")
 	d.Press("Esc")
 	change(t, p, "second words, longer\n")
 	look(d)
-	want(t, d, "second words, longer", "Size: 21 B")
+	want(t, d, "second words, longer")
 	wantNot(t, d, "first words")
+	d.Press("l") // its META is the new one's
+	want(t, d, "SIZE      21 B")
+	d.Press("h")
 	d.Press("!")
 	want(t, d, "INFO Reloaded") // then the path, folded
 }
@@ -56,10 +59,10 @@ func TestWatchKeepsThePlace(t *testing.T) {
 	p := filepath.Join(dir, "log.txt")
 	d := start(t, p, 60, 20)
 	d.Press("d", "d")
-	want(t, d, " line 16 ")
+	want(t, d, " line 17 ")
 	change(t, p, lines(100, "line %d")+"line 101\n")
 	look(d)
-	want(t, d, " line 16 ", "of 101")
+	want(t, d, " line 17 ", "of 101")
 	wantNot(t, d, "line 101")
 	d.Press("G")
 	want(t, d, "line 101")
@@ -87,20 +90,31 @@ func TestWatchFindsAgain(t *testing.T) {
 	wantNot(t, d, "/needle")
 }
 
-// TestWatchWaitsInVisual: while the Visual mode is on, what is shown is not
-// read again under the cursor; once it is left, it is (task 17, tdp
-// terminal.6).
-func TestWatchWaitsInVisual(t *testing.T) {
-	dir := files(t, map[string]string{"a.txt": "old text\n"})
+// TestWatchInVisual: the Visual mode only selects and copies, so the file
+// is read again in it too (the user, 2026-11-16): still in the mode, the
+// cursor and where the selection started where they were, and what is
+// copied is the text as it is now; where the text no longer reaches, they
+// go to its last character (task 17).
+func TestWatchInVisual(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": "old text\nsecond line\n"})
 	p := filepath.Join(dir, "a.txt")
 	d := start(t, p, 60, 20)
-	d.Press("v")
-	change(t, p, "new text\n")
+	d.Press("v", "v", "e") // select "old"
+	change(t, p, "new text\nsecond line\n")
 	look(d)
-	want(t, d, "old text")
-	d.Press("Esc")
+	want(t, d, "new text", "select", "y:copy")
+	d.Press("y")
+	if got := d.Clipboard(); len(got) != 1 || got[0] != "new" {
+		t.Errorf("copied %q, want the text as it is now", got)
+	}
+	d.Press("v", "j", "$", "v") // the cursor at the end of the second line
+	change(t, p, "a\n")
 	look(d)
-	want(t, d, "new text")
+	want(t, d, "select")
+	d.Press("y")
+	if got := d.Clipboard(); len(got) != 2 || got[1] != "a" {
+		t.Errorf("copied %q, want the last character there is", got)
+	}
 }
 
 // TestWatchGone: a file gone stays shown as it was, said once in a Warning;

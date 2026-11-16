@@ -85,9 +85,20 @@ func grey(s string) text.Line {
 	return text.Line{Chars: text.Chars(s, text.Style{Fg: terminu.Overlay0})}
 }
 
-// load reads p for showing. An error is one reading it: it does not exist,
-// it may not be read. warn is told when a diagram in it cannot be drawn.
+// load reads p for showing, its last tab META. An error is one reading it:
+// it does not exist, it may not be read. warn is told when a diagram in it
+// cannot be drawn.
 func load(p string, cfg config, warn func(error)) (*shown, error) {
+	s, err := read(p, cfg, warn)
+	if err != nil {
+		return nil, err
+	}
+	s.views = append(s.views, metaView(s))
+	return s, nil
+}
+
+// read is load but for the META tab.
+func read(p string, cfg config, warn func(error)) (*shown, error) {
 	abs, err := filepath.Abs(p)
 	if err != nil {
 		return nil, err

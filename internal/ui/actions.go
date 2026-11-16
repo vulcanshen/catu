@@ -135,26 +135,6 @@ func (v *viewer) visual() tea.Cmd {
 	return nil
 }
 
-// status is the statusbar (tdp screen.4): the size, when it was modified
-// and its mode, as tdp file-picker.4 writes them; each value but the last as
-// wide as it can be (tdp L2).
-func (v *viewer) status(w int) []terminu.Span {
-	info := v.cur.info
-	sz := size(info.Size())
-	if info.IsDir() {
-		sz = items(v.cur.path)
-	}
-	quiet := terminu.Fg(terminu.Overlay0)
-	if v.cur.stdin { // not a file: no time it was modified, no mode (tdp screen.4)
-		return []terminu.Span{{Text: "Size: " + sz, Style: quiet}}
-	}
-	return []terminu.Span{
-		{Text: "Size: " + terminu.Pad(sz, 11) + "  ", Style: quiet},
-		{Text: "Modified: " + info.ModTime().Format("2006-01-02 15:04") + "  ", Style: quiet},
-		{Text: "Mode: " + lsMode(info.Mode()), Style: quiet},
-	}
-}
-
 // items is how many entries a directory has, hidden ones left out, as tdp
 // file-picker.4 writes it: 12 items, 1 item; — when it cannot be read.
 func items(dir string) string {

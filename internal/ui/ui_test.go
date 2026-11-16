@@ -11,6 +11,8 @@ import (
 
 	terminu "github.com/vulcanshen/terminu-go"
 	"github.com/vulcanshen/terminu-go/tdptest"
+
+	"github.com/vulcanshen/catu/internal/text"
 )
 
 // files writes files (name → content) in a new directory and returns it.
@@ -86,9 +88,9 @@ func TestScreenShowsAFile(t *testing.T) {
 	tdptest.EachIconWidth(t, func(t *testing.T) {
 		for _, sz := range [][2]int{{40, 12}, {80, 24}, {120, 40}} {
 			d := start(t, filepath.Join(dir, "main.go"), sz[0], sz[1])
-			want(t, d, "[1] TEXT", "main.go", "Size: 29 B", "Modified: ", "q:quit")
-			if !strings.HasPrefix(d.Screen()[0], "Size: ") {
-				t.Errorf("the statusbar is not the first row: %q", d.Screen()[0])
+			want(t, d, "TEXT", "META", "main.go", "q:quit")
+			if !strings.HasPrefix(d.Screen()[0], "┏") {
+				t.Errorf("the panel is not on the first row, no statusbar over it: %q", d.Screen()[0])
 			}
 			if r := row(d, "package main"); !strings.Contains(r, "  1 package main") {
 				t.Errorf("line 1 is not numbered: %q", r)
@@ -97,12 +99,31 @@ func TestScreenShowsAFile(t *testing.T) {
 	})
 }
 
-func TestStatusbarModeAndDirectorySize(t *testing.T) {
-	dir := files(t, map[string]string{"a.txt": "a", "b.txt": "b", ".hidden": "h"})
+// TestMetaTab: the last tab of every file is its metadata, tdp file-picker.4's
+// four rows, as panel.12 draws one value a row: the label upper case in
+// Blue, two cells after the longest (task 1).
+func TestMetaTab(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": "a", "b.txt": "b", ".hidden": "h", "doc.md": "# T\n"})
 	d := start(t, dir, 80, 24)
-	want(t, d, "Size: 2 items", "Mode: drwx")
+	want(t, d, "DIRECTORY", "META")
+	d.Press("l")
+	want(t, d, "TYPE      directory", "SIZE      3 items", "MODIFIED  2", "MODE      drwx")
 	d = start(t, filepath.Join(dir, "a.txt"), 80, 24)
-	want(t, d, "Size: 1 B", "Mode: -rw-r--r--")
+	d.Press("l")
+	want(t, d, "TYPE      text", "SIZE      1 B", "MODE      -rw-r--r--")
+	for _, row := range d.Styled() {
+		if strings.Contains(row, "TYPE") && !strings.Contains(row, text.Style{Fg: terminu.Blue}.SGR()+"TYPE") {
+			t.Errorf("the label is not Blue: %q", row)
+		}
+	}
+	d = start(t, filepath.Join(dir, "doc.md"), 80, 24)
+	want(t, d, "DOCUMENT", "SOURCE", "META")
+	d.Press("l", "l")
+	want(t, d, "TYPE      text")
+	os.Symlink("a.txt", filepath.Join(dir, "link")) // what it points to, as ls -l writes it
+	d = start(t, filepath.Join(dir, "link"), 80, 24)
+	d.Press("l")
+	want(t, d, "TYPE      link → a.txt", "SIZE      1 B") // the target's size (tdp file-picker.4)
 }
 
 func TestQuitAtOnce(t *testing.T) {
@@ -275,8 +296,8 @@ func TestContentUnreadable(t *testing.T) {
 		d := start(t, filepath.Join(dir, c.file), 80, 24)
 		want(t, d, c.fact, "Press [o] to open another file")
 		wantNot(t, d, "(unreadable)")
-		if !strings.HasSuffix(strings.TrimRight(d.Screen()[2], " ┃"), c.file) {
-			t.Errorf("%s: no location row over the fact (tdp panel.10): %q", c.file, d.Screen()[2])
+		if !strings.HasSuffix(strings.TrimRight(d.Screen()[1], " ┃"), c.file) {
+			t.Errorf("%s: no location row over the fact (tdp panel.10): %q", c.file, d.Screen()[1])
 		}
 		red := strings.TrimSuffix(terminu.Fg(terminu.Red).Render("Can't read this"), "\x1b[0m")
 		if !strings.Contains(strings.Join(d.Styled(), ""), red) {
@@ -365,21 +386,21 @@ func TestHideSecrets(t *testing.T) {
 func TestScrollKeys(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": lines(100, "line %d")})
 	d := start(t, filepath.Join(dir, "a.txt"), 60, 20)
-	want(t, d, "1-15 of 100")
+	want(t, d, "1-16 of 100")
 	d.Press("j")
-	want(t, d, "2-16 of 100")
+	want(t, d, "2-17 of 100")
 	d.Press("d")
-	want(t, d, "9-23 of 100")
+	want(t, d, "10-25 of 100")
 	d.Press("u")
-	want(t, d, "2-16 of 100")
+	want(t, d, "2-17 of 100")
 	d.Press("G")
-	want(t, d, "86-100 of 100", "line 100")
+	want(t, d, "85-100 of 100", "line 100")
 	d.Press("k")
-	want(t, d, "85-99 of 100")
+	want(t, d, "84-99 of 100")
 	d.Press("g", "g")
-	want(t, d, "1-15 of 100")
+	want(t, d, "1-16 of 100")
 	d.Press("Ctrl-D")
-	want(t, d, "1-15 of 100") // not an alias (tdp K12)
+	want(t, d, "1-16 of 100") // not an alias (tdp K12)
 }
 
 func TestVisualSelectsAndCopies(t *testing.T) {

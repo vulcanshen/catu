@@ -46,8 +46,11 @@ func TestStandardInput(t *testing.T) {
 	}
 	defer done()
 	d := start(t, p, 60, 20)
-	want(t, d, "standard input", "DOCUMENT", "SOURCE", " Title ", "Size: 15 B")
-	wantNot(t, d, "Modified:", "Mode:", "stdin.md")
+	want(t, d, "standard input", "DOCUMENT", "SOURCE", "META", " Title ")
+	wantNot(t, d, "stdin.md")
+	d.Press("l", "l") // not a file: no time it was modified, no mode
+	want(t, d, "SIZE      15 B", "MODIFIED  —", "MODE      —")
+	d.Press("h", "h")
 	d.Press("!")
 	want(t, d, "INFO Opened standard input")
 	d.Press("Esc", "o")

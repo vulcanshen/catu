@@ -24,15 +24,13 @@ func (v *viewer) watch() tea.Cmd {
 	return v.app.Tick(watchEvery, func(time.Time) tea.Msg { return watchTick{} })
 }
 
-// check looks at the file shown: read again when it changed. While the
-// Visual mode is on, it waits, so what is selected is not moved under the
-// cursor, as a terminal's history holds its output still (tdp
-// terminal.6); once the mode is left, the next look reads it. A file gone,
-// or that cannot be read now, stays shown as it was, said once in a
+// check looks at the file shown: read again when it changed, the Visual
+// mode too, which only selects and copies (the user, 2026-11-16). A file
+// gone, or that cannot be read now, stays shown as it was, said once in a
 // Warning (tdp toast.2, note.7); when it is back, it is read again.
 func (v *viewer) check() tea.Cmd {
 	s := v.cur
-	if s == nil || s.stdin || v.body.visual {
+	if s == nil || s.stdin {
 		return nil
 	}
 	info, err := os.Stat(s.path)
@@ -64,20 +62,23 @@ func (v *viewer) lost(s *shown, why string) tea.Cmd {
 }
 
 // refresh shows again, read again, what is shown: on the tab it was on,
-// where the view was, the search found again (tdp note.3), logged as the
-// app's own doing (tdp note.7).
+// where the view was, the search found again (tdp note.3), in the Visual
+// mode it was in, the cursor and where the selection started kept where
+// the text still reaches; logged as the app's own doing (tdp note.7).
 func (v *viewer) refresh(again *shown) tea.Cmd {
 	b := v.body
 	tab, top, sub, end := v.panel.Tab, b.top, b.sub, b.atEnd()
 	q, cur := b.query, b.current
+	vis := b.visualState()
 	warned := v.warned // a diagram's error is logged once for the file
-	cmd := v.show(again)
+	cmd := v.display(again)
 	v.warned = warned
 	if tab > 0 && tab < len(again.views) {
 		v.panel.Tab = tab
 		v.showView(tab)
 	}
 	b.keep(top, sub, end, q, cur)
+	b.keepVisual(vis)
 	if q != "" {
 		v.panel.OnEsc = v.clearHits
 	}

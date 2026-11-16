@@ -53,6 +53,7 @@ type reader struct {
 	toEnd  bool
 	again  string
 	againN int
+	vis    *visualState // the Visual mode to put back, nil for none
 
 	visual, selecting bool
 	line, col         int // the cursor
@@ -172,6 +173,10 @@ func (r *reader) Draw(w, h int, focused bool) []string {
 	if r.again != "" {
 		r.collect(r.again, r.againN)
 		r.again = ""
+	}
+	if r.vis != nil {
+		r.restoreVisual(*r.vis)
+		r.vis = nil
 	}
 	if len(r.lines) == 0 {
 		r.scroll = ""
@@ -575,6 +580,41 @@ func (r *reader) startVisual() {
 func (r *reader) startSelect() {
 	r.selecting = true
 	r.fromL, r.fromC = r.line, r.col
+}
+
+// visualState is the Visual mode as it is: the cursor, and where the
+// selection started when there is one.
+type visualState struct {
+	selecting               bool
+	line, col, fromL, fromC int
+}
+
+// visualState is the Visual mode's, nil out of it.
+func (r *reader) visualState() *visualState {
+	if !r.visual {
+		return nil
+	}
+	return &visualState{r.selecting, r.line, r.col, r.fromL, r.fromC}
+}
+
+// keepVisual puts the Visual mode back, s, at the next Draw, once what is
+// laid out at the panel's width is.
+func (r *reader) keepVisual(s *visualState) { r.vis = s }
+
+// restoreVisual is the Visual mode s on the text as it is now: the cursor
+// and where the selection started where they were, the text still reaching
+// there, its last character otherwise.
+func (r *reader) restoreVisual(s visualState) {
+	clamp := func(line, col int) (int, int) {
+		line = min(max(line, 0), max(len(r.lines)-1, 0))
+		if len(r.lines) == 0 {
+			return 0, 0
+		}
+		return line, min(max(col, 0), max(len(r.lines[line].Chars)-1, 0))
+	}
+	r.visual, r.selecting = true, s.selecting
+	r.line, r.col = clamp(s.line, s.col)
+	r.fromL, r.fromC = clamp(s.fromL, s.fromC)
 }
 
 func (r *reader) leave()    { r.visual, r.selecting = false, false }

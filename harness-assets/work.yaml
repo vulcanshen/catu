@@ -1,14 +1,17 @@
 tasks:
   - id: 1
-    spec: 14
+    spec: 17
     implementation: |
       單畫面（tgo Screen，名字 View）、一個 panel [1]；panel 的 body 是 catu 自己的 reader（tgo Body）
-      最上面一列 statusbar（tgo App.Status）：Size: <值補到 11 格>  Modified: <YYYY-MM-DD HH:MM>  Mode: <ls -l 的寫法>，全部 Overlay0；
-      目錄的 Size 是 N items（1 item，不算 . 開頭的），讀不到寫 —
+      沒有 statusbar（不設 tgo App.Status），panel 從最上面一列開始
+      每個檔最後一個 tab 是 META（internal/ui/meta.go）：四列 TYPE、SIZE、MODIFIED、MODE，label Blue、值 Text（外面來的字照 Escape），label 欄 8 格再隔兩格；
+      TYPE 是 text（Markdown、mermaid 也是）、private key、image、PDF、archive、binary、directory，symlink 是 link → <os.Readlink 的目標>；
+      SIZE 是 1024 進位、一位小數（目錄是 N items，1 item，不算 . 開頭的，讀不到寫 —）；MODIFIED 是 YYYY-MM-DD HH:MM；MODE 是 ls -l 的寫法；
+      symlink 的 SIZE、MODIFIED、MODE 是目標的（os.Stat）；不畫行號；太長的值照 viewer 折行（列不是 Fixed），不截；找字、Visual 跟其他 tab 一樣
       panel 的 label 是內容的種類：TEXT、DIRECTORY、ARCHIVE、PDF、IMAGE、BINARY、PRIVATE KEY
       panel 裡第一列是位置列（tgo Panel.Location 畫）：看的東西的完整路徑，家目錄寫成 ~，Lavender，太長從前面截，名稱裡的控制字元畫成名字；
       不捲，空狀態與 panel.15 的錯誤上面也留著，panel 沒有焦點時跟著變暗（tgo 做）
-      下框 hint：o:open /:search v:visual（tgo Action.Hint）；footer 由 tgo 畫：Space:menu ?:help !:log q:quit
+      下框 hint：h|l:tab o:open /:search v:visual（每個檔都有 META，至少兩個 tab，h|l:tab 由 tgo 加在前面；其他是 tgo Action.Hint）；footer 由 tgo 畫：Space:menu ?:help !:log q:quit
       內容一行也沒有時，位置列下面置中畫空狀態（tgo EmptyState：Overlay0，照 panel 寬折行）：空檔案 Empty file / Press [o] to open another file，
       空目錄 Empty directory / Press [o] to open a file，空壓縮檔 Empty archive / Press [o] to open another file
       最低尺寸 40×12（tgo App.MinWidth、MinHeight）
@@ -19,7 +22,7 @@ tasks:
       Info toast、file-picker、OPEN FAILED 的 error popup、splash、MOVE ASIDE 的 confirm）各在 80×24 打開，開著把終端機改成比它窄（50×24：
       在 80 欄打開的搜尋 input popup 寬 78）、比它矮（80×12：在 24 列打開的 file-picker 高 22）、兩邊都小（50×12），都在最低尺寸以上、popup 疊在畫面上；
       再改成最低尺寸 40×12、比它小（39×12、80×5、1×1，只畫三列，tdp screen.7），最後改回 80×24：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
-    test: [TestScreenShowsAFile, TestStatusbarModeAndDirectorySize, TestQuitAtOnce, TestEmptyFile, TestEmptyDirectory, TestEmptyArchive, TestFirstLaunch, TestOwnPopupsEverySize]
+    test: [TestScreenShowsAFile, TestMetaTab, TestQuitAtOnce, TestEmptyFile, TestEmptyDirectory, TestEmptyArchive, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
     spec: 13
     implementation: |
@@ -66,12 +69,12 @@ tasks:
       hide_secrets_in_preview 不管 panel：panel 照樣畫使用者打開的檔（私鑰、只有擁有者能讀的檔也一樣）；這個設定只交給 tgo 的 file-picker 預覽（task 8）
     test: [TestDirectoryTree, TestEmptyDirectory, TestArchiveTree, TestEmptyArchive, TestContentUnreadable, TestImageDataURI, TestPDFText, TestBinaryHex, TestBinaryTooBig, TestHideSecrets]
   - id: 5
-    spec: 9
+    spec: 17
     implementation: |
       panel 上沒有游標：j|↓、k|↑ 捲一列（折行的一行一列一列捲），d|PgDn、u|PgUp 捲半頁，gg、G 到頭尾；Ctrl-U、Ctrl-D 不作用
       （PgUp、PgDn 是 u|d，跟 tgo 每一個 surface 一樣：viewer、清單、menu、表單、finder、textarea 都收，tdp K12）
       下框右邊：放不下時寫 N-M of T（最上面那一列所屬的行到最下面那一列所屬的行，總行數）
-      ? 的 MOVE 區列 j|k、u|d、gg|G（tgo Body.MoveKeys），內容全放得下時不列
+      ? 的 MOVE 區列 j|k、u|d、gg|G（tgo Body.MoveKeys），內容全放得下時不列；h|l（previous tab, next tab）由 tgo 列：每個檔都有 META，都有 tab
       v（Space menu 的 panel operation [v]isual：select text to copy；hint v:visual；沒有內容時不出現）：進 tgo 的 panel 模式 Visual（tgo Panel.EnterMode），
       游標出現在畫面第一行的行首，一格 Subtext1 底、Base 粗體（panel 的 cursor 色塊）；那一行的行號 Text
       Visual 裡：h|j|k|l（與方向鍵）、w|b|e、0|$、u|d（PgUp、PgDn）、gg|G 照 vim 移動游標（同 tgo viewer 的選取模式），走到畫面邊緣時捲動；下框右邊寫 N of M（游標所在的行）
@@ -100,11 +103,11 @@ tasks:
       App Log（!）與 key reference（?）的 / 是 tgo 的（key reference 的 hint /:search ?|Esc:close），catu 不另外做
     test: [TestSearchFindsAndSteps, TestSearchNoHit, TestSearchHitsDrawn, TestSearchFromTheSpaceMenu]
   - id: 7
-    spec: 9
+    spec: 17
     implementation: |
       o（Space menu 的 panel operation [o]pen：another file；hint o:open）：tgo 的 file-picker，標題 Open、glyph nf-md-file_find（U+F0DCF）；
       根目錄是正在看的檔案所在的目錄、cursor 停在它上面（Green）；看的是目錄時根目錄就是那個目錄
-      選了一個檔案（Enter）：先讀（tgo FilePicker.Commit）；讀得到就換成看它、label 與位置列與 statusbar 跟著換、回到最上面，App Log 記 Info「Opened <路徑>」，
+      選了一個檔案（Enter）：先讀（tgo FilePicker.Commit）；讀得到就換成看它、label、tab 與位置列跟著換、回到最上面，App Log 記 Info「Opened <路徑>」，
       連打開它的 Space menu 一起收起（tgo App.CloseAll，file-picker 與 menu 同時播收起的動畫）
       選的是正在看的那一個（值跟打開時一樣）：不讀、不換，tgo 直接關掉 file-picker；從 Space menu 打開時回到 Space menu；App Log 不記
       讀不到：file-picker 留著，tgo 在上面開 error popup（OPEN FAILED，寫原因），Enter|Esc 關掉回到 file-picker；原本看的內容不動；
@@ -231,19 +234,19 @@ tasks:
       結束時刪掉暫存目錄；超過 16 MB 時文字最後一列 Overlay0「(more not shown)」
       暫存目錄一建好、開始讀 stdin 之前就交給 main 記著（ui.Spool 的 made），自己結束以外這幾種結束也刪：有 - 時 main 接 SIGHUP、SIGINT、SIGTERM、SIGPIPE（os/signal），
       收到就刪掉、以 128+訊號編號結束；開畫面前不再接（signal.Stop）：開著畫面時 SIGHUP 由 tgo 接、SIGINT 與 SIGTERM 由 Bubble Tea 接，Run 照常回來，結束後刪；印的時候寫 stdout 得到 EPIPE（catu | head）也是刪掉、什麼都不說、結束碼 141
-      畫面上：位置列 standard input，statusbar 只有 Size: <大小>，App Log 記 Info「Opened standard input」，找字的提示 Find in standard input，
+      畫面上：位置列 standard input，META 的 MODIFIED、MODE 寫 —，App Log 記 Info「Opened standard input」，找字的提示 Find in standard input，
       圖畫不出來的 Warning 寫 in standard input；o 的 file-picker 根目錄是啟動 catu 的目錄；鍵盤從終端機讀（Bubble Tea 在 stdin 不是終端機時開 /dev/tty）
       印的時候照 task 13、14；讀不了時 stderr 寫 catu: standard input: <原因>
       catu help 有 cmd | catu [-l fmt] 一列與 -l 的說明
     test: [TestReadFromAPipe, TestStandardInput, TestPipeFileGoes]
   - id: 16
-    spec: 13
+    spec: 17
     implementation: |
       兩個以上的路徑（ui.OpenAll）：開畫面前照順序每個都讀，同一個檔（絕對路徑一樣）只留第一次；讀不到的：不開畫面，stderr 印 catu: <照給的路徑>: <原因>，結束碼 1
       單畫面兩個 panel：[1] FILES（tgo List，一欄、沒有表頭、太長從前面截），[2] 照 task 1 的 viewer；tgo Screen.Layout 左右並排，
       FILES 寬是最長的名字、框兩格、名字前一格、名字後面留給 cursor 箭頭的一個 powerline 符號寬（tdp panel.5、E5：佔兩格的終端機上是兩格），最多畫面寬的三分之一；Screen.NarrowBelow 60：窄於 60 欄只畫有 focus 的那個、佔滿寬度（tdp screen.5）
       FILES 的列：照給的路徑寫（絕對路徑的家目錄寫成 ~，stdin 寫 standard input），照給的順序
-      List.OnMove：cursor 到哪一列，[2] 就換成那個檔（label、tab、位置列、statusbar 跟著換，回到最上面）；focus 留在 [1]（tdp panel.13）
+      List.OnMove：cursor 到哪一列，[2] 就換成那個檔（label、tab、位置列跟著換，回到最上面）；focus 留在 [1]（tdp panel.13）
       [1] 的 Enter（hint Enter:view，tgo Action.ToDetails）把 focus 送到 [2]；Tab、1、2 換 panel（tgo 做），footer 是 Space:menu ?:help !:log Tab|1–2:panels q:quit
       一開始 focus 在 [1]，[2] 是第一個；在背景上色的大檔：上完色記在那個檔上，換回來不用再上一次
       App Log：啟動時每個檔各記一筆 Info「Opened <路徑>」；在清單上移動不記（移動，tdp note.7）
@@ -257,12 +260,14 @@ tasks:
     spec: 17
     implementation: |
       internal/ui/watch.go：啟動時（App.Start）開始，每 watchEvery（1 秒）一個 tgo App.Tick；每一次看正在看的檔案（os.Stat）：
-      修改時間或大小跟讀進來時不同就重讀（load），一樣就不動；管線送來的（shown.stdin）不看；Visual 模式中（reader.visual）這一次不看，離開後下一次看
+      修改時間或大小跟讀進來時不同就重讀（load），一樣就不動；管線送來的（shown.stdin）不看；Visual 模式中也看
+      Visual 模式中重讀：不離開模式（viewer.display 不叫 LeaveMode），reader 記下游標與選取的起點（visualState），下一次 Draw 排好之後放回去，
+      收在新內容裡（那一列沒有了到最後一列，那一格沒有了到那一列最後一個字）；y 複製的是新內容
       重讀（refresh）：照原本的 tab 顯示；畫面停在原本的列（top、sub），原本最後一列在畫面上的（reader.atEnd）移到最後面；
       有命中的照新內容重找（reader.collect：不捲動，目前第幾筆照舊，超過就最後一筆），Esc 照樣清；排版的（Markdown、mermaid）在下一次 Draw 排好之後才定位與重找
       同一個檔的 mermaid 錯誤照舊只記一次；FILES 清單裡那個檔的快取換成新的
-      App Log 記 INFO「Reloaded <路徑，家目錄寫成 ~>」；statusbar 的 Size、Modified 是新讀的
+      App Log 記 INFO「Reloaded <路徑，家目錄寫成 ~>」；META 是新讀的
       看不到（os.Stat 失敗）：Warning toast「<檔名> is no longer there: shown as it was」；讀不了（load 失敗）：「Can't read <檔名> now: <原因>; shown as it was」；
       兩種都只說一次（viewer.gone），畫面保留最後讀到的；之後看得到就重讀
-    test: [TestWatchReadsAgain, TestWatchKeepsThePlace, TestWatchFindsAgain, TestWatchWaitsInVisual, TestWatchGone, TestWatchKeepsTheTab, TestWatchNotThePipe, TestWatchSeveralFiles]
+    test: [TestWatchReadsAgain, TestWatchKeepsThePlace, TestWatchFindsAgain, TestWatchInVisual, TestWatchGone, TestWatchKeepsTheTab, TestWatchNotThePipe, TestWatchSeveralFiles]
 

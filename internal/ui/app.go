@@ -86,7 +86,8 @@ func OpenAll(paths []string) (*terminu.App, error) {
 	// One panel: 80×24 terminals and a half of a tmux window are enough (tdp L1).
 	a.MinWidth, a.MinHeight = 40, 12
 	a.InputTabWidth, a.HideSecretsInPreview = cfg.TabWidth, cfg.HideSecrets
-	a.Status = v.status
+	// No statusbar (tdp screen.4: the app's to have): the file's metadata is
+	// its META tab (meta.go), the row the panel's.
 	a.OnMsg = v.onMsg
 	v.panel = &terminu.Panel{Body: v.body, Actions: v.actions(), OnTab: v.onTab}
 	v.body.found = &v.panel.SearchStatus
@@ -146,8 +147,14 @@ func (v *viewer) opened(s *shown) {
 // first view in the body. It returns the colouring of the views to be
 // coloured in the background; the panel is loading until they are.
 func (v *viewer) show(s *shown) tea.Cmd {
-	v.cur, v.warned = s, map[string]bool{}
 	v.panel.LeaveMode()
+	return v.display(s)
+}
+
+// display is show but for leaving the mode: the file read again is shown
+// in the Visual mode it was in (watch.go).
+func (v *viewer) display(s *shown) tea.Cmd {
+	v.cur, v.warned = s, map[string]bool{}
 	v.panel.Label = s.views[0].name
 	v.panel.Tabs = nil
 	for _, vw := range s.views[1:] {
