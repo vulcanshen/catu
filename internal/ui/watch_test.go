@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	terminu "github.com/vulcanshen/terminu-go"
 	"github.com/vulcanshen/terminu-go/tdptest"
 )
 
@@ -28,6 +29,72 @@ var changed int
 
 // look lets watchEvery go by: catu looks at the file shown.
 func look(d *tdptest.Driver) { d.Advance(watchEvery) }
+
+// synced is the sync status on the screen of a read in the last look: on
+// the App's clock, at a tick in the last watchEvery, so its second is now's
+// or the one before (a key's animations move the clock too).
+func synced(t *testing.T, d *tdptest.Driver) string {
+	t.Helper()
+	for _, at := range []time.Time{d.Now(), d.Now().Add(-watchEvery)} {
+		if s := syncGlyph + " " + at.Format("15:04:05"); d.Has(s) {
+			return s
+		}
+	}
+	t.Errorf("no sync status of a read in the last %v:\n%s", watchEvery, strings.Join(d.Screen(), "\n"))
+	return "\x00" // on no screen
+}
+
+// bottom is the viewer panel's bottom border, as it reads and as it is drawn.
+func bottom(t *testing.T, d *tdptest.Driver) (string, string) {
+	t.Helper()
+	s := d.Screen()
+	for i := len(s) - 1; i >= 0; i-- {
+		if strings.Contains(s[i], "┛") {
+			return s[i], d.Styled()[i]
+		}
+	}
+	t.Fatal("no bottom border")
+	return "", ""
+}
+
+// TestWatchSyncStatus: the viewer panel's frame says at the bottom right
+// that the file shown is watched, and when it was last read (tdp panel.1,
+// the user, task 17): the same while the file is, the new read's once read
+// again; Peach while the file is gone, still the last read's.
+func TestWatchSyncStatus(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": "first\n"})
+	p := filepath.Join(dir, "a.txt")
+	d := start(t, p, 60, 20)
+	first, _ := bottom(t, d)
+	if !strings.Contains(first, "━ "+syncGlyph+" ") || !strings.HasSuffix(first, " ━┛") {
+		t.Fatalf("no sync status at the bottom right: %q", first)
+	}
+	look(d)
+	if now, _ := bottom(t, d); now != first {
+		t.Errorf("the file unchanged, the status is %q, want %q", now, first)
+	}
+	change(t, p, "second\n")
+	look(d)
+	at := synced(t, d)
+	if b, _ := bottom(t, d); !strings.Contains(b, "━ "+at+" ━") {
+		t.Errorf("read again, the status is not %q: %q", at, b)
+	}
+	peach := strings.TrimSuffix(terminu.Fg(terminu.Peach).Render(at), "\x1b[0m")
+	os.Remove(p)
+	look(d)
+	if b, styled := bottom(t, d); !strings.Contains(b, at) || !strings.Contains(styled, peach) {
+		t.Errorf("gone, the status is not %q in Peach: %q", at, styled)
+	}
+	change(t, p, "back\n")
+	look(d)
+	back := synced(t, d)
+	if back == at {
+		t.Errorf("back, the status is still %q", at)
+	}
+	if _, styled := bottom(t, d); strings.Contains(styled, strings.TrimSuffix(terminu.Fg(terminu.Peach).Render("x"), "x\x1b[0m")) {
+		t.Errorf("back, the status is not in the frame's colour: %q", styled)
+	}
+}
 
 // TestWatchReadsAgain: the file shown, changed on the disk, is read again
 // within watchEvery, without a key pressed, and the App Log says so (task 17,
@@ -77,14 +144,14 @@ func TestWatchKeepsThePlace(t *testing.T) {
 func TestWatchFindsAgain(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "needle one\nhay\nneedle two\n"})
 	p := filepath.Join(dir, "a.txt")
-	d := start(t, p, 60, 20)
+	d := start(t, p, 80, 20) // room for the sync status too
 	d.Press("/")
 	d.Type("needle")
 	d.Press("Enter", "n")
 	want(t, d, "/needle 2 of 2")
 	change(t, p, "needle one\nhay\nneedle two\nneedle three\n")
 	look(d)
-	want(t, d, "needle three", "/needle 2 of 3")
+	want(t, d, "needle three", synced(t, d)+" ━ /needle 2 of 3") // the sync status left of it (tdp panel.1)
 	change(t, p, "hay only\n")
 	look(d)
 	wantNot(t, d, "/needle")
@@ -93,8 +160,8 @@ func TestWatchFindsAgain(t *testing.T) {
 // TestWatchInVisual: the Visual mode only selects and copies, so the file
 // is read again in it too (the user, 2026-11-16): still in the mode, the
 // cursor where it was, or at the text's last character where the text no
-// longer reaches; a selection let go, the text under it changed; no toast
-// (task 17).
+// longer reaches; a selection let go, the text under it changed, the Space
+// menu open over it staying (tdp K3); no toast (task 17).
 func TestWatchInVisual(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "old text\nsecond line\n"})
 	p := filepath.Join(dir, "a.txt")
@@ -108,11 +175,13 @@ func TestWatchInVisual(t *testing.T) {
 	if got := d.Clipboard(); len(got) != 1 || got[0] != "new" {
 		t.Errorf("copied %q, want the text as it is now", got)
 	}
-	d.Press("v", "j", "$", "v") // selecting from the end of the second line
+	d.Press("v", "j", "$", "v", "Space") // selecting from the end of the second line
 	change(t, p, "a\n")
 	look(d)
+	want(t, d, "ITEM OPERATION") // the menu the user opened stays
+	d.Press("y")                 // its row does as y does now: nothing
 	want(t, d, "Visual", "v:select")
-	wantNot(t, d, "Visual>select")
+	wantNot(t, d, "Visual>select", "ITEM OPERATION")
 	d.Press("y") // nothing selected: nothing to copy
 	if got := d.Clipboard(); len(got) != 1 {
 		t.Errorf("copied %q, want the selection let go", got)
@@ -175,6 +244,7 @@ func TestWatchNotThePipe(t *testing.T) {
 	change(t, p, "changed under it\n")
 	look(d)
 	want(t, d, "from the pipe")
+	wantNot(t, d, syncGlyph) // and no sync status
 }
 
 // TestWatchSeveralFiles: with a FILES list, the file shown is the one

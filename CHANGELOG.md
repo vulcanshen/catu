@@ -7,13 +7,13 @@ Each release names the version of terminu design (tdp) it follows.
 - The file shown is watched: changed on the disk, it is read again within a second, with no key pressed and nothing
   to turn on. The view stays on the line it was on, or, at the end, follows what was added, as `tail -f`; a search is
   found again; the tab stays. In the Visual mode too: the cursor stays where it was, and a selection is let go, as
-  the text under it may have changed. A file gone stays shown as it was, said once. What came down a pipe is not
-  watched
+  the text under it may have changed. The panel's bottom right says when the file was last read (`󰓦 17:43:42`), in
+  Peach while it is gone; a file gone stays shown as it was, said once. What came down a pipe is not watched
 - A `META` tab, the last of every file: its type, size, when it was modified and its mode, as the file preview writes
   them. The row over the panel that said them is gone, and the panel has it
 - A search's status on the panel's bottom border while it has hits: what was searched for, which hit and how many
   (`/needle 2 of 5`)
-- Built on terminu-go v1.2.12, following tdp v1.2.11
+- Built on terminu-go v1.2.13, following tdp v1.2.12
 
 ## v1.0.0 — tdp v1.2.0
 

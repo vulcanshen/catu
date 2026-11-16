@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/dslipak/pdf"
@@ -58,6 +59,8 @@ type shown struct {
 	// problem is why its content could not be made out, for the App Log
 	// (tdp F5); "" when it could.
 	problem string
+	// read is when it was read, for the panel's sync status (watch.go).
+	read time.Time
 }
 
 // view is one way of showing it: a tab.
@@ -94,6 +97,7 @@ func load(p string, cfg config, warn func(error)) (*shown, error) {
 		return nil, err
 	}
 	s.views = append(s.views, metaView(s))
+	s.read = time.Now()
 	return s, nil
 }
 

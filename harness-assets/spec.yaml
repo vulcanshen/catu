@@ -1,9 +1,9 @@
-id: 20
-from: v1.2.0
-to: v1.2.11
+id: 21
+from: v1.2.11
+to: v1.2.12
 tasks:
   - id: 1
-    spec: 17
+    spec: 21
     request: 看一個檔案的畫面：一個 panel 放檔案的內容，看得到檔案的路徑；大小、修改時間、權限放在 META 分頁，不佔一列；q 直接離開
     tdp: [tdp terms.2, tdp screen.1, tdp screen.2, tdp screen.4, tdp screen.8, tdp panel.1, tdp panel.4, tdp panel.10, tdp panel.15, tdp file-picker.4, tdp components.2, tdp components.4, tdp K9, tdp L1, tdp L2, tdp L3, tdp L4, tdp E5, tdp components.5, tdp E8, tdp E6, tdp screen.7, tdp M5, tdp panel.12, tdp terms.4, tdp note.2, tdp K12, tdp P5]
     remark:
@@ -13,7 +13,7 @@ tasks:
         ┏[1] DOCUMENTSOURCEMETA━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓   ← label 是內容的種類；有兩種看法時是 tab；最後一個 tab 是 META
         ┃ ~/Documents/sideproj/catu/README.md                         ┃   ← 位置列：檔案的路徑（tdp panel.10）
         ┃   1 …                                                         ┃
-        ┗━ h|l:tab o:open /:search v:visual ━━━━━━━━━━━━━━ 1-30 of 120 ━┛
+        ┗━ h|l:tab o:open /:search v:visual ━━━ 󰓦 17:43:42 ━ 1-30 of 120 ━┛   ← sync 狀態（task 17，tdp panel.1）
         Space:menu ?:help !:log q:quit                                      ← footer（tdp screen.2：只有一個 panel）
       - "label 寫內容的種類，照 tdp file-picker.4 的 TYPE 大寫：TEXT、DIRECTORY、ARCHIVE、PDF、IMAGE、BINARY、PRIVATE KEY；Markdown 是 DOCUMENT、SOURCE 兩個 tab（task 9），mermaid 檔是 DIAGRAM、SOURCE（task 10）"
       - "位置列是看的東西的完整路徑，家目錄寫成 ~，Lavender、太長從前面截（tdp panel.10；webu 的網址列也是內容 panel 的位置列）"
@@ -22,6 +22,7 @@ tasks:
       - "q 與 Ctrl-C 直接離開，不先問（tdp K9：離開流程 app 可以自行決定；像 less 一樣看完就走）；有 popup 開著時照 tdp K9 先問（tgo 做）"
       - "空的檔案、目錄、壓縮檔照 tdp screen.8 的空狀態：Empty file／Empty directory／Empty archive，接一句點名 [o] 的提示"
       - "檔案打不開時 panel 不會有讀不到的狀態：啟動時讀不到在命令列就結束（task 2），o 選到讀不到的檔留在 file-picker（task 7）；檔案打得開、內容讀不出來（壞掉的壓縮檔、PDF）照 tdp panel.15 在 panel 中間寫（task 4）"
+      - "下框右邊在捲動位置的左邊是 task 17 的 sync 狀態（tdp panel.1）；管線送來的內容沒有"
   - id: 2
     spec: 13
     request: 用 catu <路徑> 打開一個檔案或目錄；沒給路徑就看目前的目錄；有 catu version 與 catu help
@@ -175,7 +176,7 @@ tasks:
       - "畫面上：位置列寫 standard input（tdp panel.10：你在看什麼），META 的 MODIFIED、MODE 寫 —（不是檔案，沒有修改時間與權限；tdp file-picker.4：拿不到的值寫 —），App Log 記 Opened standard input（tdp note.7）"
       - "開著畫面時關掉終端機（SIGHUP）：terminu-go v1.2.3 起由 lib 接、照常結束（Run 回來），暫存檔跟著照常刪；catu 開畫面前不再自己接訊號"
   - id: 16
-    spec: 17
+    spec: 21
     request: 一次看好幾個檔：catu a.go b.go
     tdp: [tdp terms.2, tdp panel.13, tdp screen.5, tdp L1, tdp K1, tdp K2, tdp K3, tdp screen.2, tdp E1, tdp panel.5, tdp panel.1, tdp note.7, tdp P5, tdp L4, tdp E5, tdp E8, tdp E3]
     remark:
@@ -185,17 +186,19 @@ tasks:
       - "開畫面前每個路徑都先讀：有讀不到的，跟一個路徑時一樣在 stderr 說、結束碼 1，不開畫面"
       - "印的時候（task 13、14）一個接一個印，跟 cat a b 一樣不加標頭；讀不到的在 stderr 說、其他照印，結束碼 1"
       - "o 選的檔加進清單最後（已經在清單裡就移過去），cursor 移到它"
+      - "sync 狀態（task 17）只在 [2] 的框上：[2] 看的檔才在 watch；focus 在 [1] 時跟著 [2] 變暗（tdp panel.1）"
   - id: 17
-    spec: 20
+    spec: 21
     request: 檔案在磁碟上變了就自動重讀、畫面跟著更新，一直開著，不用加參數
-    tdp: [tdp P5, tdp note.7, tdp toast.2, tdp note.3, tdp note.2, tdp panel.4, tdp screen.4, tdp panel.15, tdp F5, tdp E3, tdp K3, tdp note.4, tdp T2, tdp K11, tdp terminal.6, tdp toast.1, tdp panel.14]
+    tdp: [tdp P5, tdp note.7, tdp toast.2, tdp note.3, tdp note.2, tdp panel.4, tdp screen.4, tdp panel.15, tdp F5, tdp E3, tdp K3, tdp note.4, tdp T2, tdp K11, tdp terminal.6, tdp toast.1, tdp panel.14, tdp color.2, tdp panel.3, tdp menu.4, tdp K6, tdp K4, tdp F1]
     remark:
       - "看檔案、多久看一次、怎麼重讀是功能邏輯，tdp 沒有規定，app 自行決定（tdp P5）"
       - "每一秒看一次正在看的檔案的修改時間與大小（tgo App.Tick），變了就重讀：不用 fsnotify，編輯器用改名換掉檔案的存法也看得到；FILES 清單裡別的檔，被看到時才看。管線送來的內容不是檔案，不看（task 15）"
       - "重讀後畫面停在原本那一列；原本在最底下的，跟著新加的內容往下，像 tail -f：同一個功能給「一邊編輯一邊看」與「看長大中的 log」兩種用法。停在原本的 tab（tdp panel.4）"
       - "有命中時照新內容重找，畫面不跳到命中，下框的狀態跟著更新（tdp note.3）；新內容裡沒有了就清掉"
-      - "Visual 模式中照常重讀：Visual 只選取、複製，不寫入（使用者 2026-11-16）。重讀後留在模式裡，游標停在原本的行與列，新內容到不了那裡就收到最後一個字；有選取的取消選取，回到 Visual 那一層（使用者同一天定：範圍底下的字可能已經換了）；畫面照常刷新，在最底下的照樣跟著往下（使用者同一天定）；不跳 toast（使用者同一天定：框上的 sync icon 與時間一直在更新，看得到重讀了；sync icon 還在等 tdp 與 tgo，見下面的 6.）"
+      - "Visual 模式中照常重讀：Visual 只選取、複製，不寫入（使用者 2026-11-16）。重讀後留在模式裡，游標停在原本的行與列，新內容到不了那裡就收到最後一個字；有選取的取消選取，回到 Visual 那一層（使用者同一天定：範圍底下的字可能已經換了），跟 Esc 退一層的結果一樣（tdp K4），模式名稱從尾巴收回（tdp panel.3）；開著的 Space menu、? 留著，不搶 focus（tdp K3），它的列照現在的模式做（menu.4、K6）；畫面照常刷新，在最底下的照樣跟著往下（使用者同一天定）；不跳 toast（使用者同一天定：框上的 sync 狀態的時間一直在更新，看得到重讀了）"
       - "檔案不見了或讀不了：保留最後看到的內容，跳一次 Warning toast 說檔案不在了、照原樣顯示（tdp toast.2），回來了就重讀；不是每秒跳一次"
       - "每次重讀在 App Log 記一筆 INFO「Reloaded <路徑>」：app 自己在背景做的事（tdp note.7）；不跳 toast，畫面本身就是回饋，Visual 模式中也一樣。META 的大小與修改時間跟著新的"
-      - note: "review 2026-11-16（tdp v1.2.11）判 tdp 不清楚：1. note.4 的選取模式中內容變了怎麼辦（使用者同一天定了 catu 照常重讀、游標留在原本的行與列、有選取就取消、不跳 toast，見上面；但選取模式是 tdp 的模式（K11），tdp 寫進 note.4 才算定，參照 terminal.6 的畫面凍住與 note.7 的 App Log；在最底下時畫面跟著往下、游標留在原處，可能捲出畫面）；2. 在最底下時跟著新內容往下（tail -f）沒有根據，只有停在原地合 K3、panel.15；3. 重讀後行號欄照 note.2 的哪一條；4. 會自己重讀的檔案內容算不算 T2 的串流內容（失焦要不要變暗）；5. 重讀時讀不了用 Warning 還是 Error（toast.2、panel.15）。另外使用者要的：6. 框上右下角放 nf-md-sync 與最後一次讀進來的時間，表示 watch 中；tdp 框上沒有這種持續狀態的位置，tgo 也沒有 API（只有捲動位置與找字狀態到得了右下角，塞進捲動位置會違反 note.2）。暫時照現在的設計，sync icon 等 tdp 與 tgo；META 是 note.2 的 app 自己排的表（task 1），不問"
-        issue: "6. 2026-11-16 送給 terminu session（本機 SendMessage），由它跟使用者、terminu-go 定位置與 API；1 使用者 2026-11-16 定了 catu 的做法（照常重讀、游標留在原處、取消選取、不跳 toast）；1–5 使用者還沒決定要不要問 tdp，沒送"
+      - "框上的 sync 狀態（tdp panel.1：要不要有、寫什麼、放哪個角由 app 決定）：使用者 2026-11-16 定放右下角、寫 sync 的時間。nf-md-sync（U+F04E6）與最後一次讀進來的時間 HH:MM:SS（開檔時、每次重讀時；檔案沒變就不動），在找字狀態與捲動位置的左邊；框的顏色。檔案不見了或讀不了時 Peach（StatusWarning：值得注意、內容還能用，tdp color.2），時間是最後一次讀到的，回來了恢復框的顏色。管線送來的不看，沒有 sync 狀態。框太窄時它最先讓位、有空間再回來，失焦時跟著 panel 變暗（tgo 照 panel.1 畫）"
+      - note: "review 2026-11-16（tdp v1.2.11）判 tdp 不清楚：1. note.4 的選取模式中內容變了怎麼辦（使用者同一天定了 catu 照常重讀、游標留在原本的行與列、有選取就取消、不跳 toast，見上面；但選取模式是 tdp 的模式（K11），tdp 寫進 note.4 才算定，參照 terminal.6 的畫面凍住與 note.7 的 App Log；在最底下時畫面跟著往下、游標留在原處，可能捲出畫面）；2. 在最底下時跟著新內容往下（tail -f）沒有根據，只有停在原地合 K3、panel.15；3. 重讀後行號欄照 note.2 的哪一條；4. 會自己重讀的檔案內容算不算 T2 的串流內容（失焦要不要變暗）；5. 重讀時讀不了用 Warning 還是 Error（toast.2、panel.15）。另外使用者要的：6. 框上右下角放 nf-md-sync 與最後一次讀進來的時間，表示 watch 中：tdp v1.2.12 的 panel.1 加了框上的持續狀態、tgo v1.2.13 加了 Panel.FrameStatus，做了（上面）；META 是 note.2 的 app 自己排的表（task 1），不問"
+        issue: "6. 2026-11-16 送給 terminu session（本機 SendMessage），同一天由 tdp v1.2.12 panel.1、tgo v1.2.13 Panel.FrameStatus 解決；1 使用者 2026-11-16 定了 catu 的做法（照常重讀、游標留在原處、取消選取、不跳 toast）；1–5 使用者還沒決定要不要問 tdp，沒送"

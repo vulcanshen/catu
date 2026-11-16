@@ -117,3 +117,9 @@
 
 - Visual 模式中重讀：有選取的話，取消選取；游標停在原本的行與列；畫面照常刷新。
 
+## 2026-11-16（sync icon 有了位置）
+
+> tdp/tgo session 都開了, 我希望那個 sync icon 放在右下角，然後配上 sync 時間
+
+- tdp v1.2.12 的 panel.1 讓 panel 的框上放一個 app 自己的持續狀態，terminu-go v1.2.13 的 Panel.FrameStatus 畫它：sync icon 放在右下角，旁邊寫最後一次讀進來的時間。
+

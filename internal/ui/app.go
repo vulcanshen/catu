@@ -158,6 +158,7 @@ func (v *viewer) show(s *shown) tea.Cmd {
 // in the Visual mode it was in (watch.go).
 func (v *viewer) display(s *shown) tea.Cmd {
 	v.cur, v.warned = s, map[string]bool{}
+	v.syncStatus()
 	v.panel.Label = s.views[0].name
 	v.panel.Tabs = nil
 	for _, vw := range s.views[1:] {
@@ -186,8 +187,8 @@ type coloured struct {
 // onMsg takes a view's colours when they are made: in their place, where
 // they are, nothing moving (tdp K3: the background moves nothing).
 func (v *viewer) onMsg(msg tea.Msg) tea.Cmd {
-	if _, ok := msg.(watchTick); ok {
-		return tea.Batch(v.check(), v.watch())
+	if t, ok := msg.(watchTick); ok {
+		return tea.Batch(v.check(t.at), v.watch())
 	}
 	c, ok := msg.(coloured)
 	if !ok {
