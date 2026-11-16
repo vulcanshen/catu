@@ -1,4 +1,4 @@
-spec: 17
+spec: 18
 tasks:
   - id: 1
     accepted: true
@@ -34,4 +34,4 @@ tasks:
     accepted: true
   - id: 17
     accepted: false
-    reason: tdp 不清楚：note.4 的選取模式中內容變了怎麼辦（使用者定了 catu 照常重讀，tdp 還沒寫）、在最底下時跟著往下、重讀後的行號欄寬、會自己重讀的內容算不算 T2 的串流、重讀時讀不了用哪一種 toast，tdp 都沒寫；sync icon 已送 terminu session
+    reason: tdp 不清楚：note.4 的選取模式中內容變了怎麼辦（使用者定了 catu 照常重讀並跳 Info toast，tdp 還沒寫；在最底下時畫面跟著往下、游標留在原處）、在最底下時跟著往下、重讀後的行號欄寬、會自己重讀的內容算不算 T2 的串流、重讀時讀不了用哪一種 toast，tdp 都沒寫；Info toast 本身合 toast.2、note.7；sync icon 已送 terminu session

@@ -45,6 +45,8 @@ func TestWatchReadsAgain(t *testing.T) {
 	look(d)
 	want(t, d, "second words, longer")
 	wantNot(t, d, "first words")
+	wantNot(t, d, "changed: shown") // no toast: that is the Visual mode's
+
 	d.Press("l") // its META is the new one's
 	want(t, d, "SIZE      21 B")
 	d.Press("h")
@@ -94,7 +96,7 @@ func TestWatchFindsAgain(t *testing.T) {
 // is read again in it too (the user, 2026-11-16): still in the mode, the
 // cursor and where the selection started where they were, and what is
 // copied is the text as it is now; where the text no longer reaches, they
-// go to its last character (task 17).
+// go to its last character. An Info toast says the text changed (task 17).
 func TestWatchInVisual(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "old text\nsecond line\n"})
 	p := filepath.Join(dir, "a.txt")
@@ -102,7 +104,7 @@ func TestWatchInVisual(t *testing.T) {
 	d.Press("v", "v", "e") // select "old"
 	change(t, p, "new text\nsecond line\n")
 	look(d)
-	want(t, d, "new text", "select", "y:copy")
+	want(t, d, "new text", "select", "y:copy", "INFO", "a.txt changed: shown as it is now")
 	d.Press("y")
 	if got := d.Clipboard(); len(got) != 1 || got[0] != "new" {
 		t.Errorf("copied %q, want the text as it is now", got)
