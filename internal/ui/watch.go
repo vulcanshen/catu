@@ -64,9 +64,7 @@ func (v *viewer) lost(s *shown, why string) tea.Cmd {
 // refresh shows again, read again, what is shown: on the tab it was on,
 // where the view was, the search found again (tdp note.3), in the Visual
 // mode it was in, the cursor and where the selection started kept where
-// the text still reaches; logged as the app's own doing (tdp note.7). In
-// the Visual mode an Info toast says the text changed (the user,
-// 2026-11-16): what is selected may be other text now.
+// the text still reaches; logged as the app's own doing (tdp note.7).
 func (v *viewer) refresh(again *shown) tea.Cmd {
 	b := v.body
 	tab, top, sub, end := v.panel.Tab, b.top, b.sub, b.atEnd()
@@ -86,9 +84,6 @@ func (v *viewer) refresh(again *shown) tea.Cmd {
 	}
 	if v.files != nil {
 		v.files.loaded[again.path] = again
-	}
-	if vis != nil {
-		return tea.Batch(cmd, v.app.Toast(terminu.Info, again.base()+" changed: shown as it is now"))
 	}
 	v.app.Log(terminu.Info, "Reloaded "+again.name())
 	return cmd

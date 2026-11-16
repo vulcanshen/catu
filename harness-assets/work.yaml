@@ -257,17 +257,16 @@ tasks:
       catu help 的第一列是 catu [path...]，寫明兩個以上會列在旁邊；-p 一列是 catu -p [path...]
     test: [TestSeveralFiles, TestSeveralFilesWidth, TestSeveralFilesNarrow, TestSeveralFilesOpen, TestSeveralFilesUnreadable, TestSeveralFilesFirstLaunch, TestPrintSeveral]
   - id: 17
-    spec: 18
+    spec: 19
     implementation: |
       internal/ui/watch.go：啟動時（App.Start）開始，每 watchEvery（1 秒）一個 tgo App.Tick；每一次看正在看的檔案（os.Stat）：
       修改時間或大小跟讀進來時不同就重讀（load），一樣就不動；管線送來的（shown.stdin）不看；Visual 模式中也看
       Visual 模式中重讀：不離開模式（viewer.display 不叫 LeaveMode），reader 記下游標與選取的起點（visualState），下一次 Draw 排好之後放回去，
-      收在新內容裡（那一列沒有了到最後一列，那一格沒有了到那一列最後一個字）；y 複製的是新內容；
-      跳 Info toast「<檔名> changed: shown as it is now」（tgo App.Toast，同一句記進 App Log，這一次不另記 Reloaded）
+      收在新內容裡（那一列沒有了到最後一列，那一格沒有了到那一列最後一個字）；y 複製的是新內容；不跳 toast
       重讀（refresh）：照原本的 tab 顯示；畫面停在原本的列（top、sub），原本最後一列在畫面上的（reader.atEnd）移到最後面；
       有命中的照新內容重找（reader.collect：不捲動，目前第幾筆照舊，超過就最後一筆），Esc 照樣清；排版的（Markdown、mermaid）在下一次 Draw 排好之後才定位與重找
       同一個檔的 mermaid 錯誤照舊只記一次；FILES 清單裡那個檔的快取換成新的
-      不在 Visual 模式中：App Log 記 INFO「Reloaded <路徑，家目錄寫成 ~>」，不跳 toast；META 是新讀的
+      App Log 記 INFO「Reloaded <路徑，家目錄寫成 ~>」，不跳 toast（Visual 模式中也是）；META 是新讀的
       看不到（os.Stat 失敗）：Warning toast「<檔名> is no longer there: shown as it was」；讀不了（load 失敗）：「Can't read <檔名> now: <原因>; shown as it was」；
       兩種都只說一次（viewer.gone），畫面保留最後讀到的；之後看得到就重讀
     test: [TestWatchReadsAgain, TestWatchKeepsThePlace, TestWatchFindsAgain, TestWatchInVisual, TestWatchGone, TestWatchKeepsTheTab, TestWatchNotThePipe, TestWatchSeveralFiles]

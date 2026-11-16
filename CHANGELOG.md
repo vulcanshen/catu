@@ -7,7 +7,7 @@ Each release names the version of terminu design (tdp) it follows.
 - The file shown is watched: changed on the disk, it is read again within a second, with no key pressed and nothing
   to turn on. The view stays on the line it was on, or, at the end, follows what was added, as `tail -f`; a search is
   found again; the tab stays. In the Visual mode too, the cursor and the selection staying where they were, so what
-  `y` copies is the file as it is now, and a toast says the file changed. A file gone stays shown as it was, said once. What came down a pipe is not
+  `y` copies is the file as it is now. A file gone stays shown as it was, said once. What came down a pipe is not
   watched
 - A `META` tab, the last of every file: its type, size, when it was modified and its mode, as the file preview writes
   them. The row over the panel that said them is gone, and the panel has it

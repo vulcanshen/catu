@@ -105,3 +105,9 @@
 
 - 在 Visual 模式中檔案改了：照樣重讀、更新畫面，並跳一個 Info toast 說內容變了。
 
+## 2026-11-16（Visual 中不跳 toast）
+
+> 不然也不需要跳 toast, 反正有 reload icon 和時間，可以看到那個時間一直在更新
+
+- Visual 中重讀不跳 toast：框上的 sync icon 與時間一直在更新，看得到重讀了。
+
