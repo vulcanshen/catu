@@ -26,6 +26,8 @@ an archive, a PDF, an image or a binary is shown the way the terminu family prev
 - **vim's keys**: `j|k`, `u|d`, `gg|G` scroll; `v` brings out a cursor that moves with `h|j|k|l`, `w|b|e`, `0|$`, and
   `y` copies what you select. `/` finds text, `n|N` go through it.
 - **Open another file** without leaving: `o` opens a file picker with a preview.
+- **Always up to date**: save the file in your editor and catu shows the new version within a second, on the line you
+  were reading; scrolled to the end, it follows what is added, as `tail -f` does.
 - **On the command line, as `cat` is**: `git log | catu` shows what comes down a pipe; `catu a.go b.md` lists several
   files beside the one shown; `catu -p`, or catu printing into another program, prints a file instead of opening the
   screen, a Markdown file and a diagram drawn.

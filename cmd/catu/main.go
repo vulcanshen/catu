@@ -111,8 +111,9 @@ func run(args []string) int {
 	// on its own or otherwise: the terminal closed (SIGHUP), Ctrl-C or kill
 	// while the pipe is read or printed, the pipe it prints into closed
 	// (catu | head). kill -9 cannot be caught; SIGQUIT and a crash are left
-	// to Go, to dump what it was doing. On the screen, Bubble Tea takes SIGINT and SIGTERM and
-	// returns, so they are left to it there.
+	// to Go, to dump what it was doing. On the screen they are terminu-go's
+	// (SIGHUP) and Bubble Tea's (SIGINT, SIGTERM): Run returns on them, and
+	// the file goes as catu ends on its own.
 	var mu sync.Mutex
 	var cleanups []func()
 	cleanup := func() {
@@ -198,10 +199,6 @@ func run(args []string) int {
 			paths[i] = spooled
 		}
 	}
-	if pipes > 0 {
-		signal.Stop(quit)
-		signal.Notify(quit, syscall.SIGHUP)
-	}
 	app, err := ui.OpenAll(paths)
 	if err != nil {
 		var oe *ui.OpenError
@@ -215,6 +212,7 @@ func run(args []string) int {
 		fail(name, err)
 		return 1
 	}
+	signal.Stop(quit) // the screen's: Run returns on them, and the file goes after
 	if err := app.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, "catu:", err)
 		return 1

@@ -44,6 +44,15 @@ type reader struct {
 
 	hits    []hit
 	current int
+	query   string                // what the hits are of
+	found   *terminu.SearchStatus // the panel's: drawn on its bottom border (tdp note.3)
+
+	// After the file is read again (watch.go), set for the next Draw, when
+	// what is laid out at the panel's width is laid out: go to the end, and
+	// find again what was found, the again-th hit current.
+	toEnd  bool
+	again  string
+	againN int
 
 	visual, selecting bool
 	line, col         int // the cursor
@@ -80,7 +89,7 @@ func (r *reader) setLayout(layout func(w int) ([]text.Line, error), failHint str
 
 func (r *reader) reset() {
 	r.top, r.sub, r.folds = 0, 0, nil
-	r.hits, r.current = nil, 0
+	r.clearHits()
 	r.visual, r.selecting = false, false
 	r.fact, r.hint = "", ""
 	r.failHint, r.failure = "", nil
@@ -157,6 +166,13 @@ func (r *reader) Draw(w, h int, focused bool) []string {
 	out := make([]string, 0, h)
 	r.visible = max(h, 0)
 	r.measure(w)
+	if r.toEnd {
+		r.top, r.sub, r.toEnd = len(r.lines), 0, false
+	}
+	if r.again != "" {
+		r.collect(r.again, r.againN)
+		r.again = ""
+	}
 	if len(r.lines) == 0 {
 		r.scroll = ""
 		return terminu.EmptyState(w, r.visible, r.fact, r.hint) // tdp screen.8
@@ -215,7 +231,7 @@ func (r *reader) measure(w int) {
 			}
 			r.lines, r.laidW, r.folds = lines, inner, nil
 			r.top, r.sub = min(top, max(len(r.lines)-1, 0)), 0
-			r.hits = nil
+			r.clearHits()
 			if r.visual {
 				r.visual, r.selecting = false, false
 			}
@@ -457,12 +473,22 @@ func (r *reader) follow(line int) {
 // find makes every place q is a hit, in either case; it reports how many.
 // The first is scrolled into sight.
 func (r *reader) find(q string) int {
-	r.hits, r.current = nil, 0
-	want := []rune(strings.ToLower(q))
-	if len(want) == 0 {
-		return 0
+	r.collect(q, 0)
+	if len(r.hits) > 0 {
+		r.follow(r.hits[0].line)
 	}
+	return len(r.hits)
+}
+
+// collect makes every place q is a hit, in either case, the cur-th current
+// (the last when there are fewer), scrolling nowhere.
+func (r *reader) collect(q string, cur int) {
+	r.hits, r.current, r.query = nil, 0, q
+	want := []rune(strings.ToLower(q))
 	for i, l := range r.lines {
+		if len(want) == 0 {
+			break
+		}
 		low := make([]string, len(l.Chars))
 		for k, c := range l.Chars {
 			low[k] = strings.ToLower(c.Src)
@@ -474,10 +500,26 @@ func (r *reader) find(q string) int {
 			}
 		}
 	}
-	if len(r.hits) > 0 {
-		r.follow(r.hits[0].line)
+	if len(r.hits) == 0 {
+		r.query = ""
 	}
-	return len(r.hits)
+	r.current = min(max(cur, 0), max(len(r.hits)-1, 0))
+	r.syncFound()
+}
+
+// atEnd reports that the last row is in sight (everything is, when it all
+// fits): read again, the view then follows what was added, as tail -f.
+func (r *reader) atEnd() bool {
+	t, s := r.maxTop()
+	return r.top > t || r.top == t && r.sub >= s
+}
+
+// keep puts the view back where it was after the same file was read again:
+// on line top, or at the end when it was there; and finds q again, the
+// cur-th hit current, when there was a search.
+func (r *reader) keep(top, sub int, end bool, q string, cur int) {
+	r.top, r.sub, r.toEnd = top, sub, end
+	r.again, r.againN = q, cur
 }
 
 // matchAt reports whether want starts at character k, and the character
@@ -500,6 +542,21 @@ func (r *reader) step(by int) {
 	if n := len(r.hits); n > 0 {
 		r.current = ((r.current+by)%n + n) % n
 		r.follow(r.hits[r.current].line)
+		r.syncFound()
+	}
+}
+
+// clearHits ends the search: no hits, no status on the border.
+func (r *reader) clearHits() {
+	r.hits, r.current, r.query = nil, 0, ""
+	r.syncFound()
+}
+
+// syncFound puts the search's status on the panel's bottom border while it
+// has hits: the text, which hit is current and how many (tdp note.3).
+func (r *reader) syncFound() {
+	if r.found != nil {
+		*r.found = terminu.SearchStatus{Text: r.query, Current: r.current, Count: len(r.hits)}
 	}
 }
 

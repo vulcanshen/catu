@@ -1,6 +1,6 @@
-id: 16
-from: v1.2.0-beta.5
-to: v1.2.0
+id: 17
+from: v1.2.0
+to: v1.2.11
 tasks:
   - id: 1
     spec: 14
@@ -68,16 +68,16 @@ tasks:
       - "DOCUMENT 與圖複製的是畫面上的字（webu 也是）"
       - "進出 Visual 不記 App Log（tdp K11、note.7），複製的結果是 toast，會記"
   - id: 6
-    spec: 7
+    spec: 17
     request: / 找字，所有找到的地方標出來，n|N 跳到下一個、上一個
-    tdp: [tdp panel.14, tdp note.2, tdp note.3, tdp note.5, tdp text, tdp toast.2, tdp K4, tdp M6, tdp T1, tdp F2, tdp F4, tdp menu.3, tdp M3, tdp M5, tdp input.2, tdp color.2, tdp note.7, tdp P3]
+    tdp: [tdp panel.14, tdp note.2, tdp note.3, tdp note.5, tdp text, tdp toast.2, tdp K4, tdp M6, tdp T1, tdp F2, tdp F4, tdp menu.3, tdp M3, tdp M5, tdp input.2, tdp color.2, tdp note.7, tdp P3, tdp panel.1]
     remark:
       - "從 Space menu 執行時，真的搜了（Enter）就連 Space menu 一起收起，有沒有找到都一樣，input popup 與 menu 一起收（tdp T1 的表：搜尋底下的畫面清掉 source，搜尋的 input popup 是門；tdp F2、menu.3）；在 input popup 上按 Esc 回到 Space menu（tdp F4）。使用者 2026-11-03 在 catu 發現 menu 蓋住命中的字，tdp v1.2.0-beta.2 把它寫進 T1"
       - "App Log 與 ? 的 key reference 也有 /：tgo 給的（tdp note.3、note.5：每個 viewer 與按鍵說明都有搜尋），catu 不另外做"
       - "這個 panel 沒有 cursor，照 tdp panel.14：/ 開 input popup 問要找的字，命中的字加底線、目前那一筆是 cursor 色塊，n|N 繞著跳，一筆都沒有時 Info toast；Esc 清掉命中的字（tdp K4 的往上一層）"
       - "n|N 只在有命中的時候出現在 Space menu 與 ?（tdp M6：對象不存在就不列）；Esc 也只在有命中的時候列在 ?（tdp note.5：Esc 在這裡有作用時才列）"
-      - note: "找字不記 App Log：跟 panel filter 一樣只是換看得到的範圍（tdp note.7）；tgo 的 viewer 的搜尋也不記。但 note.7 記 tdp P3 的 operation，P3 的表把搜尋列為 panel operation，note.7 沒明寫 viewer 的 / 搜尋記不記（review 2026-11-04 tdp v1.2.0 附記）。暫時照舊不記"
-        issue: "送給 terminu session（本機 SendMessage），2026-11-04；同一天使用者選 A：viewer 與沒有 cursor 的 panel 的 / 搜尋不記，跟 filter 一樣，沒有命中只由它的 Info toast 記；寫進 note.7 與 note-77（tdp 本機 6f9bc4f），跟下一版 tdp 一起發。catu 不用改，升到那一版後照 note.7 不記，這一條收成一般的 remark"
+      - "找字不記 App Log，跟 panel filter 一樣只是換看得到的地方；沒有命中只由它的 Info toast 記（tdp note.7，v1.2.1 寫明；從 catu 2026-11-04 的問題來，使用者選的）"
+      - "有命中時，下框在捲動位置左邊寫找字的狀態：/、找的字、第幾筆與共幾筆（/needle 2 of 5），跟捲動位置同色，字太長從後面截、數字留著；命中清掉就跟著清（tdp note.3、panel.1，v1.2.1）"
   - id: 7
     spec: 9
     request: o 打開別的檔案
@@ -99,7 +99,7 @@ tasks:
       - "讀不了時照 tdp E3 開 MOVE ASIDE 的 confirm（tgo MoveAside）"
       - "從 viewu 改名成 catu（2026-11-04）不搬設定目錄：viewu 沒發過版（沒有 tag、沒有 GitHub repo），沒有使用者的機器上有 viewu 讀過的設定目錄，不是 tdp E3 的「app 改版把東西換到新位置」；開發的機器上也沒有 ~/.config/viewu（同一天查過）"
   - id: 9
-    spec: 9
+    spec: 17
     request: Markdown 照 webu 顯示 markdown 的方式畫成文件；也看得到原始碼。第 6 層標題有自己的顏色；引用裡的引用，直槓也照標題的顏色層級
     tdp: [tdp P4, tdp P5, tdp F1, tdp terms.4, tdp panel.4, tdp K12, tdp note.2, tdp file-picker.3, tdp panel.1, tdp E3, tdp components.5]
     remark:
@@ -112,6 +112,7 @@ tasks:
       - "Markdown 用 goldmark 解析，含 GFM：表格、刪除線、任務清單、自動連結"
       - "任務清單的記號照 webu 畫勾選框的字 [x]、[ ]，Blue，放在清單記號的位置；不借 tdp checkbox 的 glyph（tdp P4：方框打勾是 checkbox，這裡不能勾）"
       - "找字、Visual 照 task 5、6，複製的是畫面上的字，排滿一列的空白不複製（webu 也是）"
+      - "畫出來的文件照瀏覽器的樣子（tdp components.5，v1.2.2）：內文裡的 Tab 與換行是空白；程式碼區塊裡的 Tab 是 input_tab_width 格、換行是換行；其他控制字元（顏色碼的 ESC 也是）畫成 Red 的名字，不套文件裡的顏色。catu 本來就這樣畫，v1.2.2 寫進 tdp"
   - id: 10
     spec: 12
     request: mermaid 圖用 pele 畫：Markdown 裡的 mermaid 區塊，與 .mmd、.mermaid 檔；流程圖的判斷不畫成菱形，畫成好看的樣子；其他斜的直線用階梯狀的框線畫；不要用點點畫：曲線畫成直角的轉折、圓畫成框、圓餅圖畫成一條分色的橫條加圖例
@@ -163,7 +164,7 @@ tasks:
       - "印的跟 task 13 一樣是第一個 tab，但 stdout 是終端機時帶顏色：文字檔照 task 3 的語法顏色（跟畫面裡、o 的預覽同一套，tdp note.2），Markdown 與 mermaid 照畫面裡的顏色；不印行號、不折行（終端機自己折）；寬度是終端機的寬"
       - "stdout 不是終端機時（catu -p a.md | less）跟 task 13 一樣：不帶顏色"
   - id: 15
-    spec: 15
+    spec: 17
     request: 從管線讀進來看：git log | catu、curl -s 網址 | catu --lang md，像 less
     tdp: [tdp E1, tdp P5, tdp panel.10, tdp note.7, tdp screen.4, tdp E3, tdp file-picker.2, tdp E5, tdp E8, tdp input.2]
     remark:
@@ -173,6 +174,7 @@ tasks:
       - "讀到結束為止，最多 16 MB（跟檔案一樣），然後照檔案一樣：stdout 是終端機就開畫面看（鍵盤從終端機讀），不是就照 task 13 印，-p 照 task 14"
       - "格式：-l、--lang <格式> 指定（md、mermaid、json 或語言的名字，跟副檔名一樣認），沒指定就是不上色的文字；不從內容猜，猜錯比不上色更糟"
       - "畫面上：位置列寫 standard input（tdp panel.10：你在看什麼），statusbar 只有 Size（不是檔案，沒有修改時間與權限，tdp screen.4），App Log 記 Opened standard input（tdp note.7）"
+      - "開著畫面時關掉終端機（SIGHUP）：terminu-go v1.2.3 起由 lib 接、照常結束（Run 回來），暫存檔跟著照常刪；catu 開畫面前不再自己接訊號"
   - id: 16
     spec: 13
     request: 一次看好幾個檔：catu a.go b.go
@@ -184,3 +186,17 @@ tasks:
       - "開畫面前每個路徑都先讀：有讀不到的，跟一個路徑時一樣在 stderr 說、結束碼 1，不開畫面"
       - "印的時候（task 13、14）一個接一個印，跟 cat a b 一樣不加標頭；讀不到的在 stderr 說、其他照印，結束碼 1"
       - "o 選的檔加進清單最後（已經在清單裡就移過去），cursor 移到它"
+  - id: 17
+    spec: 17
+    request: 檔案在磁碟上變了就自動重讀、畫面跟著更新，一直開著，不用加參數
+    tdp: [tdp P5, tdp note.7, tdp toast.2, tdp note.3, tdp note.2, tdp panel.4, tdp screen.4, tdp panel.15, tdp F5, tdp E3, tdp K3, tdp note.4, tdp T2]
+    remark:
+      - "看檔案、多久看一次、怎麼重讀是功能邏輯，tdp 沒有規定，app 自行決定（tdp P5）"
+      - "每一秒看一次正在看的檔案的修改時間與大小（tgo App.Tick），變了就重讀：不用 fsnotify，編輯器用改名換掉檔案的存法也看得到；FILES 清單裡別的檔，被看到時才看。管線送來的內容不是檔案，不看（task 15）"
+      - "重讀後畫面停在原本那一列；原本在最底下的，跟著新加的內容往下，像 tail -f：同一個功能給「一邊編輯一邊看」與「看長大中的 log」兩種用法。停在原本的 tab（tdp panel.4）"
+      - "有命中時照新內容重找，畫面不跳到命中，下框的狀態跟著更新（tdp note.3）；新內容裡沒有了就清掉"
+      - "Visual 選取中先不重讀，選的範圍才不會被新內容推走，離開模式後下一次看就重讀：借 tdp terminal.6 互動 terminal 選取模式「畫面凍住」的道理（note.4 沒寫，見下面的回報）"
+      - "檔案不見了或讀不了：保留最後看到的內容，跳一次 Warning toast 說檔案不在了、照原樣顯示（tdp toast.2），回來了就重讀；不是每秒跳一次"
+      - "每次重讀在 App Log 記一筆 INFO「Reloaded <路徑>」：app 自己在背景做的事（tdp note.7）；不跳 toast，畫面本身就是回饋。statusbar 的大小與修改時間跟著新的（tdp screen.4）"
+      - note: "review 2026-11-16（tdp v1.2.11）判 tdp 不清楚：1. note.4 的選取模式中內容變了要不要先不重讀；2. 在最底下時跟著新內容往下（tail -f）沒有根據，只有停在原地合 K3、panel.15；3. 重讀後行號欄照 note.2 的哪一條；4. 會自己重讀的檔案內容算不算 T2 的串流內容（失焦要不要變暗）；5. 重讀時讀不了用 Warning 還是 Error（toast.2、panel.15）。另外使用者要的：6. 框上放 nf-md-sync 表示 watch 中，使用者選下框右邊、在找字狀態與捲動位置左邊，tdp 框上沒有這種狀態的位置，tgo 也要 API；7. META tab 的格式。暫時照現在的設計，sync icon 等 tdp 與 tgo"
+        issue: "2026-11-16 要送給 terminu session（本機 SendMessage），那時它沒開著，草稿留著，等它開了再送"

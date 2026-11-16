@@ -2,6 +2,16 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
+## Unreleased
+
+- The file shown is watched: changed on the disk, it is read again within a second, with no key pressed and nothing
+  to turn on. The view stays on the line it was on, or, at the end, follows what was added, as `tail -f`; a search is
+  found again; the tab stays. While you select in the Visual mode it waits, and a file gone stays shown as it was,
+  said once. What came down a pipe is not watched
+- A search's status on the panel's bottom border while it has hits: what was searched for, which hit and how many
+  (`/needle 2 of 5`)
+- Built on terminu-go v1.2.12, following tdp v1.2.11
+
 ## v1.0.0 — tdp v1.2.0
 
 - First version: `catu <path>` shows a file or a directory in one panel, the statusbar over it with its size, when it

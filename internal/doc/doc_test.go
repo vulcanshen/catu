@@ -313,4 +313,17 @@ func TestControlCharacters(t *testing.T) {
 	if !strings.Contains(lines[0].Drawn(), `a\x07b`) || !strings.Contains(lines[0].Drawn(), `c\x1bd`) {
 		t.Errorf("%q", lines[0].Drawn())
 	}
+	// As a browser shows it (tdp components.5): a colour code's ESC by its
+	// name in Red, not a colour; in running text a Tab and a line break are
+	// white space; in a code block a Tab is input_tab_width spaces.
+	lines = render("one\ttwo\nthree \x1b[31mred\n\n```\n\tx\n```\n", 60)
+	if i, k := find(lines, `\x1b`); i < 0 || lines[i].Chars[k].St.Fg != terminu.Red {
+		t.Errorf("ESC not by its name in Red: %q", drawnRows(lines))
+	}
+	if got := lines[0].Drawn(); !strings.HasPrefix(got, "one two three ") {
+		t.Errorf("a Tab and a line break in running text: %q", got)
+	}
+	if i, _ := find(lines, "    x "); i != len(lines)-1 {
+		t.Errorf("a Tab in a code block: %q", drawnRows(lines))
+	}
 }

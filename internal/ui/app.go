@@ -36,6 +36,9 @@ type viewer struct {
 	// files, with two or more paths, lists them in a panel of its own
 	// beside the viewer (files.go); nil with one.
 	files *fileList
+	// gone is the path of the file shown when it cannot be read now: it is
+	// shown as it was, said once (watch.go).
+	gone string
 }
 
 // Open makes catu showing p, a file or a directory; the error is reading p
@@ -86,6 +89,7 @@ func OpenAll(paths []string) (*terminu.App, error) {
 	a.Status = v.status
 	a.OnMsg = v.onMsg
 	v.panel = &terminu.Panel{Body: v.body, Actions: v.actions(), OnTab: v.onTab}
+	v.body.found = &v.panel.SearchStatus
 	screen := &terminu.Screen{Name: "View", Panels: []*terminu.Panel{v.panel}}
 	if len(all) > 1 {
 		v.listFiles(screen, paths, all)
@@ -102,13 +106,13 @@ func OpenAll(paths []string) (*terminu.App, error) {
 		}
 		if cfgErr != nil {
 			// Settings that cannot be read: moved aside, or catu leaves (tdp E3).
-			return tea.Batch(colour, a.MoveAside(cfgPath, cfgErr, func() tea.Cmd {
+			return tea.Batch(colour, v.watch(), a.MoveAside(cfgPath, cfgErr, func() tea.Cmd {
 				v.cfg = defaults()
 				a.InputTabWidth, a.HideSecretsInPreview = v.cfg.TabWidth, v.cfg.HideSecrets
 				return v.reload()
 			}))
 		}
-		return colour
+		return tea.Batch(colour, v.watch())
 	}
 	return a, nil
 }
@@ -172,6 +176,9 @@ type coloured struct {
 // onMsg takes a view's colours when they are made: in their place, where
 // they are, nothing moving (tdp K3: the background moves nothing).
 func (v *viewer) onMsg(msg tea.Msg) tea.Cmd {
+	if _, ok := msg.(watchTick); ok {
+		return tea.Batch(v.check(), v.watch())
+	}
 	c, ok := msg.(coloured)
 	if !ok {
 		return nil
@@ -228,7 +235,7 @@ func (v *viewer) onTab(tab int) tea.Cmd {
 // clearHits is Esc on the panel: the hits go, one level up (tdp panel.14,
 // K4).
 func (v *viewer) clearHits() tea.Cmd {
-	v.body.hits = nil
+	v.body.clearHits()
 	v.panel.OnEsc = nil
 	return nil
 }

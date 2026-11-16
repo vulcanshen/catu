@@ -473,16 +473,17 @@ func TestSearchFindsAndSteps(t *testing.T) {
 	want(t, d, "SEARCH", "Find in a.txt")
 	d.Type("needle")
 	d.Press("Enter")
-	want(t, d, "needle one")
+	want(t, d, "needle one", "/needle 1 of 2") // its status on the bottom border (tdp note.3)
 	d.Press("n")
-	want(t, d, "Needle two")
+	want(t, d, "Needle two", "/needle 2 of 2")
 	d.Press("n")
-	want(t, d, "needle one") // round to the first
+	want(t, d, "needle one", "/needle 1 of 2") // round to the first
 	d.Press("N")
 	want(t, d, "Needle two")
 	d.Press("Space")
 	want(t, d, "[n]ext", "[N] Previous")
 	d.Press("Esc", "Esc") // the menu, then the hits
+	wantNot(t, d, "/needle")
 	d.Press("Space")
 	wantNot(t, d, "[n]ext")
 }

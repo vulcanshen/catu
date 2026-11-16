@@ -84,7 +84,7 @@ tasks:
       進出模式不記 App Log；複製的 toast 由 tgo 記
     test: [TestScrollKeys, TestVisualSelectsAndCopies, TestVisualEscOneLayerAtATime, TestVisualMoves, TestVisualSpaceMenu, TestVisualSelectionPlain]
   - id: 6
-    spec: 7
+    spec: 17
     implementation: |
       /（Space menu 的 panel operation [/] Search：find text in it；hint /:search；沒有內容時不出現）：tgo 的 text input popup，
       標題 Search、glyph nf-fa-search（U+F002）、提示 Find in <檔名>、Enter:find
@@ -96,6 +96,7 @@ tasks:
       看不到時才捲到剛好看得到
       有命中時 panel 上的 Esc（tgo Panel.OnEsc）清掉命中；沒有命中時不設 OnEsc，? 不列 Esc；換檔案、換 tab 時命中跟著清掉
       找字不記 App Log；一筆都沒有時的 Info toast 由 tgo 記進 App Log，同一句話（tgo App.Toast 記每一個 toast）
+      有命中時 tgo Panel.SearchStatus 是 {找的字, 目前第幾筆, 共幾筆}，tgo 畫在下框捲動位置的左邊（/needle 2 of 5）；reader 在命中變的每個地方（找、n|N、Esc、換檔案、換 tab、重排）跟著更新，沒有命中時清掉
       App Log（!）與 key reference（?）的 / 是 tgo 的（key reference 的 hint /:search ?|Esc:close），catu 不另外做
     test: [TestSearchFindsAndSteps, TestSearchNoHit, TestSearchHitsDrawn, TestSearchFromTheSpaceMenu]
   - id: 7
@@ -121,7 +122,7 @@ tasks:
       不存狀態、資料、快取
     test: [TestSettingsTabWidth, TestSettingsDirOrder, TestSettingsUnreadable, TestSettingsUnreadableQuit, TestHideSecrets]
   - id: 9
-    spec: 9
+    spec: 17
     implementation: |
       檔名是 .md .markdown .mdown .mkd .mkdn 的文字檔：panel 有兩個 tab（tgo Panel.Label、Tabs），DOCUMENT（打開時在這裡）、SOURCE；h|l 切（tgo 做），
       下框 hint 前面多 h|l:tab；換 tab 時回到最上面、命中與 Visual 清掉
@@ -138,7 +139,7 @@ tasks:
       連結：Sapphire 的 nf-md-link（U+F0337）加一格空白，連結的字 Sapphire 加底線；沒有字時寫網址
       圖片：Overlay0 的 nf-md-image（U+F02E9）加 alt，沒有 alt 時寫網址的檔名
       表格：Overlay0 的框線畫成格子，表頭粗體、下面一條分隔線；太寬時最寬的欄先縮，切掉的格子結尾畫 Overlay0 的 …
-      分隔線：Overlay0 的 ─ 鋪滿；HTML 照原樣畫成 Overlay0；外面來的字裡的控制字元畫成 Red 的名字
+      分隔線：Overlay0 的 ─ 鋪滿；HTML 照原樣畫成 Overlay0；外面來的字裡的控制字元畫成 Red 的名字（顏色碼的 ESC 也是，不套它的顏色）；內文裡的 Tab 與換行畫成一個空白
       區塊之間空一列（清單裡不空）
       找字、Visual 照 task 5、6：命中與游標在排好的列上；複製的是畫面上的字，一列尾端補滿的空白不複製
       內容是空的時候照 task 1 的空狀態
@@ -220,7 +221,7 @@ tasks:
       catu help 有 catu -p [path] 一列
     test: [TestPrintInColour, TestPrintWhenNotATerminal]
   - id: 15
-    spec: 15
+    spec: 17
     implementation: |
       沒給路徑、stdin 不是終端機時路徑當成 -；- 是 stdin（stdin 是終端機時照樣讀到 Ctrl-D，跟 cat - 一樣）
       -l、--lang <格式>、--lang=<格式>：md、markdown 是 Markdown，mermaid、mmd 是 mermaid 圖，其他是 chroma 認得的語言名字或副檔名（json、go、python、py……）；
@@ -229,7 +230,7 @@ tasks:
       其他時候（開畫面、-p、要畫的格式）：stdin 的前 16 MB 寫進系統暫存目錄（$TMPDIR）底下每次執行建的 catu-* 目錄裡的 stdin.<格式的副檔名>（ui.Spool），照讀一個檔案一樣讀它（種類、顏色、tab 都照檔案），
       結束時刪掉暫存目錄；超過 16 MB 時文字最後一列 Overlay0「(more not shown)」
       暫存目錄一建好、開始讀 stdin 之前就交給 main 記著（ui.Spool 的 made），自己結束以外這幾種結束也刪：有 - 時 main 接 SIGHUP、SIGINT、SIGTERM、SIGPIPE（os/signal），
-      收到就刪掉、以 128+訊號編號結束；開畫面前改成只接 SIGHUP（SIGINT、SIGTERM 由 Bubble Tea 接、照常結束後刪）；印的時候寫 stdout 得到 EPIPE（catu | head）也是刪掉、什麼都不說、結束碼 141
+      收到就刪掉、以 128+訊號編號結束；開畫面前不再接（signal.Stop）：開著畫面時 SIGHUP 由 tgo 接、SIGINT 與 SIGTERM 由 Bubble Tea 接，Run 照常回來，結束後刪；印的時候寫 stdout 得到 EPIPE（catu | head）也是刪掉、什麼都不說、結束碼 141
       畫面上：位置列 standard input，statusbar 只有 Size: <大小>，App Log 記 Info「Opened standard input」，找字的提示 Find in standard input，
       圖畫不出來的 Warning 寫 in standard input；o 的 file-picker 根目錄是啟動 catu 的目錄；鍵盤從終端機讀（Bubble Tea 在 stdin 不是終端機時開 /dev/tty）
       印的時候照 task 13、14；讀不了時 stderr 寫 catu: standard input: <原因>
@@ -252,3 +253,16 @@ tasks:
       - 可以在其中（照 task 15），同一次只能出現一次，多了印用法，結束碼 2
       catu help 的第一列是 catu [path...]，寫明兩個以上會列在旁邊；-p 一列是 catu -p [path...]
     test: [TestSeveralFiles, TestSeveralFilesWidth, TestSeveralFilesNarrow, TestSeveralFilesOpen, TestSeveralFilesUnreadable, TestSeveralFilesFirstLaunch, TestPrintSeveral]
+  - id: 17
+    spec: 17
+    implementation: |
+      internal/ui/watch.go：啟動時（App.Start）開始，每 watchEvery（1 秒）一個 tgo App.Tick；每一次看正在看的檔案（os.Stat）：
+      修改時間或大小跟讀進來時不同就重讀（load），一樣就不動；管線送來的（shown.stdin）不看；Visual 模式中（reader.visual）這一次不看，離開後下一次看
+      重讀（refresh）：照原本的 tab 顯示；畫面停在原本的列（top、sub），原本最後一列在畫面上的（reader.atEnd）移到最後面；
+      有命中的照新內容重找（reader.collect：不捲動，目前第幾筆照舊，超過就最後一筆），Esc 照樣清；排版的（Markdown、mermaid）在下一次 Draw 排好之後才定位與重找
+      同一個檔的 mermaid 錯誤照舊只記一次；FILES 清單裡那個檔的快取換成新的
+      App Log 記 INFO「Reloaded <路徑，家目錄寫成 ~>」；statusbar 的 Size、Modified 是新讀的
+      看不到（os.Stat 失敗）：Warning toast「<檔名> is no longer there: shown as it was」；讀不了（load 失敗）：「Can't read <檔名> now: <原因>; shown as it was」；
+      兩種都只說一次（viewer.gone），畫面保留最後讀到的；之後看得到就重讀
+    test: [TestWatchReadsAgain, TestWatchKeepsThePlace, TestWatchFindsAgain, TestWatchWaitsInVisual, TestWatchGone, TestWatchKeepsTheTab, TestWatchNotThePipe, TestWatchSeveralFiles]
+
