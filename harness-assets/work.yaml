@@ -264,7 +264,7 @@ tasks:
       Visual 模式中重讀：不離開模式（viewer.display 不叫 LeaveMode），reader 記下游標（visualState），下一次 Draw 排好之後放回去，
       收在新內容裡（那一列沒有了到最後一列，那一格沒有了到那一列最後一個字）；在選取中（Visual>select）的取消選取：
       Panel.EnterMode 回 Visual 那一層（viewer.inVisual），不跑 select 的 OnExit，不叫 LeaveMode：開著的 Space menu、? 留著，
-      它的列照現在的模式按鍵（tgo panelModeMenu）；模式名稱由 tgo 比對前後的名字，Visual>select → Visual 照「少一層」從尾巴收回；畫面照常（在最底下的跟著往下）；不跳 toast
+      內容是打開時的（標題 VISUAL>SELECT MODE、Cop[y]，? 的 y:copy）；按 Copy 照現在的模式按 y（tgo panelModeMenu），Visual 沒有 y，什麼都不複製、menu 關掉；模式名稱由 tgo 比對前後的名字，Visual>select → Visual 照「少一層」從尾巴收回；畫面照常（在最底下的跟著往下）；不跳 toast
       重讀（refresh）：照原本的 tab 顯示；畫面停在原本的列（top、sub），原本最後一列在畫面上的（reader.atEnd）移到最後面；
       有命中的照新內容重找（reader.collect：不捲動，目前第幾筆照舊，超過就最後一筆），Esc 照樣清；排版的（Markdown、mermaid）在下一次 Draw 排好之後才定位與重找
       同一個檔的 mermaid 錯誤照舊只記一次；FILES 清單裡那個檔的快取換成新的
