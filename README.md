@@ -143,6 +143,24 @@ catu's own:
 In the Visual mode (`v`): `h|j|k|l` move the cursor, `w|b|e` by words, `0|$` to the start and the end of the line, `u|d`
 and `gg|G` as when scrolling.
 
+### When the file changes
+
+catu checks the file shown once a second and reads it again as soon as it changes on the disk: keep it open beside your
+editor, or on a log that grows. There is nothing to turn on and no key to press.
+
+- **You stay where you were reading**: the same line, the same tab. Scrolled to the end, you follow what is added, as
+  `tail -f` does; scrolled up, you stay put. A file cut shorter than the screen shows its new end.
+- **A search is found again** in the new text: the place you were on, or the next one after it, stays current. When
+  nothing is left, catu says so and the search ends.
+- **In the Visual mode**, the cursor and the start of the selection stay where they were, and `y` copies the text that
+  is there now. The view does not follow what is added, so the cursor stays in sight. If the start of the selection is
+  no longer in the text, the selection ends; if the cursor's place is gone, the Visual mode ends; a warning says which.
+- **The line numbers' column** only gets wider while the file is open, so the text does not shift left and right.
+- **The bottom right of the panel** shows `󰓦` and when the file was last read, as `󰓦 17:43:42`. It turns red when the
+  file is gone or can no longer be read; catu then keeps showing it as it was, and reads it again once it is back.
+- **With several files**, the one shown is watched; another is read again when you go to it.
+- What came down a pipe is not watched. Every read is in the App Log (`!`).
+
 ### What each kind of file looks like
 
 | File | Tabs | Shown as |
@@ -180,6 +198,8 @@ when catu quits.
 ## Limits
 
 - catu only shows files; it does not edit them.
+- A change is noticed by the file's modification time and size, checked once a second: a save that keeps both as they
+  were goes unseen.
 - A text's first 16 MB is shown, a binary's first 1 MB.
 - Images are shown as their data URI, not as pictures: a terminal's picture protocols are not in every terminal and do not
   fit its rows of cells.
