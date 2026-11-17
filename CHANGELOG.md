@@ -2,7 +2,7 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
-## Unreleased
+## v1.1.0 — tdp v1.2.13
 
 - The file shown is watched: changed on the disk, it is read again within a second, with no key pressed and nothing to
   turn on. The view stays on the line it was on, or, at the end, follows what was added, as `tail -f`; a search is found
