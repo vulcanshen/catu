@@ -124,14 +124,15 @@ func (v *viewer) visual() tea.Cmd {
 				return v.app.Toast(terminu.Success, "Copied")
 			}}),
 		OnExit: func() tea.Cmd { b.unselect(); return nil }}
-	v.panel.EnterMode(&terminu.Mode{Name: "Visual", Exit: "cancel",
+	v.inVisual = &terminu.Mode{Name: "Visual", Exit: "cancel",
 		Keys: append(v.moves(), terminu.ModeKey{Key: "v", Desc: "select", Label: "Select", MenuDesc: "from here",
 			Do: func(string) tea.Cmd {
 				b.startSelect()
 				v.panel.EnterLayer(sel)
 				return nil
 			}}),
-		OnExit: func() tea.Cmd { b.leave(); return nil }})
+		OnExit: func() tea.Cmd { b.leave(); return nil }}
+	v.panel.EnterMode(v.inVisual)
 	return nil
 }
 

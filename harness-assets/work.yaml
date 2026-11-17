@@ -257,22 +257,28 @@ tasks:
       catu help 的第一列是 catu [path...]，寫明兩個以上會列在旁邊；-p 一列是 catu -p [path...]
     test: [TestSeveralFiles, TestSeveralFilesWidth, TestSeveralFilesNarrow, TestSeveralFilesOpen, TestSeveralFilesUnreadable, TestSeveralFilesFirstLaunch, TestPrintSeveral]
   - id: 17
-    spec: 22
+    spec: 23
     implementation: |
       internal/ui/watch.go：啟動時（App.Start）開始，每 watchEvery（1 秒）一個 tgo App.Tick；每一次看正在看的檔案（os.Stat）：
       修改時間或大小跟讀進來時不同就重讀（load），一樣就不動；管線送來的（shown.stdin）不看；Visual 模式中也看
-      Visual 模式中重讀：不離開模式（viewer.display 不叫 LeaveMode），reader 記下游標與選取的起點（visualState），下一次 Draw 排好之後放回去，
-      收在新內容裡（那一列沒有了到最後一列，那一格沒有了到那一列最後一個字）；選取照舊（Visual>select 不動），y 複製範圍裡現在的內容；
-      在最底下也不跟著往下（refresh 的 end 只在不在 Visual 模式時是 reader.atEnd）；不跳 toast；
-      新內容一行都沒有時游標與起點在 0,0，選取照舊，y 複製空字串（reader.selected 不讀超過的列）
-      重讀（refresh）：照原本的 tab 顯示；畫面停在原本的列（top、sub），原本最後一列在畫面上的（reader.atEnd）移到最後面，Visual 模式中不移；行號欄照新的行數重算（display 把 reader.seenNumW 歸零），等 tdp；
-      有命中的照新內容重找（reader.collect：不捲動，目前第幾筆照舊，超過就最後一筆），Esc 照樣清；命中清掉時開著的 Space menu 與 ? 留著打開時的列（tgo），按 [n]／[N] 什麼都不做（reader.step 沒有命中不動）；排版的（Markdown、mermaid）在下一次 Draw 排好之後才定位與重找
+      重讀（refresh）照 tdp note.9（terminu 本機 01837596）：照原本的 tab 顯示（display，不叫 LeaveMode），當下用上一次畫的寬度排版
+      （reader.layOut：reader.drawnW，Markdown、mermaid 的排版也是），位置都在當下判斷；畫面停在原本的列（top、sub），
+      原本最後一列在畫面上、不在 Visual 模式的（reader.atEnd）移到最後面；比畫面短時下一次 Draw 的 clampTop 移到新的結尾；
+      行號欄只變寬：reader.seenNumW 在 display 前後留著（換檔、o 打開才歸零）
+      有命中的照新內容重找（viewer.findAgain：reader.collect 不捲動，reader.currentFrom 取原本那一筆的起點或之後的第一筆，
+      都在前面時第一筆），Esc 照樣清；一筆都不剩：Info toast「No line has <字>」，命中與下框狀態消失，panel.OnEsc 清掉；
+      開著的 Space menu 與 ? 不動（tgo 留著打開時的列）
+      Visual 模式（viewer.visualAgain）：reader 記下的游標與選取起點（visualState），reader.there 判那一行、那一欄還在不在
+      （空行的第 0 欄算在）；不收。都在：reader.restoreVisual 放回，Visual>select 不動，y 複製新的字；
+      起點不在：放回游標、不選，Panel.EnterMode 回 Visual 那一層（viewer.inVisual，跟 Esc 退一層一樣，開著的 menu 留著），
+      Warning toast「<檔名> changed: where the selection started is gone」；游標不在：Panel.LeaveMode（模式的 Space menu、? 跟著關），
+      Warning toast「<檔名> changed under the cursor: Visual left」；在 Visual 中不跟著往下
       同一個檔的 mermaid 錯誤照舊只記一次；FILES 清單裡那個檔的快取換成新的
-      App Log 記 INFO「Reloaded <路徑，家目錄寫成 ~>」，不跳 toast（Visual 模式中也是）；META 是新讀的
+      App Log 先記 INFO「Reloaded <路徑，家目錄寫成 ~>」，toast 由 tgo 記在後面；META 是新讀的
       sync 狀態（viewer.syncStatus）：viewer panel 的 tgo Panel.FrameStatus{Glyph: nf-md-sync, Text: 讀進來的時間 15:04:05, Corner: BottomRight}；
       時間是 shown.read：load 時是現在，重讀時是 App.Tick 給的時間（App 的時鐘）；display（每次顯示）與 lost 時更新；
       viewer.gone 是這個檔時 Kind StatusError，不然 StatusFine；管線送來的（shown.stdin）FrameStatus 是零值
       看不到（os.Stat 失敗）：Error toast「<檔名> is no longer there: shown as it was」；讀不了（load 失敗）：「Can't read <檔名> now: <原因>; shown as it was」；
-      兩種都只說一次（viewer.gone），畫面保留最後讀到的；之後看得到就重讀
-    test: [TestWatchSyncStatus, TestWatchReadsAgain, TestWatchKeepsThePlace, TestWatchFindsAgain, TestWatchInVisual, TestWatchVisualStaysPut, TestWatchGone, TestWatchKeepsTheTab, TestWatchNotThePipe, TestWatchSeveralFiles]
+      兩種都只說一次（viewer.gone），畫面保留最後讀到的；在 Visual 模式中就 LeaveMode、reader.leave，只跳這個 Error；之後看得到就重讀
+    test: [TestWatchSyncStatus, TestWatchReadsAgain, TestWatchKeepsThePlace, TestWatchFindsAgain, TestWatchInVisual, TestWatchVisualStartGone, TestWatchVisualCursorGone, TestWatchNumbersOnlyWiden, TestWatchVisualStaysPut, TestWatchGone, TestWatchKeepsTheTab, TestWatchNotThePipe, TestWatchSeveralFiles]
 

@@ -47,13 +47,9 @@ type reader struct {
 	query   string                // what the hits are of
 	found   *terminu.SearchStatus // the panel's: drawn on its bottom border (tdp note.3)
 
-	// After the file is read again (watch.go), set for the next Draw, when
-	// what is laid out at the panel's width is laid out: go to the end, and
-	// find again what was found, the again-th hit current.
-	toEnd  bool
-	again  string
-	againN int
-	vis    *visualState // the Visual mode to put back, nil for none
+	// drawnW is the width the reader was last drawn at, 0 before: read
+	// again, what is shown is laid out at it at once (watch.go).
+	drawnW int
 
 	visual, selecting bool
 	line, col         int // the cursor
@@ -166,18 +162,8 @@ func (r *reader) Key(key string, _ tea.KeyMsg) (bool, tea.Cmd) {
 func (r *reader) Draw(w, h int, focused bool) []string {
 	out := make([]string, 0, h)
 	r.visible = max(h, 0)
+	r.drawnW = w
 	r.measure(w)
-	if r.toEnd {
-		r.top, r.sub, r.toEnd = len(r.lines), 0, false
-	}
-	if r.again != "" {
-		r.collect(r.again, r.againN)
-		r.again = ""
-	}
-	if r.vis != nil {
-		r.restoreVisual(*r.vis)
-		r.vis = nil
-	}
 	if len(r.lines) == 0 {
 		r.scroll = ""
 		return terminu.EmptyState(w, r.visible, r.fact, r.hint) // tdp screen.8
@@ -519,12 +505,34 @@ func (r *reader) atEnd() bool {
 	return r.top > t || r.top == t && r.sub >= s
 }
 
-// keep puts the view back where it was after the same file was read again:
-// on line top, or at the end when it was there; and finds q again, the
-// cur-th hit current, when there was a search.
-func (r *reader) keep(top, sub int, end bool, q string, cur int) {
-	r.top, r.sub, r.toEnd = top, sub, end
-	r.again, r.againN = q, cur
+// layOut lays out what is shown at the width last drawn at, as the next
+// Draw would: read again, what is there is known at once (tdp note.9).
+func (r *reader) layOut() {
+	if r.drawnW > 0 {
+		r.measure(r.drawnW)
+	}
+}
+
+// currentAt is where the current hit starts; false with no hits.
+func (r *reader) currentAt() (pos, bool) {
+	if len(r.hits) == 0 {
+		return pos{}, false
+	}
+	h := r.hits[r.current]
+	return pos{h.line, h.from}, true
+}
+
+// currentFrom makes the first hit at or after p current, the first of all
+// when none is (as n wraps), scrolling nowhere.
+func (r *reader) currentFrom(p pos) {
+	r.current = 0
+	for i, h := range r.hits {
+		if h.line > p.line || h.line == p.line && h.from >= p.col {
+			r.current = i
+			break
+		}
+	}
+	r.syncFound()
 }
 
 // matchAt reports whether want starts at character k, and the character
@@ -597,24 +605,23 @@ func (r *reader) visualState() *visualState {
 	return &visualState{r.selecting, r.line, r.col, r.fromL, r.fromC}
 }
 
-// keepVisual puts the Visual mode back, s, at the next Draw, once what is
-// laid out at the panel's width is.
-func (r *reader) keepVisual(s *visualState) { r.vis = s }
-
-// restoreVisual is the Visual mode s on the text as it is now: the cursor
-// and where the selection started where they were, the text still reaching
-// there, its last character otherwise.
-func (r *reader) restoreVisual(s visualState) {
-	clamp := func(line, col int) (int, int) {
-		line = min(max(line, 0), max(len(r.lines)-1, 0))
-		if len(r.lines) == 0 {
-			return 0, 0
-		}
-		return line, min(max(col, 0), max(len(r.lines[line].Chars)-1, 0))
+// there reports that the text as it is now has line and column: a
+// position is kept only where it still is (tdp note.9). An empty line has
+// its column 0, where the cursor can be.
+func (r *reader) there(line, col int) bool {
+	if line < 0 || line >= len(r.lines) || col < 0 {
+		return false
 	}
+	n := len(r.lines[line].Chars)
+	return col < n || col == 0 && n == 0
+}
+
+// restoreVisual is the Visual mode s on the text as it is now, its
+// positions as they were: the text there is what it is now.
+func (r *reader) restoreVisual(s visualState) {
 	r.visual, r.selecting = true, s.selecting
-	r.line, r.col = clamp(s.line, s.col)
-	r.fromL, r.fromC = clamp(s.fromL, s.fromC)
+	r.line, r.col = s.line, s.col
+	r.fromL, r.fromC = s.fromL, s.fromC
 }
 
 func (r *reader) leave()    { r.visual, r.selecting = false, false }

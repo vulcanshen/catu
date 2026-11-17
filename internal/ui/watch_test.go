@@ -120,7 +120,8 @@ func TestWatchReadsAgain(t *testing.T) {
 }
 
 // TestWatchKeepsThePlace: read again, the view stays on the line it was on;
-// at the end, it follows what was added, as tail -f (task 17).
+// at the end, it follows what was added, as tail -f; shorter than the
+// view, the view is at its new end (tdp note.9, task 17).
 func TestWatchKeepsThePlace(t *testing.T) {
 	dir := files(t, map[string]string{"log.txt": lines(100, "line %d")})
 	p := filepath.Join(dir, "log.txt")
@@ -136,11 +137,16 @@ func TestWatchKeepsThePlace(t *testing.T) {
 	change(t, p, lines(100, "line %d")+"line 101\nline 102\n")
 	look(d)
 	want(t, d, "line 102", "of 102")
+	change(t, p, lines(10, "line %d")) // shorter than the view: at its new end (tdp note.9)
+	look(d)
+	want(t, d, "  1 line 1 ", "line 10")
 }
 
-// TestWatchFindsAgain: a search's hits are found again in what was read,
-// the view not moved to them, the status on the border counting them (task
-// 17, tdp note.3).
+// TestWatchFindsAgain: read again, a search is found again in the new text
+// (tdp note.9): the current hit the first at or after where it was, the
+// view not moved, the status counting them; none left, a search that found
+// nothing, an Info toast saying so, the menu open over it not changed (task
+// 17).
 func TestWatchFindsAgain(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "needle one\nhay\nneedle two\n"})
 	p := filepath.Join(dir, "a.txt")
@@ -149,19 +155,22 @@ func TestWatchFindsAgain(t *testing.T) {
 	d.Type("needle")
 	d.Press("Enter", "n")
 	want(t, d, "/needle 2 of 2")
-	change(t, p, "needle one\nhay\nneedle two\nneedle three\n")
+	change(t, p, "needle zero\nneedle one\nhay\nneedle two\nneedle three\n")
 	look(d)
-	want(t, d, "needle three", synced(t, d)+" ━ /needle 2 of 3") // the sync status left of it (tdp panel.1)
+	// "needle two" is current still, now the third; the sync status left of it (tdp panel.1)
+	want(t, d, "needle three", synced(t, d)+" ━ /needle 3 of 4")
+	d.Press("Space")
+	want(t, d, "Previous")
 	change(t, p, "hay only\n")
 	look(d)
+	want(t, d, "Previous", "INFO", "No line has needle")
 	wantNot(t, d, "/needle")
 }
 
 // TestWatchInVisual: the Visual mode only selects and copies, so the file
-// is read again in it too (the user, 2026-11-16): still selecting, the
-// cursor and where the selection started at their line and column, what is
-// copied the text there now; where the text no longer reaches, they go to
-// its last character; no toast (task 17).
+// is read again in it too, its positions kept, not its text: the cursor and
+// where the selection started both still there, nothing changes and y
+// copies the text there now, with no toast (tdp note.9, task 17).
 func TestWatchInVisual(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "old text\nsecond line\n"})
 	p := filepath.Join(dir, "a.txt")
@@ -170,19 +179,64 @@ func TestWatchInVisual(t *testing.T) {
 	change(t, p, "new text\nsecond line\n")
 	look(d)
 	want(t, d, "new text", "Visual>select", "y:copy")
-	wantNot(t, d, "INFO")
+	wantNot(t, d, "INFO", "WARNING")
 	d.Press("y")
 	if got := d.Clipboard(); len(got) != 1 || got[0] != "new" {
 		t.Errorf("copied %q, want the text there now", got)
 	}
-	d.Press("v", "j", "$", "v") // selecting from the end of the second line
-	change(t, p, "a\n")
+}
+
+// TestWatchVisualStartGone: read again, where the selection started is gone
+// and the cursor's place is not: the selection goes, back to Visual as one
+// Esc, the cursor where it was, said in a Warning (tdp note.9, task 17).
+func TestWatchVisualStartGone(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": "a\nb\nc\nd\n"})
+	p := filepath.Join(dir, "a.txt")
+	d := start(t, p, 60, 20)
+	d.Press("v", "j", "j", "j", "v", "k", "k") // from d up to b
+	change(t, p, "x\ny\n")
 	look(d)
-	want(t, d, "Visual>select")
-	d.Press("y")
-	if got := d.Clipboard(); len(got) != 2 || got[1] != "a" {
-		t.Errorf("copied %q, want the last character there is", got)
+	want(t, d, "┫Visual┣", "WARNING", "a.txt changed: where the selection started is gone")
+	wantNot(t, d, "Visual>select")
+	d.Press("v", "y") // from the cursor, still on the second line
+	if got := d.Clipboard(); len(got) != 1 || got[0] != "y" {
+		t.Errorf("copied %q, want the cursor where it was", got)
 	}
+}
+
+// TestWatchVisualCursorGone: read again, where the cursor was is gone: the
+// mode goes, as Esc to the end, said in a Warning. A file that cannot be
+// read leaves it too, its Error the only toast (tdp note.9, task 17).
+func TestWatchVisualCursorGone(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": "old text\nsecond line\n"})
+	p := filepath.Join(dir, "a.txt")
+	d := start(t, p, 60, 20)
+	d.Press("v", "j", "$") // the cursor on the e of "line"
+	change(t, p, "old text\nsecond\n")
+	look(d)
+	want(t, d, "WARNING", "a.txt changed under the cursor: Visual left", "q:quit")
+	wantNot(t, d, "┫Visual")
+	d.Press("Esc") // the toast
+	d.Press("v", "v")
+	os.Remove(p)
+	look(d)
+	want(t, d, "ERROR", "a.txt is no longer there", "q:quit")
+	wantNot(t, d, "┫Visual", "WARNING")
+}
+
+// TestWatchNumbersOnlyWiden: read again, the number column only widens while
+// the file is open (tdp note.9, task 17).
+func TestWatchNumbersOnlyWiden(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": lines(50, "line %d")})
+	p := filepath.Join(dir, "a.txt")
+	d := start(t, p, 60, 20)
+	want(t, d, "┃   1 line 1 ")
+	change(t, p, lines(1000, "line %d"))
+	look(d)
+	want(t, d, "┃    1 line 1 ")
+	change(t, p, lines(50, "line %d"))
+	look(d)
+	want(t, d, "┃    1 line 1 ")
 }
 
 // TestWatchVisualStaysPut: at the end, the Visual mode does not follow what
