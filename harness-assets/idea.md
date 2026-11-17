@@ -148,3 +148,11 @@
 - 搜尋在新內容裡重新找：目前那一筆是原本位置或之後的第一筆，畫面不動；一筆都不剩就是一次沒找到的搜尋（Info toast）。開著的 Space menu 與 ? 不為此改變。
 - 不算串流內容，失焦時變暗，log 檔也一樣。
 
+## 2026-11-17（選單開著時選取失效，tdp v1.2.14）
+
+使用者在 terminu session 定進 tdp v1.2.14 note.9（catu 的 review 問的，使用者「送給 terminu，請 tdp 定」）：
+
+- 選取模式的 Space menu 或 ? 開著時，重讀讓選取失效（起點或游標不見）：不跳 Warning toast，改在它們上面疊一個 Peach、跟 error popup 一樣的 note 說明。
+- 它們開著時檔案讀不到：不跳 Error toast，改疊 error popup，說讀不到、選取失效了。
+- 兩種都按 Enter 或 Esc 連同底下的 menu 或 ? 一起關掉，回到畫面。
+

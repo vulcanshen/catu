@@ -1,4 +1,4 @@
-spec: 24
+spec: 25
 tasks:
   - id: 1
     accepted: true
@@ -33,5 +33,4 @@ tasks:
   - id: 16
     accepted: true
   - id: 17
-    accepted: false
-    reason: tdp 不清楚：重讀讓選取起點不在、從 Visual>select 退回 Visual 時，開著的 Space menu 與 ? 列哪一層的鍵（照舊的 Cop[y]、換成 Visual 的、還是關掉），note.9 只在搜尋那一條寫開著的 menu 不變，menu.4、M6、menu.2 沒說；其他照 note.9（note-90 到 note-98）都合
+    accepted: true

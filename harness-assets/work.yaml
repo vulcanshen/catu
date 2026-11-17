@@ -257,7 +257,7 @@ tasks:
       catu help 的第一列是 catu [path...]，寫明兩個以上會列在旁邊；-p 一列是 catu -p [path...]
     test: [TestSeveralFiles, TestSeveralFilesWidth, TestSeveralFilesNarrow, TestSeveralFilesOpen, TestSeveralFilesUnreadable, TestSeveralFilesFirstLaunch, TestPrintSeveral]
   - id: 17
-    spec: 24
+    spec: 25
     implementation: |
       internal/ui/watch.go：啟動時（App.Start）開始，每 watchEvery（1 秒）一個 tgo App.Tick；每一次看正在看的檔案（os.Stat）：
       修改時間或大小跟讀進來時不同就重讀（load），一樣就不動；管線送來的（shown.stdin）不看；Visual 模式中也看
@@ -270,17 +270,18 @@ tasks:
       開著的 Space menu 與 ? 不動（tgo 留著打開時的列）
       Visual 模式（viewer.visualAgain）：reader 記下的游標與選取起點（visualState），reader.there 判那一行、那一欄還在不在
       （空行的第 0 欄算在）；不收。都在：reader.restoreVisual 放回，Visual>select 不動，y 複製新的字；
-      起點不在：放回游標、不選，Panel.EnterMode 回 Visual 那一層（viewer.inVisual，跟 Esc 退一層一樣，開著的 menu 留著），
-      Warning toast「<檔名> changed: where the selection started is gone」；游標不在：Panel.LeaveMode（模式的 Space menu、? 跟著關），
-      Warning toast「<檔名> changed under the cursor: Visual left」；在 Visual 中不跟著往下
-      起點不在、退回 Visual 時開著的 Space menu 與 ?：留著打開時的列（Visual>select 的 Cop[y]、y:copy），按 Copy 照現在的模式按 y，Visual 沒有 y，什麼都不做
+      起點不在：tgo App.SelectionGone(panel, Warning, "Read again", 「<檔名> changed: where the selection started is gone」)，再放回游標、不選，
+      Panel.EnterMode 回 Visual 那一層（viewer.inVisual，跟 Esc 退一層一樣）；游標不在：App.SelectionGone(panel, Warning, "Read again",
+      「<檔名> changed under the cursor: Visual left」)，再 Panel.LeaveMode；SelectionGone 先叫，模式的 Space menu 或 ? 開著時它疊一個
+      Peach 的 note（READ AGAIN，Enter|Esc:close，連同底下的一起關），LeaveMode 才不會先關掉它們；沒開時就是 Warning toast；在 Visual 中不跟著往下
       不算串流內容（tdp note.9、T2）：viewer panel 不設 Panel.Stream，失焦照一般 panel 變暗（tgo 預設；task 16 的 [2]）
       同一個檔的 mermaid 錯誤照舊只記一次；FILES 清單裡那個檔的快取換成新的
-      App Log 先記 INFO「Reloaded <路徑，家目錄寫成 ~>」，toast 由 tgo 記在後面；META 是新讀的
+      App Log 先記 INFO「Reloaded <路徑，家目錄寫成 ~>」，toast 由 tgo 記在後面；SelectionGone 疊的 note 不是 toast，tgo 照它代替的 toast 記：
+      WARN「Read again: <那一句>」、ERR「Cannot read: <那一句> The selection is gone」（tdp F5、note.7；footer 的 ! 跟著標）；META 是新讀的
       sync 狀態（viewer.syncStatus）：viewer panel 的 tgo Panel.FrameStatus{Glyph: nf-md-sync, Text: 讀進來的時間 15:04:05, Corner: BottomRight}；
       時間是 shown.read：load 時是現在，重讀時是 App.Tick 給的時間（App 的時鐘）；display（每次顯示）與 lost 時更新；
       viewer.gone 是這個檔時 Kind StatusError，不然 StatusFine；管線送來的（shown.stdin）FrameStatus 是零值
       看不到（os.Stat 失敗）：Error toast「<檔名> is no longer there: shown as it was」；讀不了（load 失敗）：「Can't read <檔名> now: <原因>; shown as it was」；
-      兩種都只說一次（viewer.gone），畫面保留最後讀到的；在 Visual 模式中就 LeaveMode、reader.leave，只跳這個 Error；之後看得到就重讀
-    test: [TestWatchSyncStatus, TestWatchReadsAgain, TestWatchKeepsThePlace, TestWatchFindsAgain, TestWatchInVisual, TestWatchVisualStartGone, TestWatchVisualCursorGone, TestWatchNumbersOnlyWiden, TestWatchVisualStaysPut, TestWatchGone, TestWatchKeepsTheTab, TestWatchNotThePipe, TestWatchSeveralFiles]
+      兩種都只說一次（viewer.gone），畫面保留最後讀到的；在 Visual 模式中改叫 App.SelectionGone(panel, Error, "Cannot read", 那一句, "The selection is gone")，再 LeaveMode、reader.leave：模式的 Space menu 或 ? 開著時是疊在上面的 error popup（CANNOT READ，Enter|Esc:close，連同底下的一起關），沒開時是 Error toast（兩列）；之後看得到就重讀
+    test: [TestWatchSyncStatus, TestWatchReadsAgain, TestWatchKeepsThePlace, TestWatchFindsAgain, TestWatchInVisual, TestWatchVisualStartGone, TestWatchVisualCursorGone, TestWatchVisualMenuOpen, TestWatchNumbersOnlyWiden, TestWatchVisualStaysPut, TestWatchGone, TestWatchKeepsTheTab, TestWatchNotThePipe, TestWatchSeveralFiles]
 

@@ -2,6 +2,13 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
+## Unreleased
+
+- With the Visual mode's `Space` menu or `?` open, a read that takes the selection away says so in a note over them,
+  not in a toast: in Peach when the selection or the mode had to go, as an error when the file cannot be read; `Enter`
+  or `Esc` closes it and them together
+- Built on terminu-go v1.2.15, following tdp v1.2.14
+
 ## v1.1.0 — tdp v1.2.13
 
 - The file shown is watched: changed on the disk, it is read again within a second, with no key pressed and nothing to

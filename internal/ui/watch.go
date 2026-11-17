@@ -76,19 +76,23 @@ func (v *viewer) check(at time.Time) tea.Cmd {
 	return v.refresh(again)
 }
 
-// lost says once, in an Error, that s cannot be read now; the Visual mode
-// is left, that Error the only toast (tdp note.9).
+// lost says once, in an Error, that s cannot be read now. In the Visual
+// mode it is left, that Error the only word of it: a toast, or, with the
+// mode's Space menu or ? open, an error popup over them saying the
+// selection is gone too, closing with them (tdp note.9, note-100).
 func (v *viewer) lost(s *shown, why string) tea.Cmd {
 	if v.gone == s.path {
 		return nil
 	}
 	v.gone = s.path
 	v.syncStatus()
-	if v.body.visual {
-		v.panel.LeaveMode()
-		v.body.leave()
+	if !v.body.visual {
+		return v.app.Toast(terminu.Error, why)
 	}
-	return v.app.Toast(terminu.Error, why)
+	cmd := v.app.SelectionGone(v.panel, terminu.Error, "Cannot read", why, "The selection is gone")
+	v.panel.LeaveMode() // after it: what is open stays under the note
+	v.body.leave()
+	return cmd
 }
 
 // refresh shows again, read again, what is shown, as if it were opened
@@ -147,19 +151,22 @@ func (v *viewer) findAgain(q string, at pos) tea.Cmd {
 // visualAgain puts the Visual mode back on what was read (tdp note.9): its
 // positions, not its text. Both still there, nothing changes. Where the
 // selection started gone, the selection goes, back to Visual as one Esc;
-// the cursor's place gone, the mode goes, as Esc to the end; either said
-// in a Warning.
+// the cursor's place gone, the mode goes, as Esc to the end. Either is said
+// in a Warning: a toast, or, with the mode's Space menu or ? open, a note
+// over them in Peach, closing with them (note-99).
 func (v *viewer) visualAgain(s visualState) tea.Cmd {
 	b := v.body
 	if !b.there(s.line, s.col) {
-		v.panel.LeaveMode()
-		return v.app.Toast(terminu.Warning, v.cur.base()+" changed under the cursor: Visual left")
+		cmd := v.app.SelectionGone(v.panel, terminu.Warning, "Read again", v.cur.base()+" changed under the cursor: Visual left")
+		v.panel.LeaveMode() // after it: what is open stays under the note
+		return cmd
 	}
 	if s.selecting && !b.there(s.fromL, s.fromC) {
+		cmd := v.app.SelectionGone(v.panel, terminu.Warning, "Read again", v.cur.base()+" changed: where the selection started is gone")
 		s.selecting = false
 		b.restoreVisual(s)
 		v.panel.EnterMode(v.inVisual)
-		return v.app.Toast(terminu.Warning, v.cur.base()+" changed: where the selection started is gone")
+		return cmd
 	}
 	b.restoreVisual(s)
 	return nil

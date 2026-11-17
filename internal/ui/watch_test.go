@@ -224,6 +224,48 @@ func TestWatchVisualCursorGone(t *testing.T) {
 	wantNot(t, d, "┫Visual", "WARNING")
 }
 
+// TestWatchVisualMenuOpen: with the Visual mode's Space menu or ? open, a
+// read that takes the selection away says so in a note over them, not a
+// toast: a Warning's in Peach, an error popup when the file cannot be read;
+// Enter or Esc closes it and them together, back to the panel (tdp note-99,
+// note-100, task 17).
+func TestWatchVisualMenuOpen(t *testing.T) {
+	dir := files(t, map[string]string{"a.txt": "a\nb\nc\nd\n"})
+	p := filepath.Join(dir, "a.txt")
+	d := start(t, p, 70, 24)
+	d.Press("v", "j", "j", "j", "v", "k", "k", "Space") // from d up to b, the menu open
+	change(t, p, "x\ny\n")
+	look(d)
+	want(t, d, "READ AGAIN", "a.txt changed: where the selection started is gone", "Enter|Esc:close", "ITEM OPERATION")
+	wantNot(t, d, "WARNING")
+	d.Press("Enter")
+	wantNot(t, d, "READ AGAIN", "ITEM OPERATION")
+	want(t, d, "┫Visual┣") // back to Visual, as one Esc
+	d.Press("?")
+	change(t, p, "x\n") // the cursor's line gone
+	look(d)
+	want(t, d, "READ AGAIN", "a.txt changed under the cursor: Visual left", "VISUAL KEYS")
+	d.Press("Esc")
+	wantNot(t, d, "READ AGAIN", "VISUAL KEYS", "┫Visual")
+	d.Press("v", "v", "Space")
+	os.Remove(p)
+	look(d)
+	want(t, d, "CANNOT READ", "a.txt is no longer there: shown as it was", "The selection is gone", "ITEM OPERATION")
+	wantNot(t, d, "ERROR")
+	d.Press("Esc")
+	wantNot(t, d, "CANNOT READ", "ITEM OPERATION", "┫Visual")
+	change(t, p, "back\n") // and gone again, the note closed with Enter
+	look(d)
+	d.Press("v", "v", "?")
+	os.Remove(p)
+	look(d)
+	want(t, d, "CANNOT READ", "VISUAL>SELECT KEYS")
+	d.Press("Enter")
+	wantNot(t, d, "CANNOT READ", "VISUAL>SELECT KEYS", "┫Visual")
+	d.Press("!") // the notes are in the App Log as their toasts would be (tdp F5, note.7)
+	want(t, d, "WARN", "Read again: a.txt changed", "ERR", "Cannot read: a.txt is no longer")
+}
+
 // TestWatchNumbersOnlyWiden: read again, the number column only widens while
 // the file is open (tdp note.9, task 17).
 func TestWatchNumbersOnlyWiden(t *testing.T) {
