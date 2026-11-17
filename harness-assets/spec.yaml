@@ -1,4 +1,4 @@
-id: 21
+id: 22
 from: v1.2.11
 to: v1.2.12
 tasks:
@@ -188,18 +188,18 @@ tasks:
       - "o 選的檔加進清單最後（已經在清單裡就移過去），cursor 移到它"
       - "sync 狀態（task 17）只在 [2] 的框上：[2] 看的檔才在 watch；focus 在 [1] 時跟著 [2] 變暗（tdp panel.1）"
   - id: 17
-    spec: 21
+    spec: 22
     request: 檔案在磁碟上變了就自動重讀、畫面跟著更新，一直開著，不用加參數
-    tdp: [tdp P5, tdp note.7, tdp toast.2, tdp note.3, tdp note.2, tdp panel.4, tdp screen.4, tdp panel.15, tdp F5, tdp E3, tdp K3, tdp note.4, tdp T2, tdp K11, tdp terminal.6, tdp toast.1, tdp panel.14, tdp color.2, tdp panel.3, tdp menu.4, tdp K6, tdp K4, tdp F1, tdp panel.1, tdp M6]
+    tdp: [tdp P5, tdp note.7, tdp toast.2, tdp note.3, tdp note.2, tdp panel.4, tdp panel.15, tdp F5, tdp E3, tdp K3, tdp note.4, tdp T2, tdp K11, tdp terminal.6, tdp toast.1, tdp panel.14, tdp color.2, tdp F1, tdp panel.1, tdp M6, tdp menu.2]
     remark:
       - "看檔案、多久看一次、怎麼重讀是功能邏輯，tdp 沒有規定，app 自行決定（tdp P5）"
       - "每一秒看一次正在看的檔案的修改時間與大小（tgo App.Tick），變了就重讀：不用 fsnotify，編輯器用改名換掉檔案的存法也看得到；FILES 清單裡別的檔，被看到時才看。管線送來的內容不是檔案，不看（task 15）"
-      - "重讀後畫面停在原本那一列；原本在最底下的，跟著新加的內容往下，像 tail -f：同一個功能給「一邊編輯一邊看」與「看長大中的 log」兩種用法。停在原本的 tab（tdp panel.4）"
+      - "重讀後畫面停在原本那一列；原本在最底下的，跟著新加的內容往下，像 tail -f：同一個功能給「一邊編輯一邊看」與「看長大中的 log」兩種用法；Visual 模式中不跟，游標留在畫面裡（使用者 2026-11-17）。停在原本的 tab（tdp panel.4）"
       - "有命中時照新內容重找，畫面不跳到命中，下框的狀態跟著更新（tdp note.3）；新內容裡沒有了就清掉"
-      - "Visual 模式中照常重讀：Visual 只選取、複製，不寫入（使用者 2026-11-16）。重讀後留在模式裡，游標停在原本的行與列，新內容到不了那裡就收到最後一個字；有選取的取消選取，回到 Visual 那一層（使用者同一天定：範圍底下的字可能已經換了），跟 Esc 退一層的結果一樣（tdp K4），模式名稱從尾巴收回（tdp panel.3）；開著的 Space menu、? 留著，不搶 focus（tdp K3），它的列照現在的模式做（menu.4、K6）；畫面照常刷新，在最底下的照樣跟著往下（使用者同一天定）；不跳 toast（使用者同一天定：框上的 sync 狀態的時間一直在更新，看得到重讀了）"
-      - "檔案不見了或讀不了：保留最後看到的內容，跳一次 Warning toast 說檔案不在了、照原樣顯示（tdp toast.2），回來了就重讀；不是每秒跳一次"
+      - "Visual 模式中照常重讀：Visual 只選取、複製，不寫入（使用者 2026-11-16）。重讀後留在模式裡，選取不取消：游標與選取的起點停在原本的行與列，新內容到不了那裡就收到最後一個字；範圍裡的內容不管，可能已經換成別的字，y 複製的是現在的內容（使用者 2026-11-17：「不要取消，範圍和 cursor 位置保留，但是內容不管」）。選取一直在，開著的 Space menu 與 ? 的對象也一直在；在最底下也不跟著往下（上面）；不跳 toast（使用者同一天定：框上的 sync 狀態的時間一直在更新，看得到重讀了）"
+      - "檔案不見了或讀不了：保留最後看到的內容，跳一次 Error toast 說檔案不在了、照原樣顯示（使用者 2026-11-17 定用 Error；tdp toast.2「失敗一律用 Error，不用 Warning」），回來了就重讀；不是每秒跳一次"
       - "每次重讀在 App Log 記一筆 INFO「Reloaded <路徑>」：app 自己在背景做的事（tdp note.7）；不跳 toast，畫面本身就是回饋，Visual 模式中也一樣。META 的大小與修改時間跟著新的"
-      - "框上的 sync 狀態（tdp panel.1：要不要有、寫什麼、放哪個角由 app 決定）：使用者 2026-11-16 定放右下角、寫 sync 的時間。nf-md-sync（U+F04E6）與最後一次讀進來的時間 HH:MM:SS（開檔時、每次重讀時；檔案沒變就不動），在找字狀態與捲動位置的左邊；框的顏色。檔案不見了或讀不了時 Peach（StatusWarning：值得注意、內容還能用，tdp color.2），時間是最後一次讀到的，回來了恢復框的顏色。管線送來的不看，沒有 sync 狀態。框太窄時它最先讓位、有空間再回來，失焦時跟著 panel 變暗（tgo 照 panel.1 畫）"
-      - "重讀就取消選取，檔案每秒都在變時（看長大中的 log）很難選起來：使用者 2026-11-16 判不違反 tdp F1：F1 保證 viewer 能選字複製，沒有保證內容一直在變時選取還留著；內容變了還保留選取範圍沒有意義，範圍底下已經是別的字（「這沒有違反，只是讓他很難選，但這就是 log，難道要把選取範圍都保留嗎?」）"
-      - note: "review 2026-11-16（tdp v1.2.11，v1.2.12 再判一樣）判 tdp 不清楚：1. note.4 的選取模式中內容變了怎麼辦（使用者同一天定了 catu 照常重讀、游標留在原本的行與列、有選取就取消、不跳 toast，見上面；但選取模式是 tdp 的模式（K11），tdp 寫進 note.4 才算定，參照 terminal.6 的畫面凍住與 note.7 的 App Log；在最底下時畫面跟著往下、游標留在原處，可能捲出畫面）；2. 在最底下時跟著新內容往下（tail -f）沒有根據，只有停在原地合 K3、panel.15；3. 重讀後行號欄照 note.2 的哪一條；4. 會自己重讀的檔案內容算不算 T2 的串流內容（失焦要不要變暗）；5. 重讀時讀不了用 Warning 還是 Error（toast.2、panel.15）；7. 選取那一層在使用者沒按鍵時退掉，開著的 Space menu 與 ? 照 menu.2「每一列打開時就確定」留著原本的列（Cop[y]、VISUAL>SELECT MODE），還是照 M6「對象不存在：那一列不出現」，tdp 沒寫；相近的 panel.9 是 anchor 不在了就離開模式、跳 Warning toast。另外使用者要的：6. 框上右下角放 nf-md-sync 與最後一次讀進來的時間，表示 watch 中：tdp v1.2.12 的 panel.1 加了框上的持續狀態、tgo v1.2.13 加了 Panel.FrameStatus，做了（上面）；META 是 note.2 的 app 自己排的表（task 1），不問"
-        issue: "6. 2026-11-16 送給 terminu session（本機 SendMessage），同一天由 tdp v1.2.12 panel.1、tgo v1.2.13 Panel.FrameStatus 解決；1 使用者 2026-11-16 定了 catu 的做法（照常重讀、游標留在原處、取消選取、不跳 toast）；1–5、7 使用者還沒決定要不要問 tdp，沒送"
+      - "框上的 sync 狀態（tdp panel.1：要不要有、寫什麼、放哪個角由 app 決定）：使用者 2026-11-16 定放右下角、寫 sync 的時間。nf-md-sync（U+F04E6）與最後一次讀進來的時間 HH:MM:SS（開檔時、每次重讀時；檔案沒變就不動），在找字狀態與捲動位置的左邊；框的顏色。檔案不見了或讀不了時 Red（StatusError：跟 toast 一樣是錯誤，tdp color.2），時間是最後一次讀到的，回來了恢復框的顏色。管線送來的不看，沒有 sync 狀態。框太窄時它最先讓位、有空間再回來，失焦時跟著 panel 變暗（tgo 照 panel.1 畫）"
+      - "失焦時照一般 panel 變暗：catu 不分是不是 log，只分檔案格式；看的都是檔案，不是 T2 的串流內容，log 檔在 catu 裡跟 JSON 一樣只是一種格式（使用者 2026-11-17 判不違反 T2）"
+      - note: "review 2026-11-17（tdp v1.2.12）判 tdp 不清楚：檔案在背景重讀時 viewer 怎麼辦，tdp 還沒寫；使用者定的做法只在 idea.md 與 remark。1. note.4 的選取模式（tdp 的，K11）中內容換掉：使用者定選取與游標留在原本的行列、內容不管；tdp 唯一相近的 terminal.6 是畫面凍住，只管互動 terminal。新內容一行都沒有時（檔案變空、FORMATTED 或 DIAGRAM 照 panel.15 畫）也是這個缺口：catu 的游標與起點在 0,0，y 複製空字串。2. 不在 Visual 時停在最底下跟著往下（tail -f）：tdp 沒有一節讓 viewer 因為內容變多自己捲；Visual 不跟合 note.4、K3。3. 重讀後行號欄照 note.2 的哪一條（使用者要 tdp 補，見 issue）；暫時照新的行數重算。4. 會長大的檔算不算 T2 的串流內容（T2 舉了 log，note.2 把檔案內容歸在打開時就知道行數的）：使用者判 catu 只分檔案格式、照常變暗，tdp 還沒寫。7. 重讀把命中清掉時，開著的 Space menu 的 [n]／[N] 與 ? 的 Esc 照 menu.2 留著還是照 M6 拿掉：catu 照 tgo 留著打開時的列，按了什麼都不做。5 已合（Error、Red：toast.2、panel.15、E3、panel.1、color.2）；6. sync icon 由 tdp v1.2.12 panel.1、tgo v1.2.13 做了；META 是 note.2 的 app 自己排的表（task 1），不問"
+        issue: "3. 2026-11-17 送給 terminu session（本機 SendMessage），同時告知 1、2、4、5 使用者定的做法；6. 2026-11-16 送給 terminu session，同一天由 tdp v1.2.12、tgo v1.2.13 解決"

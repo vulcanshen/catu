@@ -60,7 +60,7 @@ func bottom(t *testing.T, d *tdptest.Driver) (string, string) {
 // TestWatchSyncStatus: the viewer panel's frame says at the bottom right
 // that the file shown is watched, and when it was last read (tdp panel.1,
 // the user, task 17): the same while the file is, the new read's once read
-// again; Peach while the file is gone, still the last read's.
+// again; Red while the file is gone, still the last read's.
 func TestWatchSyncStatus(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "first\n"})
 	p := filepath.Join(dir, "a.txt")
@@ -79,11 +79,11 @@ func TestWatchSyncStatus(t *testing.T) {
 	if b, _ := bottom(t, d); !strings.Contains(b, "━ "+at+" ━") {
 		t.Errorf("read again, the status is not %q: %q", at, b)
 	}
-	peach := strings.TrimSuffix(terminu.Fg(terminu.Peach).Render(at), "\x1b[0m")
+	red := strings.TrimSuffix(terminu.Fg(terminu.Red).Render(at), "\x1b[0m")
 	os.Remove(p)
 	look(d)
-	if b, styled := bottom(t, d); !strings.Contains(b, at) || !strings.Contains(styled, peach) {
-		t.Errorf("gone, the status is not %q in Peach: %q", at, styled)
+	if b, styled := bottom(t, d); !strings.Contains(b, at) || !strings.Contains(styled, red) {
+		t.Errorf("gone, the status is not %q in Red: %q", at, styled)
 	}
 	change(t, p, "back\n")
 	look(d)
@@ -91,7 +91,7 @@ func TestWatchSyncStatus(t *testing.T) {
 	if back == at {
 		t.Errorf("back, the status is still %q", at)
 	}
-	if _, styled := bottom(t, d); strings.Contains(styled, strings.TrimSuffix(terminu.Fg(terminu.Peach).Render("x"), "x\x1b[0m")) {
+	if _, styled := bottom(t, d); strings.Contains(styled, strings.TrimSuffix(terminu.Fg(terminu.Red).Render("x"), "x\x1b[0m")) {
 		t.Errorf("back, the status is not in the frame's colour: %q", styled)
 	}
 }
@@ -158,49 +158,55 @@ func TestWatchFindsAgain(t *testing.T) {
 }
 
 // TestWatchInVisual: the Visual mode only selects and copies, so the file
-// is read again in it too (the user, 2026-11-16): still in the mode, the
-// cursor where it was, or at the text's last character where the text no
-// longer reaches; a selection let go, the text under it changed, the Space
-// menu open over it staying (tdp K3); no toast (task 17).
+// is read again in it too (the user, 2026-11-16): still selecting, the
+// cursor and where the selection started at their line and column, what is
+// copied the text there now; where the text no longer reaches, they go to
+// its last character; no toast (task 17).
 func TestWatchInVisual(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "old text\nsecond line\n"})
 	p := filepath.Join(dir, "a.txt")
 	d := start(t, p, 60, 20)
-	d.Press("v", "e") // the cursor on the d of "old"
+	d.Press("v", "v", "e") // select "old"
 	change(t, p, "new text\nsecond line\n")
 	look(d)
-	want(t, d, "new text", "Visual", "v:select")
+	want(t, d, "new text", "Visual>select", "y:copy")
 	wantNot(t, d, "INFO")
-	d.Press("v", "0", "y") // selected from where the cursor was
+	d.Press("y")
 	if got := d.Clipboard(); len(got) != 1 || got[0] != "new" {
-		t.Errorf("copied %q, want the text as it is now", got)
+		t.Errorf("copied %q, want the text there now", got)
 	}
-	d.Press("v", "j", "$", "v", "Space") // selecting from the end of the second line
+	d.Press("v", "j", "$", "v") // selecting from the end of the second line
 	change(t, p, "a\n")
 	look(d)
-	want(t, d, "ITEM OPERATION") // the menu the user opened stays
-	d.Press("y")                 // its row does as y does now: nothing
-	want(t, d, "Visual", "v:select")
-	wantNot(t, d, "Visual>select", "ITEM OPERATION")
-	d.Press("y") // nothing selected: nothing to copy
-	if got := d.Clipboard(); len(got) != 1 {
-		t.Errorf("copied %q, want the selection let go", got)
-	}
-	d.Press("v", "y")
+	want(t, d, "Visual>select")
+	d.Press("y")
 	if got := d.Clipboard(); len(got) != 2 || got[1] != "a" {
-		t.Errorf("copied %q, want the cursor at the last character there is", got)
+		t.Errorf("copied %q, want the last character there is", got)
 	}
 }
 
-// TestWatchGone: a file gone stays shown as it was, said once in a Warning;
-// back, it is read again (task 17).
+// TestWatchVisualStaysPut: at the end, the Visual mode does not follow what
+// is added: the cursor stays in sight (the user, 2026-11-16, task 17).
+func TestWatchVisualStaysPut(t *testing.T) {
+	dir := files(t, map[string]string{"log.txt": lines(100, "line %d")})
+	p := filepath.Join(dir, "log.txt")
+	d := start(t, p, 60, 20)
+	d.Press("G", "v", "G") // the cursor on the last line
+	change(t, p, lines(130, "line %d"))
+	look(d)
+	want(t, d, " line 85 ", " line 100 ", "Visual")
+	wantNot(t, d, "line 101")
+}
+
+// TestWatchGone: a file gone stays shown as it was, said once in an Error
+// (the user); back, it is read again (task 17).
 func TestWatchGone(t *testing.T) {
 	dir := files(t, map[string]string{"a.txt": "still here\n"})
 	p := filepath.Join(dir, "a.txt")
 	d := start(t, p, 60, 20)
 	os.Remove(p)
 	look(d)
-	want(t, d, "still here", "a.txt is no longer there: shown as it was")
+	want(t, d, "still here", "ERROR", "a.txt is no longer there: shown as it was")
 	d.Advance(10 * time.Second) // the toast goes, and no other comes
 	look(d)
 	wantNot(t, d, "no longer there")
@@ -209,7 +215,7 @@ func TestWatchGone(t *testing.T) {
 	want(t, d, "back again")
 	d.Press("!")
 	if n := strings.Count(strings.Join(d.Screen(), "\n"), "no longer there"); n != 1 {
-		t.Errorf("the Warning is in the App Log %d times, want once", n)
+		t.Errorf("the Error is in the App Log %d times, want once", n)
 	}
 }
 

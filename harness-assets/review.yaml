@@ -1,4 +1,4 @@
-spec: 21
+spec: 22
 tasks:
   - id: 1
     accepted: true
@@ -34,4 +34,4 @@ tasks:
     accepted: true
   - id: 17
     accepted: false
-    reason: tdp 不清楚：note.4 的選取模式中內容變了怎麼辦（使用者定了 catu 照常重讀、游標留在原處、有選取就取消，使用者判不違反 F1，tdp 還沒寫；選取在背景退掉時開著的 Space menu 與 ? 照 menu.2 還是 M6）、在最底下時跟著往下（Visual 中游標可能捲出畫面）、重讀後的行號欄寬、會自己重讀的內容算不算 T2 的串流、重讀時讀不了用 Warning 還是 Error（sync 狀態用 Peach 還是 Red 同一個問題），tdp 都沒寫；sync 狀態合 panel.1、color.2，K3 已修
+    reason: tdp 不清楚：檔案在背景重讀時 viewer 怎麼辦 tdp 還沒寫：選取模式中內容換掉（使用者定選取與游標留在原本的行列，內容不管）、不在 Visual 時停在最底下跟著往下、重讀後的行號欄寬（已請 tdp 補）、會長大的檔算不算 T2 的串流內容（使用者判照常變暗）、重讀清掉命中時開著的 Space menu 與 ? 照 menu.2 還是 M6；讀不了用 Error、sync 狀態 Red 已合

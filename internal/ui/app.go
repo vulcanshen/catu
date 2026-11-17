@@ -39,9 +39,6 @@ type viewer struct {
 	// gone is the path of the file shown when it cannot be read now: it is
 	// shown as it was, said once (watch.go).
 	gone string
-	// inVisual is the Visual mode's own layer, under its select: a reload
-	// lets a selection go, back to it (watch.go).
-	inVisual *terminu.Mode
 }
 
 // Open makes catu showing p, a file or a directory; the error is reading p
