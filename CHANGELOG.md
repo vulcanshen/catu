@@ -2,7 +2,7 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
-## Unreleased
+## v1.1.1 — tdp v1.2.14
 
 - With the Visual mode's `Space` menu or `?` open, a read that takes the selection away says so in a note over them,
   not in a toast: in Peach when the selection or the mode had to go, as an error when the file cannot be read; `Enter`
