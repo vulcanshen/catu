@@ -1,4 +1,4 @@
-spec: 22
+spec: 24
 tasks:
   - id: 1
     accepted: true
@@ -34,4 +34,4 @@ tasks:
     accepted: true
   - id: 17
     accepted: false
-    reason: tdp 不清楚：檔案在背景重讀時 viewer 怎麼辦 tdp 還沒寫：選取模式中內容換掉（使用者定選取與游標留在原本的行列，內容不管）、不在 Visual 時停在最底下跟著往下、重讀後的行號欄寬（已請 tdp 補）、會長大的檔算不算 T2 的串流內容（使用者判照常變暗）、重讀清掉命中時開著的 Space menu 與 ? 照 menu.2 還是 M6；讀不了用 Error、sync 狀態 Red 已合
+    reason: tdp 不清楚：重讀讓選取起點不在、從 Visual>select 退回 Visual 時，開著的 Space menu 與 ? 列哪一層的鍵（照舊的 Cop[y]、換成 Visual 的、還是關掉），note.9 只在搜尋那一條寫開著的 menu 不變，menu.4、M6、menu.2 沒說；其他照 note.9（note-90 到 note-98）都合

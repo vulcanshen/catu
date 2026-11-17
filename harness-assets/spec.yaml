@@ -1,6 +1,6 @@
-id: 23
-from: v1.2.11
-to: v1.2.12
+id: 24
+from: v1.2.12
+to: v1.2.13
 tasks:
   - id: 1
     spec: 21
@@ -188,9 +188,9 @@ tasks:
       - "o 選的檔加進清單最後（已經在清單裡就移過去），cursor 移到它"
       - "sync 狀態（task 17）只在 [2] 的框上：[2] 看的檔才在 watch；focus 在 [1] 時跟著 [2] 變暗（tdp panel.1）"
   - id: 17
-    spec: 23
+    spec: 24
     request: 檔案在磁碟上變了就自動重讀、畫面跟著更新，一直開著，不用加參數
-    tdp: [tdp P5, tdp note.7, tdp toast.2, tdp note.3, tdp note.2, tdp panel.4, tdp panel.15, tdp F5, tdp E3, tdp K3, tdp note.4, tdp T2, tdp K11, tdp terminal.6, tdp toast.1, tdp panel.14, tdp color.2, tdp F1, tdp panel.1, tdp M6, tdp menu.2]
+    tdp: [tdp P5, tdp note.7, tdp toast.2, tdp note.3, tdp note.2, tdp panel.4, tdp panel.15, tdp F5, tdp E3, tdp K3, tdp note.4, tdp T2, tdp K11, tdp toast.1, tdp panel.14, tdp color.2, tdp F1, tdp panel.1, tdp M6, tdp menu.2, tdp note.9, tdp menu.4, tdp note.5, tdp K4]
     remark:
       - "看檔案、多久看一次、怎麼重讀是功能邏輯，tdp 沒有規定，app 自行決定（tdp P5）"
       - "每一秒看一次正在看的檔案的修改時間與大小（tgo App.Tick），變了就重讀：不用 fsnotify，編輯器用改名換掉檔案的存法也看得到；FILES 清單裡別的檔，被看到時才看。管線送來的內容不是檔案，不看（task 15）"
@@ -201,5 +201,5 @@ tasks:
       - "每次重讀在 App Log 記一筆 INFO「Reloaded <路徑>」：app 自己在背景做的事（tdp note.7）；不跳 toast，畫面本身就是回饋，Visual 模式中也一樣。META 的大小與修改時間跟著新的"
       - "框上的 sync 狀態（tdp panel.1：要不要有、寫什麼、放哪個角由 app 決定）：使用者 2026-11-16 定放右下角、寫 sync 的時間。nf-md-sync（U+F04E6）與最後一次讀進來的時間 HH:MM:SS（開檔時、每次重讀時；檔案沒變就不動），在找字狀態與捲動位置的左邊；框的顏色。檔案不見了或讀不了時 Red（StatusError：跟 toast 一樣是錯誤，tdp color.2），時間是最後一次讀到的，回來了恢復框的顏色。管線送來的不看，沒有 sync 狀態。框太窄時它最先讓位、有空間再回來，失焦時跟著 panel 變暗（tgo 照 panel.1 畫）"
       - "失焦時照一般 panel 變暗：重新讀進來不是串流進來，不是 T2 的串流內容，log 檔也一樣（使用者 2026-11-17，tdp note.9）；catu 不分是不是 log，只分檔案格式"
-      - note: "review 2026-11-17（tdp v1.2.12）判 tdp 不清楚：檔案在背景重讀時 viewer 怎麼辦（選取模式中內容換掉、跟著結尾、重讀後的行號欄、算不算串流、重讀清掉命中時開著的 menu）。使用者同一天在 terminu session 定進 tdp note.9「開著時會變的內容」（terminu 本機 commit 01837596，還沒發版），catu 照它的本機原文做了（上面）；tdp 與 tgo 發版後升版、引 note.9、再 review。5 已合（Error、Red：toast.2、panel.15、E3、panel.1、color.2）；6. sync icon 由 tdp v1.2.12 panel.1、tgo v1.2.13 做了；META 是 note.2 的 app 自己排的表（task 1），不問"
-        issue: "1、2、3、4、7 2026-11-17 送給 terminu session（本機 SendMessage）；同一天寫進 tdp note.9（terminu 01837596，未發版），版本等 terminu session 通知；6. 2026-11-16 送給 terminu session，同一天由 tdp v1.2.12、tgo v1.2.13 解決"
+      - note: "review 2026-11-17（tdp v1.2.12）判 tdp 不清楚：檔案在背景重讀時 viewer 怎麼辦（選取模式中內容換掉、跟著結尾、重讀後的行號欄、算不算串流、重讀清掉命中時開著的 menu）。使用者同一天定進 tdp v1.2.13 的 note.9「開著時會變的內容」（note.2、note.4、T2 跟著改），catu 照它做（上面）。review 2026-11-17（tdp v1.2.13）其他都合，只剩：起點不在、從 Visual>select 退回 Visual 時，開著的 Space menu 與 ? 列哪一層的鍵（note.9 只在搜尋那一條寫開著的 menu 不變；menu.4 的 Cop[y] 與 VISUAL>SELECT MODE、M6 的對象不在就不出現、menu.2 的打開時就確定，tdp 沒說照哪一條）；catu 留著打開時的列（K3），按 Copy 照現在的模式按 y，什麼都不做。5 已合（Error、Red：toast.2、panel.15、E3、panel.1、color.2）；6. sync icon 由 tdp v1.2.12 panel.1、tgo v1.2.13 做了；META 是 note.2 的 app 自己排的表（task 1），不問"
+        issue: "1、2、3、4、7 2026-11-17 送給 terminu session（本機 SendMessage），同一天由 tdp v1.2.13 note.9 解決；6. 2026-11-16 送給 terminu session，同一天由 tdp v1.2.12、tgo v1.2.13 解決"

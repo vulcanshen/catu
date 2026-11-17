@@ -15,7 +15,7 @@ Each release names the version of terminu design (tdp) it follows.
   them. The row over the panel that said them is gone, and the panel has it
 - A search's status on the panel's bottom border while it has hits: what was searched for, which hit and how many
   (`/needle 2 of 5`)
-- Built on terminu-go v1.2.13, following tdp v1.2.12
+- Built on terminu-go v1.2.14, following tdp v1.2.13
 
 ## v1.0.0 — tdp v1.2.0
 

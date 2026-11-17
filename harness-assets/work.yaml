@@ -257,11 +257,11 @@ tasks:
       catu help 的第一列是 catu [path...]，寫明兩個以上會列在旁邊；-p 一列是 catu -p [path...]
     test: [TestSeveralFiles, TestSeveralFilesWidth, TestSeveralFilesNarrow, TestSeveralFilesOpen, TestSeveralFilesUnreadable, TestSeveralFilesFirstLaunch, TestPrintSeveral]
   - id: 17
-    spec: 23
+    spec: 24
     implementation: |
       internal/ui/watch.go：啟動時（App.Start）開始，每 watchEvery（1 秒）一個 tgo App.Tick；每一次看正在看的檔案（os.Stat）：
       修改時間或大小跟讀進來時不同就重讀（load），一樣就不動；管線送來的（shown.stdin）不看；Visual 模式中也看
-      重讀（refresh）照 tdp note.9（terminu 本機 01837596）：照原本的 tab 顯示（display，不叫 LeaveMode），當下用上一次畫的寬度排版
+      重讀（refresh）照 tdp note.9：照原本的 tab 顯示（display，不叫 LeaveMode），當下用上一次畫的寬度排版
       （reader.layOut：reader.drawnW，Markdown、mermaid 的排版也是），位置都在當下判斷；畫面停在原本的列（top、sub），
       原本最後一列在畫面上、不在 Visual 模式的（reader.atEnd）移到最後面；比畫面短時下一次 Draw 的 clampTop 移到新的結尾；
       行號欄只變寬：reader.seenNumW 在 display 前後留著（換檔、o 打開才歸零）
@@ -273,6 +273,8 @@ tasks:
       起點不在：放回游標、不選，Panel.EnterMode 回 Visual 那一層（viewer.inVisual，跟 Esc 退一層一樣，開著的 menu 留著），
       Warning toast「<檔名> changed: where the selection started is gone」；游標不在：Panel.LeaveMode（模式的 Space menu、? 跟著關），
       Warning toast「<檔名> changed under the cursor: Visual left」；在 Visual 中不跟著往下
+      起點不在、退回 Visual 時開著的 Space menu 與 ?：留著打開時的列（Visual>select 的 Cop[y]、y:copy），按 Copy 照現在的模式按 y，Visual 沒有 y，什麼都不做
+      不算串流內容（tdp note.9、T2）：viewer panel 不設 Panel.Stream，失焦照一般 panel 變暗（tgo 預設；task 16 的 [2]）
       同一個檔的 mermaid 錯誤照舊只記一次；FILES 清單裡那個檔的快取換成新的
       App Log 先記 INFO「Reloaded <路徑，家目錄寫成 ~>」，toast 由 tgo 記在後面；META 是新讀的
       sync 狀態（viewer.syncStatus）：viewer panel 的 tgo Panel.FrameStatus{Glyph: nf-md-sync, Text: 讀進來的時間 15:04:05, Corner: BottomRight}；
